@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Quản lý khung giờ tư vấn (Slots)')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Quản Lý Khung Giờ Tư Vấn (Slots)</h2>
+            <p class="text-muted mb-0 small">Thiết lập các khung giờ mở để sinh viên có thể đăng ký lịch tư vấn trực tiếp hoặc trực tuyến</p>
+        </div>
+        <button type="button" class="btn btn-qaute-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#newSlotModal">
+            <i class="bi bi-plus-circle-fill me-2"></i>Mở khung giờ mới
+        </button>
+    </div>
+
+    <!-- Advisor Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/advisor/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan bàn làm việc
+        </a>
+        <a th:href="@{/advisor/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-inbox me-1"></i>Phiếu xử lý & Hàng đợi
+        </a>
+        <a th:href="@{/advisor/slots}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-calendar3-week me-1"></i>Quản lý khung giờ (Slots)
+        </a>
+        <a th:href="@{/advisor/appointments}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-calendar2-check me-1"></i>Phê duyệt lịch hẹn
+        </a>
+        <a th:href="@{/advisor/chat}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-chat-dots me-1"></i>Tư vấn trực tuyến 1-1
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <!-- Info -->
+    <div class="alert alert-info py-2 small mb-4 d-flex align-items-center gap-2 border-0 bg-info bg-opacity-10 text-info-emphasis">
+        <i class="bi bi-info-circle-fill fs-5 text-info"></i>
+        <div>
+            <strong>Quy định thời lượng (QĐ24):</strong> Mỗi slot có thời lượng chuẩn <strong>45 hoặc 60 phút</strong>; không trùng lặp khung giờ trong cùng ngày.
+        </div>
+    </div>
+
+    <!-- Slots Table -->
+    <div class="qaute-card p-4 border-0 shadow-sm">
+        <div th:if="${#lists.isEmpty(slots)}" class="text-center py-5 text-muted">
+            <i class="bi bi-calendar3 fs-1 text-secondary mb-2"></i>
+            <h5>Bạn chưa mở khung giờ tư vấn nào</h5>
+            <p class="small text-muted mb-3">Hãy tạo các khung giờ rảnh trong tuần để sinh viên có thể xem và đặt lịch.</p>
+            <button type="button" class="btn btn-primary btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#newSlotModal">
+                Mở khung giờ ngay
+            </button>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(slots)}">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Ngày tư vấn</th>
+                        <th>Khung thời gian</th>
+                        <th>Hình thức</th>
+                        <th>Địa điểm / Link họp</th>
+                        <th>Trạng thái slot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${slots}">
+                        <td><strong class="text-secondary" th:text="${'#' + s.maKhungGio}">#1</strong></td>
+                        <td class="fw-bold text-dark" th:text="${#temporals.format(s.batDau, 'EEEE, dd/MM/yyyy')}">Thứ Hai, 22/09</td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                <i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(s.batDau, 'HH:mm')} + ' - ' + ${#temporals.format(s.ketThuc, 'HH:mm')}">09:00 - 10:00</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${s.hinhThuc == 'TrucTiep'}" class="badge bg-secondary-subtle text-secondary">
+                                <i class="bi bi-geo-alt me-1"></i>Trực tiếp
+                            </span>
+                            <span th:if="${s.hinhThuc == 'TrucTuyen'}" class="badge bg-info-subtle text-info">
+                                <i class="bi bi-camera-video me-1"></i>Trực tuyến
+                            </span>
+                        </td>
+                        <td class="small text-secondary" th:text="${s.diaDiemLink}">Phòng A1-402</td>
+                        <td>
+                            <span th:if="${s.trangThai == 'Mo'}" class="badge bg-success-subtle text-success">Đang mở</span>
+                            <span th:if="${s.trangThai == 'Khoa'}" class="badge bg-secondary-subtle text-secondary">Đã khóa</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- New Slot Modal -->
+<div class="modal fade" id="newSlotModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark">Mở khung giờ tư vấn mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/advisor/slots/new}" method="post">
+                <div class="modal-body text-start">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Thời điểm bắt đầu *</label>
+                        <input type="datetime-local" name="batDau" class="form-control form-control-sm" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Thời lượng tư vấn (QĐ24) *</label>
+                        <select name="thoiLuongPhut" class="form-select form-select-sm" required>
+                            <option value="45">45 phút</option>
+                            <option value="60" selected>60 phút (1 tiếng)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Hình thức tư vấn *</label>
+                        <select name="hinhThuc" class="form-select form-select-sm" required>
+                            <option value="TrucTiep" selected>Gặp trực tiếp tại Văn phòng</option>
+                            <option value="TrucTuyen">Họp trực tuyến (Google Meet / Zoom)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Địa điểm phòng hoặc Link họp *</label>
+                        <input type="text" name="diaDiemLink" class="form-control form-control-sm" placeholder="VD: Phòng A1-402 hoặc link Google Meet" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">Mở khung giờ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

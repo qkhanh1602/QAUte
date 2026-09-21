@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Phòng tư vấn trực tuyến')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <!-- Student Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/student/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
+        </a>
+        <a th:href="@{/student/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-ticket-detailed me-1"></i>Phiếu tư vấn của tôi
+        </a>
+        <a th:href="@{/student/appointments}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-calendar-check me-1"></i>Lịch hẹn gặp cố vấn
+        </a>
+        <a th:href="@{/student/chat}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến
+        </a>
+        <a th:href="@{/student/history}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-clock-history me-1"></i>Lịch sử tư vấn
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Department selector -->
+        <div class="col-lg-4">
+            <div class="qaute-card p-3 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Chọn Đơn vị kết nối</h6>
+                <div class="list-group list-group-flush">
+                    <a th:each="dv : ${donViList}" th:href="@{/student/chat(maDonVi=${dv.maDonVi})}"
+                       th:class="${selectedDonVi == dv.maDonVi ? 'list-group-item list-group-item-action active rounded-3 mb-1 fw-semibold' : 'list-group-item list-group-item-action rounded-3 mb-1'}">
+                        <i class="bi bi-building me-2"></i>
+                        <span th:text="${dv.tenDonVi}">Phòng Đào tạo</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="qaute-card p-3 bg-light border-0 small text-secondary">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Quy định chat trực tuyến</h6>
+                <p class="mb-1">&bull; Giờ trực tuyến: 08:00 - 11:30 và 13:30 - 16:30 (Thứ 2 - Thứ 6).</p>
+                <p class="mb-1">&bull; Vui lòng giữ lịch sự và nêu rõ MSSV, lớp khi trao đổi.</p>
+                <p class="mb-0">&bull; Lịch sử trao đổi được lưu trữ bảo mật để phục vụ đối soát.</p>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-lg-8" th:if="${currentSession != null}">
+            <div class="qaute-card border-0 shadow-sm d-flex flex-column" style="height: 580px;">
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-headset"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark" th:text="${currentSession.donVi.tenDonVi}">Phòng Đào tạo</div>
+                            <small th:if="${currentSession.nguoiTuVan != null}" class="text-success fw-semibold">
+                                <i class="bi bi-person-check-fill me-1"></i>Cố vấn: <span th:text="${currentSession.nguoiTuVan.taiKhoan.hoTen}">Thầy Khoa</span>
+                            </small>
+                            <small th:unless="${currentSession.nguoiTuVan != null}" class="text-warning fw-semibold">
+                                <i class="bi bi-hourglass-split me-1"></i>Đang chờ Cố vấn tiếp nhận...
+                            </small>
+                        </div>
+                    </div>
+                    <span th:class="${'status-badge status-' + currentSession.trangThai}" th:text="${currentSession.trangThai}">ChoTiepNhan</span>
+                </div>
+
+                <!-- Messages Stream -->
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="messageStream" style="background: #f8fafc;">
+                    <div th:if="${#lists.isEmpty(messages)}" class="text-center my-auto text-muted small">
+                        <i class="bi bi-chat-text fs-2 mb-2 d-block text-secondary"></i>
+                        Chưa có tin nhắn nào trong phiên này. Hãy gửi tin nhắn đầu tiên!
+                    </div>
+
+                    <div th:each="m : ${messages}" th:class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
+                        <div th:class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}">
+                            <div class="small fw-bold mb-1 opacity-75" th:text="${m.taiKhoanGui.hoTen}">Họ tên</div>
+                            <div style="white-space: pre-line;" th:text="${m.noiDung}">Nội dung tin nhắn...</div>
+                            <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;" th:text="${#temporals.format(m.thoiGianGui, 'HH:mm')}">14:30</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Form -->
+                <div class="p-3 border-top bg-white rounded-bottom-4">
+                    <form th:action="@{'/student/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" class="d-flex gap-2">
+                        <input type="text" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập tin nhắn..." required autocomplete="off">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const stream = document.getElementById('messageStream');
+    if (stream) {
+        stream.scrollTop = stream.scrollHeight;
+    }
+});
+</script>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Xử lý phiếu tư vấn #' + ${ticket.maYeuCau})}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/advisor/dashboard}" class="text-decoration-none">Bàn cố vấn</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/advisor/tickets}" class="text-decoration-none">Phiếu tư vấn</a></li>
+            <li class="breadcrumb-item active" th:text="${'#' + ticket.maYeuCau}">#1</li>
+        </ol>
+    </nav>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Processing Area -->
+        <div class="col-lg-8">
+            <!-- Ticket Info Card -->
+            <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">Phiếu yêu cầu tư vấn <strong th:text="${'#' + ticket.maYeuCau}">#1</strong></span>
+                    <span th:class="${'status-badge status-' + ticket.trangThai}" th:text="${ticket.trangThai}">DangXuLy</span>
+                </div>
+
+                <h3 class="fw-bold text-dark mb-3" th:text="${ticket.tieuDe}">Tiêu đề phiếu tư vấn</h3>
+
+                <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
+                    <span><i class="bi bi-building me-1"></i><span th:text="${ticket.donVi.tenDonVi}">Phòng Đào tạo</span></span>
+                    <span><i class="bi bi-tag me-1"></i><span th:text="${ticket.linhVuc.tenLinhVuc}">Học vụ</span></span>
+                    <span><i class="bi bi-clock me-1"></i>Gửi lúc: <span th:text="${#temporals.format(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}">21/09/2026</span></span>
+                    <span th:if="${ticket.baoMatDanhTinh}" class="badge bg-secondary-subtle text-secondary">
+                        <i class="bi bi-shield-lock me-1"></i>Sinh viên yêu cầu bảo mật danh tính
+                    </span>
+                </div>
+
+                <!-- Original Student Question -->
+                <div class="p-3 bg-light rounded-3 mb-2 border">
+                    <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-question-circle-fill text-primary"></i>
+                        <span>Nội dung câu hỏi của Sinh viên:</span>
+                    </div>
+                    <div class="text-secondary" style="white-space: pre-line; line-height: 1.7;" th:text="${ticket.noiDung}">
+                        Nội dung câu hỏi...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversation History -->
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-square-dots-fill text-primary me-2"></i>Lịch sử trao đổi</h5>
+            <div class="d-flex flex-column gap-3 mb-4">
+                <div th:each="ph : ${ticket.phanHoiList}"
+                     th:class="${ph.loaiPhanHoi == 'TraLoi' ? 'qaute-card p-4 border-start border-4 border-success shadow-sm' : 'qaute-card p-4 border-start border-4 border-primary shadow-sm'}">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:if="${ph.loaiPhanHoi == 'TraLoi'}" class="badge bg-success-subtle text-success">
+                                <i class="bi bi-check-circle me-1"></i>Câu trả lời của bạn
+                            </span>
+                            <span th:if="${ph.loaiPhanHoi == 'HoiThem'}" class="badge bg-primary-subtle text-primary">
+                                <i class="bi bi-question-circle me-1"></i>Sinh viên hỏi thêm
+                            </span>
+                            <strong class="text-dark small" th:text="${ph.taiKhoanGui.hoTen}">Người gửi</strong>
+                        </div>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(ph.ngayTraLoi, 'dd/MM/yyyy HH:mm')}">21/09</span></small>
+                    </div>
+
+                    <div class="text-secondary" style="white-space: pre-line; line-height: 1.8;" th:text="${ph.noiDungTraLoi}">
+                        Nội dung phản hồi...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reply Form -->
+            <div class="qaute-card p-4 border-0 shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-2"><i class="bi bi-reply-all-fill text-success me-1"></i>Soạn câu trả lời tư vấn</h5>
+                <p class="text-muted small mb-3">Câu trả lời sẽ được lưu trữ và thông báo ngay đến tài khoản của sinh viên.</p>
+
+                <!-- Canned Responses dropdown -->
+                <div class="mb-3" th:unless="${#lists.isEmpty(mauTraLoiList)}">
+                    <label class="form-label small fw-semibold text-secondary">
+                        <i class="bi bi-lightning-charge me-1 text-warning"></i>Sử dụng Mẫu câu trả lời có sẵn:
+                    </label>
+                    <select class="form-select form-select-sm" onchange="applyCannedResponse(this.value)">
+                        <option value="" selected>-- Chọn mẫu câu trả lời gợi ý --</option>
+                        <option th:each="m : ${mauTraLoiList}" th:value="${m.noiDung}" th:text="${m.tieuDe}">Mẫu câu trả lời...</option>
+                    </select>
+                </div>
+
+                <form th:action="@{'/advisor/tickets/' + ${ticket.maYeuCau} + '/reply'}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Nội dung giải đáp chi tiết *</label>
+                        <textarea name="noiDung" id="replyTextarea" rows="6" class="form-control" placeholder="Nhập câu trả lời giải đáp căn cứ theo quy định của Trường..." required></textarea>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="deXuatFaq" value="true" id="deXuatCheck">
+                        <label class="form-check-label small fw-semibold text-dark" for="deXuatCheck">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>Đề xuất đưa câu hỏi & câu trả lời này vào mục <strong>Hỏi đáp FAQ chung</strong>
+                        </label>
+                        <div class="text-muted" style="font-size: 0.78rem;">
+                            (Sẽ chuyển vào danh sách chờ Ban Quản trị phê duyệt trước khi công khai)
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#transferModal">
+                            <i class="bi bi-arrow-left-right me-1"></i>Chuyển tiếp đơn vị khác
+                        </button>
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">
+                            <i class="bi bi-send-check me-1"></i>Gửi phản hồi tư vấn
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <!-- Student Information Card -->
+            <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Thông tin Sinh viên</h6>
+                <div class="d-flex flex-column gap-2 small">
+                    <div>
+                        <span class="text-muted">Họ và tên:</span>
+                        <strong class="d-block text-dark" th:text="${ticket.sinhVien.taiKhoan.hoTen}">Nguyễn Văn An</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted">Mã số sinh viên:</span>
+                        <span class="d-block fw-semibold text-primary" th:text="${ticket.sinhVien.mssv}">21110001</span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Lớp & Ngành:</span>
+                        <span class="d-block" th:text="${ticket.sinhVien.lop + ' - ' + ticket.sinhVien.nganh}">21110CLC1</span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Email liên hệ:</span>
+                        <span class="d-block text-truncate" th:text="${ticket.sinhVien.taiKhoan.email}">email@student.ute.edu.vn</span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Số điện thoại:</span>
+                        <span class="d-block" th:text="${ticket.sinhVien.taiKhoan.soDienThoai != null ? ticket.sinhVien.taiKhoan.soDienThoai : 'Chưa cập nhật'}">09xxxxxxxx</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLA Card -->
+            <div class="qaute-card p-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Mốc thời gian & SLA</h6>
+                <div class="d-flex flex-column gap-2 small">
+                    <div>
+                        <span class="text-muted">Ngày gửi:</span>
+                        <span class="d-block" th:text="${#temporals.format(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}">21/09</span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Hạn SLA phản hồi đầu:</span>
+                        <span class="d-block fw-bold text-danger" th:text="${#temporals.format(ticket.hanSLA, 'dd/MM/yyyy HH:mm')}">23/09</span>
+                    </div>
+                    <div th:if="${ticket.ngayPhanHoiDau != null}">
+                        <span class="text-muted">Đã phản hồi lần đầu lúc:</span>
+                        <span class="d-block text-success fw-semibold" th:text="${#temporals.format(ticket.ngayPhanHoiDau, 'dd/MM/yyyy HH:mm')}">21/09</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark">Chuyển tiếp phiếu tư vấn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{'/advisor/tickets/' + ${ticket.maYeuCau} + '/transfer'}" method="post">
+                <div class="modal-body">
+                    <p class="small text-secondary mb-3">
+                        Nếu câu hỏi thuộc phạm vi thẩm quyền của đơn vị khác, hãy chuyển tiếp để đơn vị phụ trách tiếp nhận và xử lý.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Đơn vị mới tiếp nhận *</label>
+                        <select name="maDonViMoi" class="form-select form-select-sm" required>
+                            <option value="" disabled selected>-- Chọn đơn vị chuyển tiếp --</option>
+                            <option th:each="dv : ${donViList}" th:value="${dv.maDonVi}" th:text="${dv.tenDonVi}" th:if="${dv.maDonVi != ticket.donVi.maDonVi}">Phòng CTSV</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Lĩnh vực chuyển tiếp *</label>
+                        <select name="maLinhVucMoi" class="form-select form-select-sm" required>
+                            <option value="" disabled selected>-- Chọn lĩnh vực --</option>
+                            <option th:each="lv : ${linhVucList}" th:value="${lv.maLinhVuc}" th:text="${lv.tenLinhVuc}">Lĩnh vực</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Lý do chuyển tiếp *</label>
+                        <textarea name="lyDo" rows="3" class="form-control form-control-sm" placeholder="VD: Vấn đề thuộc thẩm quyền giải quyết học phí của Phòng CTSV..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Xác nhận chuyển</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyCannedResponse(text) {
+    if (text) {
+        document.getElementById('replyTextarea').value = text;
+    }
+}
+</script>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Cổng Tư vấn Sinh viên Trực tuyến')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<!-- Hero Banner -->
+<section class="hero-banner">
+    <div class="container">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-7">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white mb-3 small fw-semibold border border-white border-opacity-10">
+                    <i class="bi bi-stars text-warning"></i> Cổng thông tin giải đáp & tư vấn học đường
+                </div>
+                <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; line-height: 1.15;">
+                    Bạn cần hỗ trợ điều gì hôm nay?
+                </h1>
+                <p class="lead text-white-50 mb-4 fs-6">
+                    Hệ thống QAUTE tiếp nhận, phản hồi và giải đáp các thắc mắc về học vụ, học phí, học bổng, chính sách sinh viên và định hướng việc làm với cam kết thời gian xử lý nhanh chóng.
+                </p>
+
+                <!-- Search form -->
+                <form th:action="@{/faq}" method="get" class="d-flex gap-2 bg-white p-2 rounded-4 shadow-lg" style="max-width: 580px;">
+                    <span class="input-group-text bg-transparent border-0 text-muted ps-3">
+                        <i class="bi bi-search fs-5"></i>
+                    </span>
+                    <input type="text" name="kw" class="form-control border-0 shadow-none ps-0" placeholder="Tìm kiếm câu hỏi, quy chế, thủ tục, từ khóa...">
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold">Tìm kiếm</button>
+                </form>
+
+                <div class="d-flex flex-wrap gap-2 mt-3 small text-white-50">
+                    <span class="text-white">Gợi ý:</span>
+                    <a th:href="@{/faq(kw='rút học phần')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#rút học phần</a>
+                    <a th:href="@{/faq(kw='học bổng')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#học bổng</a>
+                    <a th:href="@{/faq(kw='bảo hiểm y tế')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#BHYT</a>
+                    <a th:href="@{/faq(kw='đồ án')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#đồ án tốt nghiệp</a>
+                </div>
+            </div>
+
+            <div class="col-lg-5 text-center text-lg-end">
+                <div class="qaute-card p-4 text-start bg-white text-dark shadow-xl" style="border-radius: 1.5rem;">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Chỉ số vận hành hệ thống</h6>
+                            <small class="text-muted">Theo quy định chuẩn QAUTE</small>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Đang trực tuyến</span>
+                    </div>
+
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fs-3 fw-bold text-primary" th:text="${stats.tongYeuCau}">0</div>
+                                <small class="text-muted fw-medium">Tổng phiếu tư vấn</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fs-3 fw-bold text-success" th:text="${stats.tyLeHoanTat + '%'}">0%</div>
+                                <small class="text-muted fw-medium">Tỷ lệ hoàn tất (QĐ22)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fs-3 fw-bold text-info" th:text="${stats.tongLichHen}">0</div>
+                                <small class="text-muted fw-medium">Lịch hẹn tư vấn</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fs-3 fw-bold text-warning" th:text="${stats.tongCoVan}">0</div>
+                                <small class="text-muted fw-medium">Cố vấn chuyên trách</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <a th:href="@{/student/tickets/new}" class="btn btn-qaute-primary w-100 py-2">
+                            <i class="bi bi-pencil-square me-2"></i>Gửi phiếu tư vấn ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3 Main Channels Section -->
+<section class="container mb-5">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-dark tracking-tight">3 Kênh Hỗ Trợ Đắc Lực</h2>
+        <p class="text-muted">Lựa chọn hình thức tư vấn phù hợp nhất với nhu cầu của bạn</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Channel 1 -->
+        <div class="col-md-4">
+            <div class="qaute-card qaute-card-hover p-4 h-100 d-flex flex-column">
+                <div class="rounded-4 bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 54px; height: 54px;">
+                    <i class="bi bi-chat-left-dots-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">1. Gửi Phiếu Tư Vấn (Ticket)</h5>
+                <p class="text-muted small flex-grow-1">
+                    Gửi câu hỏi kèm tài liệu đính kèm, tùy chọn bảo mật danh tính. Cố vấn phản hồi theo quy chuẩn SLA 24h/48h.
+                </p>
+                <div class="mt-3 pt-3 border-top">
+                    <a th:href="@{/student/tickets/new}" class="btn btn-outline-primary btn-sm rounded-pill fw-semibold w-100">
+                        Gửi câu hỏi mới <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel 2 -->
+        <div class="col-md-4">
+            <div class="qaute-card qaute-card-hover p-4 h-100 d-flex flex-column">
+                <div class="rounded-4 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 54px; height: 54px;">
+                    <i class="bi bi-calendar-event-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">2. Đặt Lịch Hẹn Tư Vấn</h5>
+                <p class="text-muted small flex-grow-1">
+                    Chọn khung giờ 45 - 60 phút của Cố vấn học tập trong tuần. Hỗ trợ gặp trực tiếp tại văn phòng hoặc trực tuyến qua Google Meet.
+                </p>
+                <div class="mt-3 pt-3 border-top">
+                    <a th:href="@{/student/appointments}" class="btn btn-outline-success btn-sm rounded-pill fw-semibold w-100">
+                        Chọn lịch hẹn <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel 3 -->
+        <div class="col-md-4">
+            <div class="qaute-card qaute-card-hover p-4 h-100 d-flex flex-column">
+                <div class="rounded-4 bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center mb-3" style="width: 54px; height: 54px;">
+                    <i class="bi bi-headset fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">3. Tư Vấn Trực Tuyến 1-1</h5>
+                <p class="text-muted small flex-grow-1">
+                    Trò chuyện trực tiếp qua hộp thư tin nhắn thời gian thực với cán bộ thường trực phòng ban để giải quyết vấn đề gấp.
+                </p>
+                <div class="mt-3 pt-3 border-top">
+                    <a th:href="@{/student/chat}" class="btn btn-outline-info btn-sm rounded-pill fw-semibold w-100">
+                        Vào phòng chat <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured FAQs Section -->
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold text-dark tracking-tight mb-1">Câu Hỏi Thường Gặp (FAQ)</h3>
+            <p class="text-muted mb-0">Các thắc mắc phổ biến đã được Ban Quản trị phê duyệt chính thức</p>
+        </div>
+        <a th:href="@{/faq}" class="btn btn-link text-decoration-none fw-semibold">
+            Xem tất cả <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="accordion qaute-card p-3 shadow-sm border-0" id="faqAccordion">
+        <div class="accordion-item border-0 border-bottom mb-2" th:each="faq, iterStat : ${faqs}" th:if="${iterStat.index < 5}">
+            <h2 class="accordion-header" th:id="'heading' + ${faq.maFAQ}">
+                <button class="accordion-button collapsed fw-bold py-3 text-dark bg-transparent shadow-none" type="button" 
+                        data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${faq.maFAQ}">
+                    <i class="bi bi-question-circle-fill text-primary me-2"></i>
+                    <span th:text="${faq.cauHoi}">Câu hỏi FAQ mẫu?</span>
+                    <span class="badge bg-secondary-subtle text-secondary ms-auto me-3 small" th:text="${faq.linhVuc.tenLinhVuc}">Lĩnh vực</span>
+                </button>
+            </h2>
+            <div th:id="'collapse' + ${faq.maFAQ}" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-secondary ps-5 pb-4" style="line-height: 1.7;" th:text="${faq.cauTraLoi}">
+                    Nội dung câu trả lời chi tiết...
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Articles Section -->
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold text-dark tracking-tight mb-1">Cẩm Nang & Hướng Dẫn Sinh Viên</h3>
+            <p class="text-muted mb-0">Bài viết hướng dẫn quy chế, học bổng và quy trình thủ tục chi tiết</p>
+        </div>
+        <a th:href="@{/articles}" class="btn btn-link text-decoration-none fw-semibold">
+            Xem thêm bài viết <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4" th:each="article : ${articles}">
+            <div class="qaute-card qaute-card-hover p-4 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle" th:text="${article.linhVuc.tenLinhVuc}">Học vụ</span>
+                    <small class="text-muted"><i class="bi bi-eye me-1"></i><span th:text="${article.luotXem}">0</span> lượt xem</small>
+                </div>
+                <h5 class="fw-bold mb-2">
+                    <a th:href="@{'/articles/' + ${article.maBaiViet}}" class="text-dark text-decoration-none hover-primary" th:text="${article.tieuDe}">
+                        Tiêu đề bài viết hướng dẫn...
+                    </a>
+                </h5>
+                <p class="text-secondary small flex-grow-1" th:text="${article.tomTat}">Tóm tắt nội dung cẩm nang...</p>
+                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(article.ngayDang, 'dd/MM/yyyy')}">21/09/2026</span></small>
+                    <a th:href="@{'/articles/' + ${article.maBaiViet}}" class="text-primary fw-semibold small text-decoration-none">
+                        Đọc chi tiết <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Advisors Showcase Section -->
+<section class="container mb-5 pb-3">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-dark tracking-tight">Đội Ngũ Cố Vấn Học Tập</h3>
+        <p class="text-muted">Các thầy cô phụ trách giải đáp chuyên môn và tư vấn định hướng</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4" th:each="cv : ${advisors}">
+            <div class="qaute-card p-4 text-center h-100">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+                    <i class="bi bi-person-badge fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-1" th:text="${cv.taiKhoan.hoTen}">TS. Trần Minh Khoa</h5>
+                <p class="text-primary small fw-semibold mb-1" th:text="${cv.hocHamHocVi + ' - ' + cv.chucVu}">Tiến sĩ - Trưởng Bộ môn</p>
+                <p class="text-muted small mb-2" th:text="${cv.donVi.tenDonVi}">Khoa Công nghệ Thông tin</p>
+                <div class="bg-light p-2 rounded-3 small text-secondary mb-3" th:text="${'Chuyên môn: ' + cv.chuyenMon}">Chuyên môn...</div>
+                <a th:href="@{/student/appointments(maCV=${cv.maCV})}" class="btn btn-outline-primary btn-sm rounded-pill fw-semibold w-100">
+                    <i class="bi bi-calendar-check me-1"></i>Đặt lịch tư vấn
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

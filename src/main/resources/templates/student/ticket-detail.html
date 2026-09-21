@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Chi tiết phiếu tư vấn #' + ${ticket.maYeuCau})}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/student/dashboard}" class="text-decoration-none">Cổng sinh viên</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/student/tickets}" class="text-decoration-none">Phiếu tư vấn</a></li>
+            <li class="breadcrumb-item active" th:text="${'#' + ticket.maYeuCau}">#1</li>
+        </ol>
+    </nav>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Conversation Area -->
+        <div class="col-lg-8">
+            <!-- Ticket Info Card -->
+            <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small">Phiếu yêu cầu tư vấn <strong th:text="${'#' + ticket.maYeuCau}">#1</strong></span>
+                    <span th:class="${'status-badge status-' + ticket.trangThai}" th:text="${ticket.trangThai}">DangXuLy</span>
+                </div>
+
+                <h3 class="fw-bold text-dark mb-3" th:text="${ticket.tieuDe}">Tiêu đề phiếu tư vấn</h3>
+
+                <div class="d-flex flex-wrap gap-3 small text-muted mb-4 pb-3 border-bottom">
+                    <span><i class="bi bi-building me-1"></i><span th:text="${ticket.donVi.tenDonVi}">Phòng Đào tạo</span></span>
+                    <span><i class="bi bi-tag me-1"></i><span th:text="${ticket.linhVuc.tenLinhVuc}">Học vụ</span></span>
+                    <span><i class="bi bi-clock me-1"></i>Gửi lúc: <span th:text="${#temporals.format(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}">21/09/2026</span></span>
+                    <span th:if="${ticket.baoMatDanhTinh}" class="badge bg-secondary-subtle text-secondary">
+                        <i class="bi bi-shield-lock me-1"></i>Chế độ ẩn danh
+                    </span>
+                </div>
+
+                <!-- Original Student Question -->
+                <div class="p-3 bg-light rounded-3 mb-2 border">
+                    <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-circle text-primary"></i>
+                        <span>Nội dung câu hỏi ban đầu của bạn:</span>
+                    </div>
+                    <div class="text-secondary" style="white-space: pre-line; line-height: 1.7;" th:text="${ticket.noiDung}">
+                        Nội dung câu hỏi...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversation Responses Stream -->
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-square-dots-fill text-primary me-2"></i>Tiến trình trao đổi</h5>
+
+            <div th:if="${#lists.isEmpty(ticket.phanHoiList)}" class="qaute-card p-4 text-center text-muted mb-4 border-0 shadow-sm">
+                <i class="bi bi-hourglass-split fs-2 text-warning mb-2"></i>
+                <h6 class="fw-bold text-dark">Đang chờ phản hồi từ Cố vấn</h6>
+                <p class="small text-muted mb-0">Cố vấn chuyên trách đang xem xét nội dung câu hỏi của bạn. Thời hạn xử lý tối đa là 48h làm việc.</p>
+            </div>
+
+            <div class="d-flex flex-column gap-3 mb-4" th:unless="${#lists.isEmpty(ticket.phanHoiList)}">
+                <div th:each="ph : ${ticket.phanHoiList}"
+                     th:class="${ph.loaiPhanHoi == 'TraLoi' ? 'qaute-card p-4 border-start border-4 border-success shadow-sm' : 'qaute-card p-4 border-start border-4 border-primary shadow-sm'}">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:if="${ph.loaiPhanHoi == 'TraLoi'}" class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>Phản hồi từ Cố vấn
+                            </span>
+                            <span th:if="${ph.loaiPhanHoi == 'HoiThem'}" class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                <i class="bi bi-question-circle me-1"></i>Sinh viên hỏi thêm
+                            </span>
+                            <strong class="text-dark small" th:text="${ph.taiKhoanGui.hoTen}">Người gửi</strong>
+                        </div>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(ph.ngayTraLoi, 'dd/MM/yyyy HH:mm')}">21/09</span></small>
+                    </div>
+
+                    <div class="text-secondary" style="white-space: pre-line; line-height: 1.8;" th:text="${ph.noiDungTraLoi}">
+                        Nội dung phản hồi...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Follow-up Question Box (if ticket not closed) -->
+            <div th:if="${ticket.trangThai == 'DaPhanHoi'}" class="qaute-card p-4 border-0 shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-2"><i class="bi bi-reply-fill text-primary me-1"></i>Bạn có câu hỏi thêm?</h5>
+                <p class="text-muted small mb-3">Nếu cần làm rõ câu trả lời, hãy nhập câu hỏi thêm tại đây để tiếp tục trao đổi với cố vấn.</p>
+                <form th:action="@{'/student/tickets/' + ${ticket.maYeuCau} + '/follow-up'}" method="post">
+                    <div class="mb-3">
+                        <textarea name="noiDung" rows="4" class="form-control" placeholder="Nhập câu hỏi bổ sung..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#closeTicketModal">
+                            <i class="bi bi-check2-circle me-1"></i>Đã hiểu và muốn đóng phiếu
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">
+                            <i class="bi bi-send me-1"></i>Gửi câu hỏi thêm
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Rating Section (if answered or closed) -->
+            <div th:if="${ticket.trangThai == 'DaPhanHoi' || ticket.trangThai == 'Dong'}" class="qaute-card p-4 border-0 shadow-sm">
+                <div th:if="${ticket.danhGia == null}">
+                    <h5 class="fw-bold text-dark mb-2"><i class="bi bi-star-fill text-warning me-2"></i>Đánh giá chất lượng tư vấn</h5>
+                    <p class="text-muted small mb-3">Đóng góp ý kiến của bạn giúp Nhà trường nâng cao chất lượng hỗ trợ sinh viên.</p>
+                    <form th:action="@{'/student/tickets/' + ${ticket.maYeuCau} + '/rate'}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Số sao đánh giá (1 - 5 sao) *</label>
+                            <select name="soSao" class="form-select form-select-sm" style="max-width: 200px;" required>
+                                <option value="5" selected>★★★★★ - Rất hài lòng (5 sao)</option>
+                                <option value="4">★★★★☆ - Hài lòng (4 sao)</option>
+                                <option value="3">★★★☆☆ - Bình thường (3 sao)</option>
+                                <option value="2">★★☆☆☆ - Chưa hài lòng (2 sao)</option>
+                                <option value="1">★☆☆☆☆ - Rất không hài lòng (1 sao)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nhận xét thêm (nếu có)</label>
+                            <textarea name="nhanXet" rows="2" class="form-control form-control-sm" placeholder="Chia sẻ cảm nghĩ về tốc độ và chất lượng câu trả lời..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-4">
+                            Gửi đánh giá
+                        </button>
+                    </form>
+                </div>
+
+                <div th:if="${ticket.danhGia != null}">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-patch-check-fill text-success fs-5"></i>
+                        <h6 class="fw-bold text-dark mb-0">Bạn đã đánh giá phiếu tư vấn này</h6>
+                    </div>
+                    <div class="rating-stars mb-1">
+                        <span th:each="i : ${#numbers.sequence(1, ticket.danhGia.soSao)}">★</span>
+                        <span th:each="i : ${#numbers.sequence(ticket.danhGia.soSao + 1, 5)}" th:if="${ticket.danhGia.soSao < 5}" class="text-secondary">☆</span>
+                        <strong class="text-dark small ms-2" th:text="${ticket.danhGia.soSao + '/5 sao'}">5/5 sao</strong>
+                    </div>
+                    <p class="text-secondary small mb-0 fst-italic" th:text="${ticket.danhGia.nhanXet}">Nhận xét...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Meta Info -->
+        <div class="col-lg-4">
+            <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Thông tin tiếp nhận & SLA</h6>
+                <div class="d-flex flex-column gap-3 small">
+                    <div>
+                        <div class="text-muted">Cố vấn phụ trách:</div>
+                        <div class="fw-bold text-primary" th:text="${ticket.coVanPhuTrach != null ? ticket.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}">Thầy Khoa</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Hạn tiếp nhận (24h làm việc):</div>
+                        <div class="fw-semibold text-dark" th:text="${#temporals.format(ticket.hanTiepNhan, 'dd/MM/yyyy HH:mm')}">22/09/2026</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Hạn phản hồi chuẩn (48h làm việc):</div>
+                        <div class="fw-semibold text-dark" th:text="${#temporals.format(ticket.hanSLA, 'dd/MM/yyyy HH:mm')}">23/09/2026</div>
+                    </div>
+                    <div th:if="${ticket.hanTuDongDong != null}">
+                        <div class="text-muted">Hạn tự động đóng:</div>
+                        <div class="fw-semibold text-warning" th:text="${#temporals.format(ticket.hanTuDongDong, 'dd/MM/yyyy')}">30/09/2026</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">(Nếu sau 7 ngày không có câu hỏi thêm)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action shortcut -->
+            <div class="qaute-card p-4 bg-light border-0 text-center">
+                <h6 class="fw-bold mb-2">Cần trao đổi trực tiếp?</h6>
+                <p class="small text-muted mb-3">Bạn có thể đặt lịch hẹn tư vấn 1-1 với Cố vấn để thảo luận kỹ hơn.</p>
+                <a th:href="@{/student/appointments}" class="btn btn-outline-success btn-sm rounded-pill w-100 fw-semibold">
+                    <i class="bi bi-calendar-plus me-1"></i>Đặt lịch hẹn gặp
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Close Ticket Modal -->
+<div class="modal fade" id="closeTicketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark">Xác nhận đóng phiếu tư vấn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{'/student/tickets/' + ${ticket.maYeuCau} + '/close'}" method="post">
+                <div class="modal-body">
+                    <p class="text-secondary small">
+                        Khi đóng phiếu, bạn xác nhận rằng câu hỏi đã được giải đáp thỏa đáng và không cần hỏi thêm.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Ghi chú kết luận (tùy chọn)</label>
+                        <textarea name="ketLuan" rows="3" class="form-control form-control-sm" placeholder="VD: Đã hiểu rõ quy định rút học phần..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Xác nhận đóng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

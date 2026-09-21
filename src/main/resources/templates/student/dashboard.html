@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Cổng Sinh Viên - Tổng quan')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <!-- Student Header Banner -->
+    <div class="qaute-card p-4 p-md-5 mb-4 text-white border-0 shadow-sm" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important; border-radius: 1.5rem;">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-25 px-3 py-1 rounded-pill mb-2">
+                    <i class="bi bi-mortarboard me-1"></i> Cổng thông tin Sinh viên
+                </span>
+                <h2 class="fw-bold mb-1" th:text="${'Xin chào, ' + student.taiKhoan.hoTen + '!'}">Xin chào, Nguyễn Văn An!</h2>
+                <p class="text-white-50 mb-3 small">
+                    MSSV: <strong class="text-white" th:text="${student.mssv}">21110001</strong> | 
+                    Lớp: <span class="text-white" th:text="${student.lop}">21110CLC1</span> | 
+                    Ngành: <span class="text-white" th:text="${student.nganh}">Kỹ thuật Phần mềm</span>
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/student/tickets/new}" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-3 shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Gửi câu hỏi tư vấn mới
+                    </a>
+                    <a th:href="@{/student/appointments}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-calendar-plus me-1"></i>Đặt lịch hẹn gặp Cố vấn
+                    </a>
+                    <a th:href="@{/student/chat}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-chat-dots me-1"></i>Vào phòng chat 1-1
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                <div class="bg-white bg-opacity-10 p-3 rounded-4 text-center border border-white border-opacity-10 d-inline-block" style="min-width: 200px;">
+                    <small class="text-white-50 d-block mb-1">Phiếu đang xử lý</small>
+                    <span class="fs-1 fw-extrabold text-white" th:text="${processingTicketsCount}">0</span>
+                    <div class="text-white-50 small mt-1">Hạn xử lý chuẩn SLA 48h</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Navigation Sub-bar -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/student/dashboard}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
+        </a>
+        <a th:href="@{/student/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-ticket-detailed me-1"></i>Phiếu tư vấn của tôi
+        </a>
+        <a th:href="@{/student/appointments}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-calendar-check me-1"></i>Lịch hẹn gặp cố vấn
+        </a>
+        <a th:href="@{/student/chat}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến
+        </a>
+        <a th:href="@{/student/history}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-clock-history me-1"></i>Lịch sử tư vấn
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Tickets -->
+        <div class="col-lg-7">
+            <div class="qaute-card p-4 h-100 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-chat-left-text text-primary me-2"></i>Phiếu tư vấn gần đây</h5>
+                    <a th:href="@{/student/tickets}" class="text-primary text-decoration-none small fw-semibold">Xem tất cả</a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(recentTickets)}" class="text-center py-5 text-muted">
+                    <i class="bi bi-chat-square-text fs-1 mb-2 text-secondary"></i>
+                    <p class="small mb-2">Bạn chưa gửi phiếu tư vấn nào.</p>
+                    <a th:href="@{/student/tickets/new}" class="btn btn-outline-primary btn-sm rounded-pill">Gửi câu hỏi ngay</a>
+                </div>
+
+                <div class="list-group list-group-flush" th:unless="${#lists.isEmpty(recentTickets)}">
+                    <div class="list-group-item px-0 py-3 border-bottom" th:each="t : ${recentTickets}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span th:class="${'status-badge status-' + t.trangThai}" th:text="${t.trangThai}">ChoTiepNhan</span>
+                            <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(t.ngayTao, 'dd/MM/yyyy HH:mm')}">21/09</span></small>
+                        </div>
+                        <h6 class="fw-bold mb-1">
+                            <a th:href="@{'/student/tickets/' + ${t.maYeuCau}}" class="text-dark text-decoration-none hover-primary" th:text="${t.tieuDe}">
+                                Tiêu đề phiếu tư vấn...
+                            </a>
+                        </h6>
+                        <div class="small text-muted d-flex gap-3">
+                            <span><i class="bi bi-building me-1"></i><span th:text="${t.donVi.tenDonVi}">Đơn vị</span></span>
+                            <span><i class="bi bi-person me-1"></i><span th:text="${t.coVanPhuTrach != null ? t.coVanPhuTrach.taiKhoan.hoTen : 'Đang chờ phân công'}">Cố vấn</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Appointments & Notifications -->
+        <div class="col-lg-5">
+            <!-- Appointments -->
+            <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-calendar-event text-success me-2"></i>Lịch hẹn của bạn</h5>
+                    <a th:href="@{/student/appointments}" class="text-success text-decoration-none small fw-semibold">Quản lý</a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(recentAppointments)}" class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x fs-2 text-secondary mb-1"></i>
+                    <p class="small mb-0">Chưa có lịch hẹn nào sắp tới.</p>
+                </div>
+
+                <div class="d-flex flex-column gap-3" th:unless="${#lists.isEmpty(recentAppointments)}">
+                    <div class="p-3 bg-light rounded-3 border-start border-4 border-success" th:each="a : ${recentAppointments}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark" th:text="${a.chuDe}">Chủ đề hẹn</span>
+                            <span th:class="${'status-badge status-' + a.trangThai}" th:text="${a.trangThai}">DaXacNhan</span>
+                        </div>
+                        <div class="small text-secondary mb-1">
+                            <i class="bi bi-person-badge me-1"></i><span th:text="${a.nguoiTuVan.taiKhoan.hoTen}">Thầy Khoa</span>
+                        </div>
+                        <div class="small text-muted">
+                            <i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(a.khungGio.batDau, 'dd/MM/yyyy HH:mm')} + ' - ' + ${#temporals.format(a.khungGio.ketThuc, 'HH:mm')}">09:00</span>
+                        </div>
+                        <div th:if="${a.linkHopPhong != null}" class="mt-2 pt-2 border-top small text-primary fw-semibold">
+                            <i class="bi bi-geo-alt me-1"></i><span th:text="${a.linkHopPhong}">Phòng A1-402</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications list -->
+            <div class="qaute-card p-4 border-0 shadow-sm">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bell text-warning me-2"></i>Thông báo mới nhất</h5>
+                <div th:if="${#lists.isEmpty(notifications)}" class="text-muted small text-center py-3">
+                    Không có thông báo mới nào.
+                </div>
+                <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(notifications)}">
+                    <div class="p-2 border-bottom small" th:each="n : ${notifications}">
+                        <div class="fw-bold text-dark" th:text="${n.tieuDe}">Tiêu đề thông báo</div>
+                        <div class="text-secondary" th:text="${n.noiDung}">Nội dung...</div>
+                        <div class="text-muted" style="font-size: 0.75rem;" th:text="${#temporals.format(n.ngayTao, 'dd/MM/yyyy HH:mm')}">21/09</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Phê duyệt nội dung FAQ & Cẩm nang')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Kiểm Duyệt & Xuất Bản Nội Dung</h2>
+            <p class="text-muted mb-0 small">Phê duyệt câu hỏi FAQ và bài viết hướng dẫn trước khi công khai lên cổng thông tin</p>
+        </div>
+    </div>
+
+    <!-- Admin Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
+        </a>
+        <a th:href="@{/admin/users}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-people me-1"></i>Quản lý tài khoản
+        </a>
+        <a th:href="@{/admin/content}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
+        </a>
+        <a th:href="@{/admin/catalogs}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-diagram-3 me-1"></i>Đơn vị & Lĩnh vực
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+
+    <!-- FAQs Section -->
+    <div class="qaute-card p-4 border-0 shadow-sm mb-4">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-question-circle-fill text-warning me-2"></i>1. Danh sách Câu hỏi FAQ</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Câu hỏi</th>
+                        <th>Lĩnh vực</th>
+                        <th>Người đề xuất</th>
+                        <th>Trạng thái</th>
+                        <th style="width: 130px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="f : ${faqs}">
+                        <td><strong th:text="${'#' + f.maFAQ}">#1</strong></td>
+                        <td>
+                            <div class="fw-bold text-dark" th:text="${f.cauHoi}">Câu hỏi FAQ...</div>
+                            <small class="text-secondary text-truncate d-block" style="max-width: 450px;" th:text="${f.cauTraLoi}">Câu trả lời...</small>
+                        </td>
+                        <td th:text="${f.linhVuc.tenLinhVuc}">Học vụ</td>
+                        <td th:text="${f.taiKhoanDeXuat.hoTen}">Người đề xuất</td>
+                        <td>
+                            <span th:if="${f.trangThai == 'HienThi'}" class="badge bg-success-subtle text-success">Đã hiển thị</span>
+                            <span th:if="${f.trangThai == 'ChoDuyet'}" class="badge bg-warning-subtle text-warning-emphasis">Chờ duyệt</span>
+                            <span th:if="${f.trangThai == 'BanNhao'}" class="badge bg-secondary-subtle text-secondary">Bản nháp</span>
+                        </td>
+                        <td>
+                            <form th:if="${f.trangThai != 'HienThi'}" th:action="@{'/admin/content/faq/' + ${f.maFAQ} + '/approve'}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+                                    <i class="bi bi-check2 me-1"></i>Duyệt
+                                </button>
+                            </form>
+                            <span th:if="${f.trangThai == 'HienThi'}" class="text-muted small">Đã công khai</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Articles Section -->
+    <div class="qaute-card p-4 border-0 shadow-sm">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-journal-text text-primary me-2"></i>2. Danh sách Bài viết Cẩm nang</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tiêu đề bài viết</th>
+                        <th>Lĩnh vực</th>
+                        <th>Lượt xem</th>
+                        <th>Trạng thái</th>
+                        <th style="width: 130px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${articles}">
+                        <td><strong th:text="${'#' + b.maBaiViet}">#1</strong></td>
+                        <td class="fw-bold text-dark" th:text="${b.tieuDe}">Tiêu đề bài viết</td>
+                        <td th:text="${b.linhVuc.tenLinhVuc}">Học vụ</td>
+                        <td th:text="${b.luotXem}">100</td>
+                        <td>
+                            <span th:if="${b.trangThai == 'XuatBan'}" class="badge bg-success-subtle text-success">Đã xuất bản</span>
+                            <span th:if="${b.trangThai == 'BanNhao'}" class="badge bg-secondary-subtle text-secondary">Bản nháp</span>
+                        </td>
+                        <td>
+                            <form th:if="${b.trangThai != 'XuatBan'}" th:action="@{'/admin/content/article/' + ${b.maBaiViet} + '/approve'}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                                    <i class="bi bi-check2 me-1"></i>Xuất bản
+                                </button>
+                            </form>
+                            <span th:if="${b.trangThai == 'XuatBan'}" class="text-muted small">Đã công khai</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Lịch sử tư vấn')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Lịch Sử Tư Vấn Tổng Hợp</h2>
+            <p class="text-muted mb-0 small">Tổng hợp toàn bộ phiếu câu hỏi và buổi hẹn tư vấn của bạn</p>
+        </div>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>In biên bản tổng hợp
+        </button>
+    </div>
+
+    <!-- Student Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/student/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
+        </a>
+        <a th:href="@{/student/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-ticket-detailed me-1"></i>Phiếu tư vấn của tôi
+        </a>
+        <a th:href="@{/student/appointments}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-calendar-check me-1"></i>Lịch hẹn gặp cố vấn
+        </a>
+        <a th:href="@{/student/chat}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến
+        </a>
+        <a th:href="@{/student/history}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-clock-history me-1"></i>Lịch sử tư vấn
+        </a>
+    </div>
+
+    <!-- Content Tabs -->
+    <div class="qaute-card p-4 border-0 shadow-sm mb-4">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ticket-detailed-fill text-primary me-2"></i>1. Lịch sử Phiếu tư vấn</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tiêu đề</th>
+                        <th>Đơn vị</th>
+                        <th>Cố vấn</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th>Đánh giá</th>
+                        <th>Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="t : ${tickets}">
+                        <td><strong th:text="${'#' + t.maYeuCau}">#1</strong></td>
+                        <td class="fw-bold" th:text="${t.tieuDe}">Tiêu đề...</td>
+                        <td th:text="${t.donVi.tenDonVi}">Phòng Đào tạo</td>
+                        <td th:text="${t.coVanPhuTrach != null ? t.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}">Thầy Khoa</td>
+                        <td th:text="${#temporals.format(t.ngayTao, 'dd/MM/yyyy')}">21/09</td>
+                        <td><span th:class="${'status-badge status-' + t.trangThai}" th:text="${t.trangThai}">Dong</span></td>
+                        <td>
+                            <span th:if="${t.danhGia != null}" class="text-warning fw-bold">
+                                ★ <span th:text="${t.danhGia.soSao}">5</span>/5
+                            </span>
+                            <span th:unless="${t.danhGia != null}" class="text-muted">Chưa đánh giá</span>
+                        </td>
+                        <td>
+                            <a th:href="@{'/student/tickets/' + ${t.maYeuCau}}" class="btn btn-link btn-sm p-0 text-decoration-none">Xem</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="qaute-card p-4 border-0 shadow-sm">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calendar2-check-fill text-success me-2"></i>2. Lịch sử Buổi hẹn tư vấn</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Chủ đề</th>
+                        <th>Cố vấn</th>
+                        <th>Thời gian</th>
+                        <th>Địa điểm / Link</th>
+                        <th>Trạng thái</th>
+                        <th>Kết luận buổi tư vấn</th>
+                        <th>Đánh giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="a : ${appointments}">
+                        <td class="fw-bold" th:text="${a.chuDe}">Chủ đề hẹn</td>
+                        <td th:text="${a.nguoiTuVan.taiKhoan.hoTen}">Thầy Khoa</td>
+                        <td th:text="${#temporals.format(a.khungGio.batDau, 'dd/MM/yyyy HH:mm')}">22/09 09:00</td>
+                        <td th:text="${a.linkHopPhong != null ? a.linkHopPhong : a.khungGio.diaDiemLink}">Phòng A1-402</td>
+                        <td><span th:class="${'status-badge status-' + a.trangThai}" th:text="${a.trangThai}">HoanThanh</span></td>
+                        <td th:text="${a.ketLuan != null ? a.ketLuan : '-'}">-</td>
+                        <td>
+                            <span th:if="${a.danhGia != null}" class="text-warning fw-bold">
+                                ★ <span th:text="${a.danhGia.soSao}">5</span>/5
+                            </span>
+                            <span th:unless="${a.danhGia != null}" class="text-muted">-</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

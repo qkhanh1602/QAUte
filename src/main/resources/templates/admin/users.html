@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Quản trị Người dùng & Tài khoản')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Quản Lý Người Dùng & Tài Khoản</h2>
+            <p class="text-muted mb-0 small">Theo dõi danh sách tài khoản, phân quyền, khóa/mở tài khoản và đặt lại mật khẩu</p>
+        </div>
+    </div>
+
+    <!-- Admin Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
+        </a>
+        <a th:href="@{/admin/users}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-people me-1"></i>Quản lý tài khoản
+        </a>
+        <a th:href="@{/admin/content}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
+        </a>
+        <a th:href="@{/admin/catalogs}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-diagram-3 me-1"></i>Đơn vị & Lĩnh vực
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+
+    <!-- Role Filter -->
+    <div class="d-flex gap-2 mb-4">
+        <a th:href="@{/admin/users}" th:class="${selectedRole == null ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Tất cả</a>
+        <a th:href="@{/admin/users(role='SinhVien')}" th:class="${selectedRole == 'SinhVien' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Sinh viên</a>
+        <a th:href="@{/admin/users(role='CoVan')}" th:class="${selectedRole == 'CoVan' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Cố vấn học tập</a>
+        <a th:href="@{/admin/users(role='Admin')}" th:class="${selectedRole == 'Admin' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Quản trị viên</a>
+    </div>
+
+    <!-- Users Table -->
+    <div class="qaute-card p-4 border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Họ và tên</th>
+                        <th>Email & SĐT</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th style="width: 220px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td><strong class="text-secondary" th:text="${'#' + u.maTK}">#1</strong></td>
+                        <td><code class="fw-bold text-dark" th:text="${u.tenDangNhap}">username</code></td>
+                        <td class="fw-semibold text-dark" th:text="${u.hoTen}">Họ tên</td>
+                        <td class="small">
+                            <div th:text="${u.email}">email@ute.edu.vn</div>
+                            <small class="text-muted" th:text="${u.soDienThoai != null ? u.soDienThoai : '-'}">09xxxxxxxx</small>
+                        </td>
+                        <td>
+                            <span th:if="${u.vaiTro == 'Admin'}" class="badge bg-danger-subtle text-danger border border-danger-subtle">Admin</span>
+                            <span th:if="${u.vaiTro == 'CoVan'}" class="badge bg-primary-subtle text-primary border border-primary-subtle">Cố vấn</span>
+                            <span th:if="${u.vaiTro == 'SinhVien'}" class="badge bg-success-subtle text-success border border-success-subtle">Sinh viên</span>
+                        </td>
+                        <td>
+                            <span th:if="${u.trangThai == 'HoatDong'}" class="badge bg-success-subtle text-success">Hoạt động</span>
+                            <span th:if="${u.trangThai == 'Khoa'}" class="badge bg-danger-subtle text-danger">Bị khóa</span>
+                        </td>
+                        <td class="small text-muted" th:text="${#temporals.format(u.ngayTao, 'dd/MM/yyyy')}">21/09/2026</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <!-- Lock/Unlock Button -->
+                                <form th:action="@{'/admin/users/' + ${u.maTK} + '/toggle-status'}" method="post" class="m-0">
+                                    <button th:if="${u.trangThai == 'HoatDong'}" type="submit" class="btn btn-outline-danger btn-sm rounded-pill" title="Khóa tài khoản">
+                                        <i class="bi bi-lock me-1"></i>Khóa
+                                    </button>
+                                    <button th:if="${u.trangThai == 'Khoa'}" type="submit" class="btn btn-outline-success btn-sm rounded-pill" title="Mở khóa tài khoản">
+                                        <i class="bi bi-unlock me-1"></i>Mở khóa
+                                    </button>
+                                </form>
+
+                                <!-- Reset Password Button -->
+                                <form th:action="@{'/admin/users/' + ${u.maTK} + '/reset-password'}" method="post" class="m-0" onsubmit="return confirm('Đặt lại mật khẩu tài khoản này về 123456?');">
+                                    <button type="submit" class="btn btn-light btn-sm rounded-pill text-secondary border" title="Reset mật khẩu về 123456">
+                                        <i class="bi bi-key me-1"></i>Reset MK
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

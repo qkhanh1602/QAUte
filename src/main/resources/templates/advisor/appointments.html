@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Phê duyệt lịch hẹn tư vấn')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Phê Duyệt & Quản Lý Lịch Hẹn</h2>
+            <p class="text-muted mb-0 small">Xét duyệt yêu cầu đặt hẹn, cập nhật phòng/link họp và ghi nhận kết luận buổi tư vấn</p>
+        </div>
+    </div>
+
+    <!-- Advisor Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/advisor/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan bàn làm việc
+        </a>
+        <a th:href="@{/advisor/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-inbox me-1"></i>Phiếu xử lý & Hàng đợi
+        </a>
+        <a th:href="@{/advisor/slots}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-calendar3-week me-1"></i>Quản lý khung giờ (Slots)
+        </a>
+        <a th:href="@{/advisor/appointments}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-calendar2-check me-1"></i>Phê duyệt lịch hẹn
+        </a>
+        <a th:href="@{/advisor/chat}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-chat-dots me-1"></i>Tư vấn trực tuyến 1-1
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
+        <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="qaute-card p-4 border-0 shadow-sm">
+        <div th:if="${#lists.isEmpty(appointments)}" class="text-center py-5 text-muted">
+            <i class="bi bi-calendar-check fs-1 text-secondary mb-2"></i>
+            <h5>Chưa có lịch hẹn nào được đăng ký</h5>
+            <p class="small text-muted mb-0">Khi sinh viên đặt khung giờ tư vấn của bạn, yêu cầu sẽ xuất hiện tại đây.</p>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(appointments)}">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Sinh viên</th>
+                        <th>Chủ đề & Nội dung</th>
+                        <th>Thời gian</th>
+                        <th>Hình thức & Địa điểm</th>
+                        <th>Trạng thái</th>
+                        <th style="width: 180px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="a : ${appointments}">
+                        <td><strong class="text-secondary" th:text="${'#' + a.maLichHen}">#1</strong></td>
+                        <td>
+                            <div class="fw-bold text-dark" th:text="${a.sinhVien.taiKhoan.hoTen}">Nguyễn Văn An</div>
+                            <small class="text-muted" th:text="${a.sinhVien.mssv + ' - ' + a.sinhVien.lop}">21110001</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark small" th:text="${a.chuDe}">Chủ đề hẹn</div>
+                            <small class="text-secondary" th:text="${a.noiDungHen}">Nội dung...</small>
+                            <div th:if="${a.ketLuan != null}" class="small text-success mt-1">
+                                <i class="bi bi-check2-all me-1"></i><strong>Kết luận:</strong> <span th:text="${a.ketLuan}">Kết luận...</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small fw-bold text-dark" th:text="${#temporals.format(a.khungGio.batDau, 'dd/MM/yyyy')}">22/09/2026</div>
+                            <small class="text-primary fw-semibold" th:text="${#temporals.format(a.khungGio.batDau, 'HH:mm')} + ' - ' + ${#temporals.format(a.khungGio.ketThuc, 'HH:mm')}">09:00 - 10:00</small>
+                        </td>
+                        <td>
+                            <span th:if="${a.khungGio.hinhThuc == 'TrucTiep'}" class="badge bg-secondary-subtle text-secondary mb-1">Trực tiếp</span>
+                            <span th:if="${a.khungGio.hinhThuc == 'TrucTuyen'}" class="badge bg-info-subtle text-info mb-1">Trực tuyến</span>
+                            <div class="small text-secondary" th:text="${a.linkHopPhong != null ? a.linkHopPhong : a.khungGio.diaDiemLink}">Phòng A1-402</div>
+                        </td>
+                        <td>
+                            <span th:class="${'status-badge status-' + a.trangThai}" th:text="${a.trangThai}">ChoDuyet</span>
+                            <div th:if="${a.lyDo != null}" class="small text-danger mt-1" th:text="${'Lý do: ' + a.lyDo}">Lý do...</div>
+                        </td>
+                        <td>
+                            <!-- If ChoDuyet: Approve & Reject buttons -->
+                            <div th:if="${a.trangThai == 'ChoDuyet'}" class="d-flex gap-1">
+                                <button type="button" class="btn btn-success btn-sm rounded-pill px-3 fw-bold"
+                                        data-bs-toggle="modal" th:data-bs-target="'#approveModal' + ${a.maLichHen}">
+                                    Duyệt
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-2"
+                                        data-bs-toggle="modal" th:data-bs-target="'#rejectModal' + ${a.maLichHen}">
+                                    Từ chối
+                                </button>
+                            </div>
+
+                            <!-- If DaXacNhan: Complete button -->
+                            <div th:if="${a.trangThai == 'DaXacNhan'}">
+                                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold"
+                                        data-bs-toggle="modal" th:data-bs-target="'#completeModal' + ${a.maLichHen}">
+                                    Hoàn thành
+                                </button>
+                            </div>
+
+                            <!-- If HoanThanh: Rating badge -->
+                            <div th:if="${a.trangThai == 'HoanThanh'}">
+                                <span th:if="${a.danhGia != null}" class="text-warning fw-bold small">
+                                    ★ <span th:text="${a.danhGia.soSao}">5</span>/5 sao
+                                </span>
+                                <span th:unless="${a.danhGia != null}" class="text-muted small">Đang chờ SV đánh giá</span>
+                            </div>
+
+                            <!-- Approve Modal -->
+                            <div class="modal fade" th:id="'approveModal' + ${a.maLichHen}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content border-0 shadow">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold text-dark">Phê duyệt lịch hẹn tư vấn</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form th:action="@{'/advisor/appointments/' + ${a.maLichHen} + '/approve'}" method="post">
+                                            <div class="modal-body text-start">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Địa điểm phòng tư vấn hoặc Link họp Google Meet *</label>
+                                                    <input type="text" name="linkHopPhong" th:value="${a.khungGio.diaDiemLink}" class="form-control form-control-sm" required>
+                                                    <small class="text-muted">Thông tin này sẽ được gửi thông báo đến sinh viên.</small>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Đóng</button>
+                                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 fw-bold">Xác nhận duyệt</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reject Modal -->
+                            <div class="modal fade" th:id="'rejectModal' + ${a.maLichHen}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content border-0 shadow">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold text-dark">Từ chối lịch hẹn tư vấn</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form th:action="@{'/advisor/appointments/' + ${a.maLichHen} + '/reject'}" method="post">
+                                            <div class="modal-body text-start">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Lý do từ chối *</label>
+                                                    <textarea name="lyDo" rows="3" class="form-control form-control-sm" placeholder="VD: Thầy bị trùng lịch họp đột xuất của Khoa..." required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Đóng</button>
+                                                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Xác nhận từ chối</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Complete Modal -->
+                            <div class="modal fade" th:id="'completeModal' + ${a.maLichHen}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content border-0 shadow">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold text-dark">Ghi nhận hoàn tất buổi tư vấn</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form th:action="@{'/advisor/appointments/' + ${a.maLichHen} + '/complete'}" method="post">
+                                            <div class="modal-body text-start">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Kết luận buổi tư vấn & Hướng giải quyết *</label>
+                                                    <textarea name="ketLuan" rows="4" class="form-control form-control-sm" placeholder="VD: Đã định hướng cho sinh viên lựa chọn đề tài AI trong Y tế, giới thiệu tài liệu nghiên cứu..." required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Đóng</button>
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">Hoàn tất buổi hẹn</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

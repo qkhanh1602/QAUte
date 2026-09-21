@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Quản lý Đơn vị & Lĩnh vực')}"></head>
+<body>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">Quản Lý Danh Mục Đơn Vị & Lĩnh Vực</h2>
+            <p class="text-muted mb-0 small">Cơ cấu tổ chức phòng ban, khoa và các lĩnh vực tiếp nhận tư vấn</p>
+        </div>
+    </div>
+
+    <!-- Admin Nav -->
+    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
+        </a>
+        <a th:href="@{/admin/users}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-people me-1"></i>Quản lý tài khoản
+        </a>
+        <a th:href="@{/admin/content}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
+        </a>
+        <a th:href="@{/admin/catalogs}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-diagram-3 me-1"></i>Đơn vị & Lĩnh vực
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Departments Table -->
+        <div class="col-lg-5">
+            <div class="qaute-card p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-building text-primary me-2"></i>Danh sách Đơn vị</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tên Đơn vị</th>
+                                <th>Loại</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="d : ${donViList}">
+                                <td><code th:text="${d.maDonViCode}">CNTT</code></td>
+                                <td class="fw-bold" th:text="${d.tenDonVi}">Khoa CNTT</td>
+                                <td><span class="badge bg-secondary-subtle text-secondary" th:text="${d.loaiDonVi}">Khoa</span></td>
+                                <td>
+                                    <span th:if="${d.hoatDong}" class="badge bg-success-subtle text-success">Đang hoạt động</span>
+                                    <span th:unless="${d.hoatDong}" class="badge bg-danger-subtle text-danger">Tạm dừng</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fields Table -->
+        <div class="col-lg-7">
+            <div class="qaute-card p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-tag text-info me-2"></i>Lĩnh vực Tư vấn</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tên lĩnh vực</th>
+                                <th>Đơn vị phụ trách</th>
+                                <th>Đặc thù</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="l : ${linhVucList}">
+                                <td><code th:text="${l.maLinhVucCode}">HOCVU</code></td>
+                                <td class="fw-bold text-dark" th:text="${l.tenLinhVuc}">Học vụ</td>
+                                <td th:text="${l.donVi.tenDonVi}">Phòng Đào tạo</td>
+                                <td>
+                                    <span th:if="${l.nhayCam}" class="badge bg-warning-subtle text-warning-emphasis">Nhạy cảm / Bảo mật</span>
+                                    <span th:unless="${l.nhayCam}" class="text-muted">Thông thường</span>
+                                </td>
+                                <td>
+                                    <span th:if="${l.trangThai == 'HoatDong'}" class="badge bg-success-subtle text-success">Hoạt động</span>
+                                    <span th:unless="${l.trangThai == 'HoatDong'}" class="badge bg-secondary-subtle text-secondary">Tạm dừng</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>
