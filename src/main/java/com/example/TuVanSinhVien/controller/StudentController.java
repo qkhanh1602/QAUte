@@ -184,13 +184,15 @@ public class StudentController {
 
     @PostMapping("/chat/{sessionId}/send")
     public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, RedirectAttributes redirectAttributes) {
+        Integer maDonVi = null;
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            chatService.sendMessage(sessionId, sv.getTaiKhoan(), noiDung, "VanBan");
+            TinNhanChat msg = chatService.sendMessage(sessionId, sv.getTaiKhoan(), noiDung, "VanBan");
+            maDonVi = msg.getPhienChat().getDonVi().getMaDonVi();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/student/chat";
+        return "redirect:/student/chat" + (maDonVi != null ? "?maDonVi=" + maDonVi : "");
     }
 
     @GetMapping("/history")

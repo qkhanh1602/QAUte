@@ -1,62 +1,107 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<footer th:fragment="footer" class="mt-auto bg-dark text-white pt-5 pb-4" style="background: #0f172a !important;">
+<footer th:fragment="footer" class="mt-auto text-white pt-5 pb-4" style="background-color: #1E3A5F !important; border-top: 3px solid #2563EB;">
     <div class="container">
         <div class="row g-4">
+            <!-- Col 1: QAUTE Info -->
             <div class="col-lg-4 col-md-6">
                 <div class="d-flex align-items-center gap-2 mb-3">
-                    <i class="bi bi-mortarboard-fill text-info fs-2"></i>
-                    <h5 class="fw-bold m-0 tracking-tight text-white">QAUTE</h5>
+                    <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                        <rect width="40" height="40" rx="10" fill="url(#qauteLogoFooterGrad)"/>
+                        <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"/>
+                        <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"/>
+                        <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"/>
+                        <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"/>
+                        <defs>
+                            <linearGradient id="qauteLogoFooterGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#2563EB"/>
+                                <stop offset="1" stop-color="#14B8A6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <h5 class="fw-extrabold m-0 tracking-tight text-white">QAUTE</h5>
+                    <span class="badge" style="background-color: #14B8A6; font-size: 0.7rem;">UTE ADVISORY</span>
                 </div>
-                <p class="text-secondary small mb-3">
-                    Hệ thống Hỗ trợ và Tư vấn Trực tuyến dành cho Sinh viên Trường Đại học Sư phạm Kỹ thuật.
-                    Kết nối nhanh chóng giữa Sinh viên và Đội ngũ Cố vấn học tập, Phòng ban chức năng.
+                <p class="small mb-3 text-white-50" style="line-height: 1.6;">
+                    Hệ thống Hỗ trợ và Tư vấn Trực tuyến dành cho Sinh viên Trường Đại học Công nghệ Kỹ thuật.
+                    Kết nối nhanh chóng, tin cậy giữa Sinh viên và Đội ngũ Cố vấn học tập, Phòng ban chức năng.
                 </p>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">SLA 48h</span>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle">Hẹn trực tuyến</span>
-                    <span class="badge bg-info-subtle text-info border border-info-subtle">Bảo mật danh tính</span>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge border" style="background: rgba(37,99,235,0.2); border-color: rgba(37,99,235,0.4) !important; color: #93C5FD;">SLA 48h</span>
+                    <span class="badge border" style="background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4) !important; color: #86EFAC;">Hẹn trực tuyến</span>
+                    <span class="badge border" style="background: rgba(20,184,166,0.2); border-color: rgba(20,184,166,0.4) !important; color: #99F6E4;">Bảo mật danh tính</span>
                 </div>
             </div>
 
+            <!-- Col 2: Kênh tư vấn -->
             <div class="col-lg-2 col-md-6 col-6">
-                <h6 class="fw-bold text-white text-uppercase mb-3 small">Kênh tư vấn</h6>
-                <ul class="list-unstyled text-secondary small d-flex flex-column gap-2">
-                    <li><a th:href="@{/faq}" class="text-secondary text-decoration-none hover-white">Hỏi đáp FAQ</a></li>
-                    <li><a th:href="@{/articles}" class="text-secondary text-decoration-none hover-white">Cẩm nang sinh viên</a></li>
-                    <li><a th:href="@{/advisors}" class="text-secondary text-decoration-none hover-white">Lịch tư vấn tuần</a></li>
-                    <li><a th:href="@{/student/tickets/new}" class="text-secondary text-decoration-none hover-white">Gửi phiếu câu hỏi</a></li>
+                <h6 class="fw-bold text-white text-uppercase mb-3 small" style="letter-spacing: 0.5px;">Kênh tư vấn</h6>
+                <ul class="list-unstyled small d-flex flex-column gap-2 text-white-50">
+                    <li><a th:href="@{/faq}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center gap-1"><span class="text-primary">&#8250;</span> Hỏi đáp FAQ</a></li>
+                    <li><a th:href="@{/articles}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center gap-1"><span class="text-primary">&#8250;</span> Cẩm nang sinh viên</a></li>
+                    <li><a th:href="@{/advisors}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center gap-1"><span class="text-primary">&#8250;</span> Đội ngũ Cố vấn</a></li>
+                    <li><a th:href="@{/student/tickets/new}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center gap-1"><span class="text-primary">&#8250;</span> Gửi phiếu câu hỏi</a></li>
+                    <li><a th:href="@{/student/chat}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center gap-1"><span class="text-primary">&#8250;</span> Tư vấn 1-1 trực tuyến</a></li>
                 </ul>
             </div>
 
+            <!-- Col 3: Đơn vị & Khoa hỗ trợ -->
             <div class="col-lg-3 col-md-6 col-6">
-                <h6 class="fw-bold text-white text-uppercase mb-3 small">Đơn vị hỗ trợ</h6>
-                <ul class="list-unstyled text-secondary small d-flex flex-column gap-2">
-                    <li><i class="bi bi-building me-1 text-primary"></i>Phòng Đào tạo (Học vụ)</li>
-                    <li><i class="bi bi-building me-1 text-success"></i>Phòng Công tác Sinh viên</li>
-                    <li><i class="bi bi-building me-1 text-info"></i>Khoa Công nghệ Thông tin</li>
-                    <li><i class="bi bi-building me-1 text-warning"></i>Trung tâm Hỗ trợ Sinh viên</li>
-                </ul>
+                <h6 class="fw-bold text-white text-uppercase mb-3 small" style="letter-spacing: 0.5px;">Đơn vị & Khoa hỗ trợ</h6>
+                <div class="small text-white-50 d-flex flex-column gap-2">
+                    <div>
+                        <div class="fw-semibold text-white small mb-1" style="font-size: 0.78rem; color: #93C5FD !important;">PHÒNG BAN CHỨC NĂNG</div>
+                        <ul class="list-unstyled mb-0 ps-2 border-start border-primary border-2 d-flex flex-column gap-1">
+                            <li>Phòng Đào tạo (Học vụ)</li>
+                            <li>Phòng Công tác Sinh viên (CTSV)</li>
+                            <li>Trung tâm Hỗ trợ Sinh viên & Tuyển sinh</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-white small mb-1" style="font-size: 0.78rem; color: #99F6E4 !important;">CÁC KHOA & VIỆN CHUYÊN MÔN</div>
+                        <ul class="list-unstyled mb-0 ps-2 border-start border-2 d-flex flex-column gap-1" style="border-color: #14B8A6 !important;">
+                            <li>Khoa Công nghệ Thông tin</li>
+                            <li>Khoa Cơ khí Chế tạo máy</li>
+                            <li>Khoa Điện - Điện tử</li>
+                            <li>Khoa Kinh tế & Quản lý</li>
+                            <li>Khoa Giao thông & Năng lượng</li>
+                            <li><a th:href="@{/advisors}" class="text-white-50 text-decoration-none hover-white fst-italic">... và 10+ Khoa & Viện chuyên môn &rarr;</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
+            <!-- Col 4: Liên hệ hỗ trợ -->
             <div class="col-lg-3 col-md-6">
-                <h6 class="fw-bold text-white text-uppercase mb-3 small">Liên hệ hỗ trợ</h6>
-                <div class="text-secondary small d-flex flex-column gap-2">
-                    <div><i class="bi bi-geo-alt me-2 text-danger"></i>Số 01 Võ Văn Ngân, TP. Thủ Đức, TP.HCM</div>
-                    <div><i class="bi bi-envelope me-2 text-primary"></i>tuvan.sinhvien@ute.edu.vn</div>
-                    <div><i class="bi bi-telephone me-2 text-success"></i>(028) 38968641 - Máy lẻ 101</div>
-                    <div><i class="bi bi-clock me-2 text-warning"></i>Thứ 2 - Thứ 6: 08:00 - 17:00</div>
+                <h6 class="fw-bold text-white text-uppercase mb-3 small" style="letter-spacing: 0.5px;">Liên hệ hỗ trợ</h6>
+                <div class="small d-flex flex-column gap-2 text-white-50">
+                    <div class="d-flex align-items-start gap-2">
+                        <svg width="16" height="16" fill="#EF4444" viewBox="0 0 16 16" class="flex-shrink-0 mt-1"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                        <span>Số 01 Võ Văn Ngân, P. Linh Chiểu, TP. Thủ Đức, TP.HCM</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <svg width="16" height="16" fill="#2563EB" viewBox="0 0 16 16" class="flex-shrink-0"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/></svg>
+                        <a href="mailto:qaute.edu@gmail.com" class="text-white text-decoration-none fw-semibold">qaute.edu@gmail.com</a>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <svg width="16" height="16" fill="#22C55E" viewBox="0 0 16 16" class="flex-shrink-0"><path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/></svg>
+                        <span>(028) 38968641 - Máy lẻ 101</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <svg width="16" height="16" fill="#F59E0B" viewBox="0 0 16 16" class="flex-shrink-0"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.5-13v5.25l3.5 2.1-.75 1.23L7 12V3h1.5z"/></svg>
+                        <span>Thứ 2 - Thứ 6: 08:00 - 17:00</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <hr class="border-secondary my-4 opacity-25">
+        <hr class="my-4 opacity-25" style="border-color: rgba(255,255,255,0.2);">
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-secondary">
-            <div>&copy; 2026 QAUTE - Bản quyền thuộc Trường Đại học Sư phạm Kỹ thuật. All rights reserved.</div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-white-50">
+            <div>&copy; 2026 QAUTE - Bản quyền thuộc Trường Đại học Công nghệ Kỹ thuật TP.HCM.</div>
             <div class="d-flex gap-3">
-                <span class="text-muted">Phiên bản 1.0.0-RELEASE</span>
+                <span class="text-white-50">Hệ thống Tư vấn Trực tuyến Sinh viên v1.0</span>
             </div>
         </div>
     </div>

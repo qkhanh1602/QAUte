@@ -10,25 +10,50 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5.3.3 & Bootstrap Icons -->
+    <!-- Bootstrap 5.3.3 & Bootstrap Icons (Primary CDN + Fallback CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" crossorigin="anonymous">
     
     <style>
         :root {
-            --qaute-primary: #1e40af;
-            --qaute-primary-dark: #1e3a8a;
-            --qaute-secondary: #0d9488;
-            --qaute-accent: #f59e0b;
-            --qaute-bg: #f8fafc;
-            --qaute-card-bg: #ffffff;
-            --qaute-text: #1e293b;
-            --qaute-muted: #64748b;
-            --qaute-border: #e2e8f0;
+            /* === BẢNG MÀU CHUẨN QAUTE === */
+            --qaute-primary: #2563EB;          /* Màu chính: Xanh dương (37, 99, 235) */
+            --qaute-primary-rgb: 37, 99, 235;
+            --qaute-primary-hover: #1D4ED8;    /* Hover / nhấn: Xanh đậm (29, 78, 216) */
+            --qaute-sidebar: #1E3A5F;          /* Sidebar / Header: Xanh navy (30, 58, 95) */
+            --qaute-sidebar-rgb: 30, 58, 95;
+            --qaute-secondary: #14B8A6;        /* Màu phụ: Xanh ngọc (20, 184, 166) */
+            --qaute-secondary-rgb: 20, 184, 166;
+            --qaute-bg: #F8FAFC;               /* Nền form / trang: Xám xanh rất nhạt (248, 250, 252) */
+            --qaute-card-bg: #FFFFFF;          /* Nền card/panel: Trắng (255, 255, 255) */
+            --qaute-border: #E2E8F0;           /* Viền: Xám nhạt (226, 232, 240) */
+            --qaute-text: #1E293B;             /* Chữ chính: Xám đen (30, 41, 59) */
+            --qaute-muted: #64748B;            /* Chữ phụ: Xám (100, 116, 139) */
+            --qaute-success: #22C55E;          /* Thành công: Xanh lá (34, 197, 94) */
+            --qaute-warning: #F59E0B;          /* Cảnh báo: Vàng cam (245, 158, 11) */
+            --qaute-danger: #EF4444;           /* Lỗi / Xóa: Đỏ (239, 68, 68) */
+
+            /* Bootstrap Overrides */
+            --bs-primary: #2563EB;
+            --bs-primary-rgb: 37, 99, 235;
+            --bs-secondary: #14B8A6;
+            --bs-secondary-rgb: 20, 184, 166;
+            --bs-success: #22C55E;
+            --bs-success-rgb: 34, 197, 94;
+            --bs-warning: #F59E0B;
+            --bs-warning-rgb: 245, 158, 11;
+            --bs-danger: #EF4444;
+            --bs-danger-rgb: 239, 68, 68;
+            --bs-info: #14B8A6;
+            --bs-info-rgb: 20, 184, 166;
+            --bs-body-bg: #F8FAFC;
+            --bs-body-color: #1E293B;
+            --bs-border-color: #E2E8F0;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--qaute-bg);
             color: var(--qaute-text);
             min-height: 100vh;
@@ -36,79 +61,99 @@
             flex-direction: column;
         }
 
+        /* === NAVBAR CHÍNH === */
         .navbar-qaute {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-            box-shadow: 0 4px 20px -2px rgba(30, 58, 138, 0.25);
+            background-color: var(--qaute-sidebar);
+            background-image: linear-gradient(135deg, #1E3A5F 0%, #172d49 100%);
+            box-shadow: 0 4px 20px -2px rgba(30, 58, 95, 0.35);
             padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .navbar-brand-qaute {
             font-weight: 800;
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             letter-spacing: -0.5px;
-            color: #ffffff !important;
-            display: flex;
+            color: #FFFFFF !important;
+            display: inline-flex;
             align-items: center;
             gap: 10px;
+            text-decoration: none;
         }
 
         .brand-badge {
-            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
-            color: white;
-            font-size: 0.75rem;
+            background-color: var(--qaute-secondary);
+            color: #FFFFFF;
+            font-size: 0.72rem;
             padding: 3px 8px;
             border-radius: 6px;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .nav-link-qaute {
-            color: rgba(255, 255, 255, 0.85) !important;
+            color: rgba(255, 255, 255, 0.88) !important;
             font-weight: 500;
             font-size: 0.95rem;
             padding: 0.5rem 0.9rem !important;
             border-radius: 8px;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .nav-link-qaute:hover, .nav-link-qaute.active {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.15);
+        .nav-link-qaute:hover {
+            color: #FFFFFF !important;
+            background-color: rgba(255, 255, 255, 0.12);
         }
 
+        .nav-link-qaute.active {
+            color: #FFFFFF !important;
+            background-color: var(--qaute-primary);
+            font-weight: 600;
+        }
+
+        /* === CARD & PANEL === */
         .qaute-card {
             background-color: var(--qaute-card-bg);
             border: 1px solid var(--qaute-border);
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(30, 41, 59, 0.04), 0 2px 4px -2px rgba(30, 41, 59, 0.04);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .qaute-card-hover:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 24px -4px rgba(30, 41, 59, 0.08);
+            border-color: #cbd5e1;
         }
 
+        /* === BUTTONS === */
         .btn-qaute-primary {
-            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            background: linear-gradient(135deg, var(--qaute-primary) 0%, #3b82f6 100%);
+            background-color: var(--qaute-primary);
             border: none;
-            color: white;
+            color: #FFFFFF !important;
             font-weight: 600;
             padding: 0.6rem 1.3rem;
             border-radius: 0.6rem;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
         }
 
-        .btn-qaute-primary:hover {
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-            color: white;
+        .btn-qaute-primary:hover, .btn-qaute-primary:focus {
+            background: linear-gradient(135deg, var(--qaute-primary-hover) 0%, var(--qaute-primary) 100%);
+            background-color: var(--qaute-primary-hover);
+            color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
         }
 
         .btn-qaute-outline {
-            border: 1.5px solid #2563eb;
-            color: #2563eb;
+            border: 1.5px solid var(--qaute-primary);
+            color: var(--qaute-primary);
             font-weight: 600;
             padding: 0.55rem 1.2rem;
             border-radius: 0.6rem;
@@ -117,10 +162,57 @@
         }
 
         .btn-qaute-outline:hover {
-            background-color: #2563eb;
-            color: white;
+            background-color: var(--qaute-primary);
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         }
 
+        .btn-qaute-accent {
+            background-color: var(--qaute-secondary);
+            border: none;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            padding: 0.55rem 1.2rem;
+            border-radius: 50rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
+        }
+
+        .btn-qaute-accent:hover {
+            background-color: #0d9488;
+            color: #FFFFFF !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+        }
+
+        /* === SUBNAV & SIDEBAR STYLES === */
+        .qaute-subnav {
+            background-color: var(--qaute-card-bg);
+            border: 1px solid var(--qaute-border);
+            border-radius: 50rem;
+            padding: 0.35rem 0.5rem;
+            box-shadow: 0 2px 4px rgba(30, 41, 59, 0.03);
+        }
+
+        .qaute-sidebar-card {
+            background-color: var(--qaute-card-bg);
+            border: 1px solid var(--qaute-border);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .qaute-sidebar-header {
+            background-color: var(--qaute-sidebar);
+            color: #FFFFFF;
+            padding: 0.85rem 1.2rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* === STATUS BADGES === */
         .status-badge {
             font-weight: 600;
             font-size: 0.8rem;
@@ -131,47 +223,76 @@
             gap: 5px;
         }
 
-        .status-ChoTiepNhan { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .status-DangXuLy { background-color: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
-        .status-DaPhanHoi { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .status-Dong { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .status-ChoTiepNhan, .status-ChoDuyet {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
 
-        .status-ChoDuyet { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .status-DaXacNhan { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .status-TuChoi { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .status-HoanThanh { background-color: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
-        .status-Huy { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .status-DangXuLy {
+            background-color: #DBEAFE;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+        }
 
+        .status-DaPhanHoi, .status-DaXacNhan, .status-HoanThanh {
+            background-color: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #86EFAC;
+        }
+
+        .status-TuChoi, .status-Huy {
+            background-color: #FEE2E2;
+            color: #B91C1C;
+            border: 1px solid #FECACA;
+        }
+
+        .status-Dong {
+            background-color: #F1F5F9;
+            color: #475569;
+            border: 1px solid #E2E8F0;
+        }
+
+        /* === HERO BANNER === */
         .hero-banner {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0369a1 100%);
-            color: white;
+            background: linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 55%, #2563EB 100%);
+            color: #FFFFFF;
             padding: 4.5rem 0 3.5rem 0;
             border-radius: 0 0 2.5rem 2.5rem;
             margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px -10px rgba(30, 58, 95, 0.3);
         }
 
+        /* === CHAT BUBBLES === */
         .chat-bubble-sender {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--qaute-primary) 0%, var(--qaute-primary-hover) 100%);
+            color: #FFFFFF;
             border-radius: 1.2rem 1.2rem 0.2rem 1.2rem;
             padding: 0.8rem 1.1rem;
             max-width: 75%;
             margin-left: auto;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
         }
 
         .chat-bubble-receiver {
-            background-color: #ffffff;
-            color: #1e293b;
-            border: 1px solid #e2e8f0;
+            background-color: #FFFFFF;
+            color: var(--qaute-text);
+            border: 1px solid var(--qaute-border);
             border-radius: 1.2rem 1.2rem 1.2rem 0.2rem;
             padding: 0.8rem 1.1rem;
             max-width: 75%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 4px rgba(30, 41, 59, 0.04);
         }
 
         .rating-stars {
-            color: #fbbf24;
+            color: var(--qaute-warning);
             font-size: 1.2rem;
+        }
+
+        /* === FORM CONTROLS FOCUS === */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--qaute-primary);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
         }
     </style>
 </head>
@@ -180,29 +301,50 @@
 <div th:fragment="navbar" class="sticky-top">
     <nav class="navbar navbar-expand-lg navbar-qaute">
         <div class="container">
+            <!-- Brand Logo (Pure Inline SVG - 100% Never Missing or Broken) -->
             <a class="navbar-brand navbar-brand-qaute" th:href="@{/}">
-                <i class="bi bi-mortarboard-fill text-info fs-3"></i>
-                <span>QAUTE</span>
+                <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                    <rect width="40" height="40" rx="10" fill="url(#qauteLogoNavGrad)"/>
+                    <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"/>
+                    <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"/>
+                    <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"/>
+                    <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"/>
+                    <defs>
+                        <linearGradient id="qauteLogoNavGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#2563EB"/>
+                            <stop offset="1" stop-color="#14B8A6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="fw-extrabold text-white">QAUTE</span>
                 <span class="brand-badge">UTE Advisory</span>
             </a>
             
-            <button class="navbar-toggler text-white border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <button class="navbar-toggler text-white border-white border-opacity-50" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-label="Menu">
                 <i class="bi bi-list fs-2"></i>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     <li class="nav-item">
-                        <a class="nav-link nav-link-qaute" th:href="@{/}"><i class="bi bi-house-door me-1"></i>Trang chủ</a>
+                        <a class="nav-link nav-link-qaute" th:href="@{/}">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-qaute" th:href="@{/faq}"><i class="bi bi-question-circle me-1"></i>Hỏi đáp FAQ</a>
+                        <a class="nav-link nav-link-qaute" th:href="@{/faq}">
+                            <i class="bi bi-question-circle me-1"></i>Hỏi đáp FAQ
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-qaute" th:href="@{/articles}"><i class="bi bi-journal-text me-1"></i>Cẩm nang</a>
+                        <a class="nav-link nav-link-qaute" th:href="@{/articles}">
+                            <i class="bi bi-journal-text me-1"></i>Cẩm nang
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-qaute" th:href="@{/advisors}"><i class="bi bi-people me-1"></i>Đội ngũ Cố vấn</a>
+                        <a class="nav-link nav-link-qaute" th:href="@{/advisors}">
+                            <i class="bi bi-people me-1"></i>Đội ngũ Cố vấn
+                        </a>
                     </li>
                 </ul>
 
@@ -212,13 +354,13 @@
                         <a th:href="@{/login}" class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold">
                             <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
                         </a>
-                        <a th:href="@{/register}" class="btn btn-info btn-sm px-3 rounded-pill fw-bold text-dark">
+                        <a th:href="@{/register}" class="btn btn-qaute-accent btn-sm px-3 rounded-pill fw-bold">
                             <i class="bi bi-person-plus me-1"></i>Đăng ký SV
                         </a>
                     </div>
 
                     <!-- When Authenticated -->
-                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-3">
+                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
                         <!-- Quick Role Dashboard Link -->
                         <div sec:authorize="hasRole('SinhVien')">
                             <a th:href="@{/student/dashboard}" class="btn btn-outline-light btn-sm rounded-pill fw-semibold">
@@ -226,7 +368,7 @@
                             </a>
                         </div>
                         <div sec:authorize="hasRole('CoVan')">
-                            <a th:href="@{/advisor/dashboard}" class="btn btn-warning btn-sm rounded-pill fw-bold text-dark">
+                            <a th:href="@{/advisor/dashboard}" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold">
                                 <i class="bi bi-briefcase me-1"></i>Bàn Cố vấn
                             </a>
                         </div>
@@ -238,24 +380,28 @@
 
                         <!-- User Profile Dropdown -->
                         <div class="dropdown">
-                            <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center gap-2 p-0" type="button" data-bs-toggle="dropdown">
-                                <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 14px;">
+                            <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center gap-2 p-1 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1);">
+                                <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 13px;">
                                     <span sec:authentication="name" th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
                                 </div>
-                                <span class="d-none d-md-inline fw-semibold text-white" sec:authentication="name">User</span>
+                                <span class="d-none d-md-inline fw-semibold text-white pe-2" sec:authentication="name">User</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2 p-2" style="min-width: 220px;">
                                 <li class="px-3 py-2 border-bottom">
                                     <div class="fw-bold text-dark" sec:authentication="name">Username</div>
-                                    <small class="text-muted" sec:authorize="hasRole('SinhVien')">Sinh viên</small>
-                                    <small class="text-muted" sec:authorize="hasRole('CoVan')">Cán bộ / Cố vấn</small>
-                                    <small class="text-muted" sec:authorize="hasRole('Admin')">Quản trị viên</small>
+                                    <small class="badge bg-primary-subtle text-primary mt-1" sec:authorize="hasRole('SinhVien')">Sinh viên</small>
+                                    <small class="badge bg-warning-subtle text-warning mt-1" sec:authorize="hasRole('CoVan')">Cán bộ / Cố vấn</small>
+                                    <small class="badge bg-danger-subtle text-danger mt-1" sec:authorize="hasRole('Admin')">Quản trị viên</small>
                                 </li>
-                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/profile}"><i class="bi bi-person me-2 text-primary"></i>Hồ sơ cá nhân</a></li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" th:href="@{/profile}">
+                                        <i class="bi bi-person-circle me-2 text-primary"></i>Hồ sơ cá nhân
+                                    </a>
+                                </li>
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form th:action="@{/logout}" method="post" class="m-0">
-                                        <button type="submit" class="dropdown-item rounded-2 py-2 text-danger fw-semibold">
+                                        <button type="submit" class="dropdown-item rounded-2 py-2 text-danger fw-semibold d-flex align-items-center">
                                             <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
                                         </button>
                                     </form>

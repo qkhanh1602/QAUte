@@ -34,32 +34,40 @@
         <!-- Sessions and Queue Sidebar -->
         <div class="col-lg-4">
             <!-- Waiting Queue -->
-            <div class="qaute-card p-3 mb-4 border-0 shadow-sm">
-                <h6 class="fw-bold mb-3 border-bottom pb-2 text-warning d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-hourglass-split me-1"></i>Hàng đợi sinh viên</span>
-                    <span class="badge bg-warning text-dark" th:text="${#lists.size(waitingQueue)}">0</span>
-                </h6>
-                <div th:if="${#lists.isEmpty(waitingQueue)}" class="text-muted small text-center py-2">
-                    Không có sinh viên nào đang đợi.
+            <div class="qaute-card mb-4 border-0 shadow-sm overflow-hidden">
+                <div class="p-3 text-white fw-bold d-flex justify-content-between align-items-center" style="background-color: var(--qaute-sidebar);">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-hourglass-split" style="color: #F59E0B;"></i>Hàng đợi sinh viên
+                    </span>
+                    <span class="badge" style="background-color: #F59E0B; color: #1E293B;" th:text="${#lists.size(waitingQueue)}">0</span>
                 </div>
-                <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(waitingQueue)}">
-                    <div class="p-2 bg-light rounded-3 d-flex justify-content-between align-items-center" th:each="wq : ${waitingQueue}">
-                        <div>
-                            <strong class="small d-block text-dark" th:text="${wq.sinhVien.taiKhoan.hoTen}">Sinh viên</strong>
-                            <small class="text-muted" th:text="${wq.donVi.tenDonVi}">Đơn vị</small>
+                <div class="p-3">
+                    <div th:if="${#lists.isEmpty(waitingQueue)}" class="text-muted small text-center py-2">
+                        Không có sinh viên nào đang đợi.
+                    </div>
+                    <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(waitingQueue)}">
+                        <div class="p-2 bg-light rounded-3 d-flex justify-content-between align-items-center border" th:each="wq : ${waitingQueue}">
+                            <div>
+                                <strong class="small d-block text-dark" th:text="${wq.sinhVien.taiKhoan.hoTen}">Sinh viên</strong>
+                                <small class="text-muted" th:text="${wq.donVi.tenDonVi}">Đơn vị</small>
+                            </div>
+                            <a th:href="@{/advisor/chat(sessionId=${wq.maPhienChat})}" class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-3">
+                                Nhận chat
+                            </a>
                         </div>
-                        <a th:href="@{/advisor/chat(sessionId=${wq.maPhienChat})}" class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-3">
-                            Nhận chat
-                        </a>
                     </div>
                 </div>
             </div>
 
             <!-- My Active Sessions -->
-            <div class="qaute-card p-3 border-0 shadow-sm">
-                <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary">
-                    <i class="bi bi-chat-dots me-1"></i>Phiên chat của bạn
-                </h6>
+            <div class="qaute-card border-0 shadow-sm overflow-hidden">
+                <div class="p-3 text-white fw-bold d-flex justify-content-between align-items-center" style="background-color: var(--qaute-sidebar);">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-chat-dots" style="color: #14B8A6;"></i>Phiên chat của bạn
+                    </span>
+                    <span class="badge" style="background-color: #14B8A6;" th:text="${#lists.size(mySessions)}">0</span>
+                </div>
+                <div class="p-3">
                 <div th:if="${#lists.isEmpty(mySessions)}" class="text-muted small text-center py-2">
                     Chưa có phiên chat nào.
                 </div>
@@ -106,8 +114,14 @@
                     </div>
 
                     <div th:each="m : ${messages}" th:class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div th:class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}">
-                            <div class="small fw-bold mb-1 opacity-75" th:text="${m.taiKhoanGui.hoTen}">Họ tên</div>
+                        <div th:class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}"
+                             th:style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #eff6ff; border-left: 4px solid #3b82f6;' : ''}">
+                            <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
+                                <span th:text="${m.taiKhoanGui.hoTen}">Họ tên</span>
+                                <span th:if="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}" class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
+                                    <i class="bi bi-robot me-1"></i>Tự động
+                                </span>
+                            </div>
                             <div style="white-space: pre-line;" th:text="${m.noiDung}">Nội dung...</div>
                             <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;" th:text="${#temporals.format(m.thoiGianGui, 'HH:mm')}">14:30</div>
                         </div>

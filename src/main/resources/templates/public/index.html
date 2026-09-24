@@ -5,23 +5,32 @@
 
 <div th:replace="~{fragments/header :: navbar}"></div>
 
+<!-- Logout Flash Message -->
+<div th:if="${logoutMessage}" class="container pt-3">
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3 py-2 px-3 mb-0" role="alert">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <span class="fw-semibold" th:text="${logoutMessage}">Bạn đã đăng xuất khỏi hệ thống thành công.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
 <!-- Hero Banner -->
-<section class="hero-banner">
+<section class="hero-banner text-center">
     <div class="container">
-        <div class="row align-items-center gy-4">
-            <div class="col-lg-7">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
                 <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white mb-3 small fw-semibold border border-white border-opacity-10">
                     <i class="bi bi-stars text-warning"></i> Cổng thông tin giải đáp & tư vấn học đường
                 </div>
-                <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; line-height: 1.15;">
+                <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; line-height: 1.2;">
                     Bạn cần hỗ trợ điều gì hôm nay?
                 </h1>
-                <p class="lead text-white-50 mb-4 fs-6">
-                    Hệ thống QAUTE tiếp nhận, phản hồi và giải đáp các thắc mắc về học vụ, học phí, học bổng, chính sách sinh viên và định hướng việc làm với cam kết thời gian xử lý nhanh chóng.
+                <p class="lead text-white-50 mb-4 fs-6 mx-auto" style="max-width: 680px;">
+                    Hệ thống QAUTE tiếp nhận, phản hồi và giải đáp các thắc mắc về học vụ, học phí, học bổng, chính sách sinh viên và kết nối trực tiếp với Đội ngũ Cố vấn học tập.
                 </p>
 
                 <!-- Search form -->
-                <form th:action="@{/faq}" method="get" class="d-flex gap-2 bg-white p-2 rounded-4 shadow-lg" style="max-width: 580px;">
+                <form th:action="@{/faq}" method="get" class="d-flex gap-2 bg-white p-2 rounded-4 shadow-lg mx-auto" style="max-width: 620px;">
                     <span class="input-group-text bg-transparent border-0 text-muted ps-3">
                         <i class="bi bi-search fs-5"></i>
                     </span>
@@ -29,55 +38,37 @@
                     <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold">Tìm kiếm</button>
                 </form>
 
-                <div class="d-flex flex-wrap gap-2 mt-3 small text-white-50">
-                    <span class="text-white">Gợi ý:</span>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3 small text-white-50">
+                    <span class="text-white">Gợi ý từ khóa:</span>
                     <a th:href="@{/faq(kw='rút học phần')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#rút học phần</a>
                     <a th:href="@{/faq(kw='học bổng')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#học bổng</a>
                     <a th:href="@{/faq(kw='bảo hiểm y tế')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#BHYT</a>
                     <a th:href="@{/faq(kw='đồ án')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#đồ án tốt nghiệp</a>
+                    <a th:href="@{/faq(kw='học phí')}" class="text-white-50 text-decoration-none border border-white border-opacity-25 px-2 py-0.5 rounded-pill">#học phí</a>
                 </div>
-            </div>
 
-            <div class="col-lg-5 text-center text-lg-end">
-                <div class="qaute-card p-4 text-start bg-white text-dark shadow-xl" style="border-radius: 1.5rem;">
-                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
-                        <div>
-                            <h6 class="fw-bold mb-0 text-dark">Chỉ số vận hành hệ thống</h6>
-                            <small class="text-muted">Theo quy định chuẩn QAUTE</small>
-                        </div>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Đang trực tuyến</span>
+                <!-- Quick Action Buttons -->
+                <div class="d-flex flex-wrap justify-content-center gap-3 mt-4 pt-2">
+                    <div sec:authorize="!isAuthenticated()" class="d-flex gap-3 flex-wrap justify-content-center">
+                        <a th:href="@{/login}" class="btn btn-outline-light px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập gửi câu hỏi
+                        </a>
+                        <a th:href="@{/register}" class="btn btn-qaute-accent px-4 py-2 rounded-pill fw-bold shadow-sm">
+                            <i class="bi bi-person-plus me-1"></i>Đăng ký SV mới
+                        </a>
+                        <a th:href="@{/faq}" class="btn bg-white text-dark px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                            <i class="bi bi-question-circle me-1 text-primary"></i>Hỏi đáp FAQ
+                        </a>
                     </div>
-
-                    <div class="row g-3 text-center">
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="fs-3 fw-bold text-primary" th:text="${stats.tongYeuCau}">0</div>
-                                <small class="text-muted fw-medium">Tổng phiếu tư vấn</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="fs-3 fw-bold text-success" th:text="${stats.tyLeHoanTat + '%'}">0%</div>
-                                <small class="text-muted fw-medium">Tỷ lệ hoàn tất (QĐ22)</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="fs-3 fw-bold text-info" th:text="${stats.tongLichHen}">0</div>
-                                <small class="text-muted fw-medium">Lịch hẹn tư vấn</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="fs-3 fw-bold text-warning" th:text="${stats.tongCoVan}">0</div>
-                                <small class="text-muted fw-medium">Cố vấn chuyên trách</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 pt-3 border-top text-center">
-                        <a th:href="@{/student/tickets/new}" class="btn btn-qaute-primary w-100 py-2">
-                            <i class="bi bi-pencil-square me-2"></i>Gửi phiếu tư vấn ngay
+                    <div sec:authorize="isAuthenticated()" class="d-flex gap-3 flex-wrap justify-content-center">
+                        <a th:href="@{/student/tickets/new}" class="btn btn-warning text-dark px-4 py-2 rounded-pill fw-bold shadow-sm">
+                            <i class="bi bi-pencil-square me-1"></i>Gửi phiếu tư vấn ngay
+                        </a>
+                        <a th:href="@{/student/appointments}" class="btn btn-outline-light px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                            <i class="bi bi-calendar-event me-1"></i>Đặt lịch hẹn Cố vấn
+                        </a>
+                        <a th:href="@{/student/chat}" class="btn bg-white text-dark px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                            <i class="bi bi-headset me-1 text-primary"></i>Tư vấn trực tuyến 1-1
                         </a>
                     </div>
                 </div>

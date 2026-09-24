@@ -26,24 +26,31 @@
     </div>
 
     <div class="row g-4">
-        <!-- Department selector -->
+        <!-- Department selector (Sidebar) -->
         <div class="col-lg-4">
-            <div class="qaute-card p-3 border-0 shadow-sm mb-4">
-                <h6 class="fw-bold mb-3 border-bottom pb-2">Chọn Đơn vị kết nối</h6>
-                <div class="list-group list-group-flush">
-                    <a th:each="dv : ${donViList}" th:href="@{/student/chat(maDonVi=${dv.maDonVi})}"
-                       th:class="${selectedDonVi == dv.maDonVi ? 'list-group-item list-group-item-action active rounded-3 mb-1 fw-semibold' : 'list-group-item list-group-item-action rounded-3 mb-1'}">
-                        <i class="bi bi-building me-2"></i>
-                        <span th:text="${dv.tenDonVi}">Phòng Đào tạo</span>
-                    </a>
+            <div class="qaute-card border-0 shadow-sm mb-4 overflow-hidden">
+                <div class="p-3 text-white fw-bold d-flex align-items-center justify-content-between" style="background-color: var(--qaute-sidebar);">
+                    <span class="d-flex align-items-center gap-2"><i class="bi bi-diagram-3"></i>Chọn Đơn vị kết nối</span>
+                    <span class="badge" style="background-color: var(--qaute-secondary);" th:text="${#lists.size(donViList)}">0</span>
+                </div>
+                <div class="p-3">
+                    <div class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
+                        <a th:each="dv : ${donViList}" th:href="@{/student/chat(maDonVi=${dv.maDonVi})}"
+                           th:class="${selectedDonVi == dv.maDonVi ? 'list-group-item list-group-item-action active rounded-3 mb-1 fw-semibold' : 'list-group-item list-group-item-action rounded-3 mb-1 text-secondary'}">
+                            <i class="bi bi-building me-2"></i>
+                            <span th:text="${dv.tenDonVi}">Phòng Đào tạo</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <div class="qaute-card p-3 bg-light border-0 small text-secondary">
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Quy định chat trực tuyến</h6>
-                <p class="mb-1">&bull; Giờ trực tuyến: 08:00 - 11:30 và 13:30 - 16:30 (Thứ 2 - Thứ 6).</p>
-                <p class="mb-1">&bull; Vui lòng giữ lịch sự và nêu rõ MSSV, lớp khi trao đổi.</p>
-                <p class="mb-0">&bull; Lịch sử trao đổi được lưu trữ bảo mật để phục vụ đối soát.</p>
+            <div class="qaute-card p-3 border-0 small text-secondary" style="background-color: #F8FAFC; border: 1px solid #E2E8F0 !important;">
+                <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+                    <i class="bi bi-shield-check text-primary"></i>Quy định tư vấn trực tuyến
+                </h6>
+                <p class="mb-1">&bull; Khung giờ hỗ trợ: <strong>08:00 - 11:30</strong> và <strong>13:30 - 16:30</strong> (Thứ 2 - Thứ 6).</p>
+                <p class="mb-1">&bull; Vui lòng chuẩn bị sẵn MSSV, thông tin chi tiết câu hỏi.</p>
+                <p class="mb-0">&bull; Mọi phiên trao đổi được mã hóa và bảo mật thông tin sinh viên.</p>
             </div>
         </div>
 
@@ -77,18 +84,33 @@
                     </div>
 
                     <div th:each="m : ${messages}" th:class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div th:class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}">
-                            <div class="small fw-bold mb-1 opacity-75" th:text="${m.taiKhoanGui.hoTen}">Họ tên</div>
+                        <div th:class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}"
+                             th:style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #eff6ff; border-left: 4px solid #3b82f6;' : ''}">
+                            <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
+                                <span th:text="${m.taiKhoanGui.hoTen}">Họ tên</span>
+                                <span th:if="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}" class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
+                                    <i class="bi bi-robot me-1"></i>Tự động
+                                </span>
+                            </div>
                             <div style="white-space: pre-line;" th:text="${m.noiDung}">Nội dung tin nhắn...</div>
                             <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;" th:text="${#temporals.format(m.thoiGianGui, 'HH:mm')}">14:30</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Quick Suggestions -->
+                <div class="px-3 pt-2 pb-1 bg-white border-top d-flex gap-1 flex-wrap align-items-center">
+                    <span class="text-muted small me-1"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Gợi ý hỏi nhanh:</span>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Làm thế nào để đăng ký học phần vượt quá số tín chỉ quy định?')">Vượt tín chỉ</button>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Quy trình xin cấp giấy xác nhận sinh viên để hoãn nghĩa vụ quân sự?')">Giấy xác nhận NVQS</button>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Hướng dẫn điều kiện xét học bổng khuyến khích học tập?')">Học bổng</button>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Em muốn hỏi về điều kiện rút học phần trong học kỳ?')">Rút học phần</button>
+                </div>
+
                 <!-- Chat Input Form -->
-                <div class="p-3 border-top bg-white rounded-bottom-4">
+                <div class="p-3 bg-white rounded-bottom-4">
                     <form th:action="@{'/student/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" class="d-flex gap-2">
-                        <input type="text" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập tin nhắn..." required autocomplete="off">
+                        <input type="text" id="chatInput" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập tin nhắn hoặc chọn gợi ý bên trên..." required autocomplete="off">
                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
                             <i class="bi bi-send-fill"></i>
                         </button>
@@ -100,6 +122,14 @@
 </div>
 
 <script>
+function fillMessage(text) {
+    const input = document.getElementById('chatInput');
+    if (input) {
+        input.value = text;
+        input.focus();
+    }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const stream = document.getElementById('messageStream');
     if (stream) {

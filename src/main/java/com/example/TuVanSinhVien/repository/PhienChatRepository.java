@@ -19,4 +19,6 @@ public interface PhienChatRepository extends JpaRepository<PhienChat, Integer> {
     List<PhienChat> findByTrangThaiOrderByThoiGianBatDauAsc(String trangThai);
 
     Optional<PhienChat> findFirstBySinhVien_MaSVAndTrangThaiInOrderByThoiGianBatDauDesc(Integer maSV, List<String> trangThaiList);
+
+    Optional<PhienChat> findFirstBySinhVien_MaSVAndDonVi_MaDonViAndTrangThaiInOrderByThoiGianBatDauDesc(Integer maSV, Integer maDonVi, List<String> trangThaiList);
 }

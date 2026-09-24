@@ -19,7 +19,10 @@ public class HomeController {
     private final ReportService reportService;
 
     @GetMapping("/")
-    public String index(Model model) {
+    public String index(@RequestParam(required = false) String logout, Model model) {
+        if (logout != null) {
+            model.addAttribute("logoutMessage", "Bạn đã đăng xuất khỏi hệ thống thành công.");
+        }
         model.addAttribute("faqs", contentService.getPublicFaqs(null, null));
         model.addAttribute("articles", contentService.getPublicArticles(null, null));
         model.addAttribute("advisors", catalogService.getAllActiveAdvisors());
