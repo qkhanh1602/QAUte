@@ -156,11 +156,15 @@ public class SecurityServicesTest {
 
     @Test
     public void testGmailSmtpHandshake() {
+        String mailUsername = System.getenv("MAIL_USERNAME");
+        String mailPassword = System.getenv("MAIL_PASSWORD");
+        org.junit.jupiter.api.Assumptions.assumeTrue(mailUsername != null && !mailUsername.isBlank()
+                && mailPassword != null && !mailPassword.isBlank(), "Bỏ qua SMTP khi chưa cấu hình secret môi trường");
         org.springframework.mail.javamail.JavaMailSenderImpl sender = new org.springframework.mail.javamail.JavaMailSenderImpl();
         sender.setHost("smtp.gmail.com");
         sender.setPort(587);
-        sender.setUsername("qaute.edu@gmail.com");
-        sender.setPassword("xlwhjtjqvfaigaus");
+        sender.setUsername(mailUsername);
+        sender.setPassword(mailPassword);
 
         java.util.Properties props = sender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
@@ -175,5 +179,28 @@ public class SecurityServicesTest {
         } catch (Exception e) {
             System.out.println(">>> [NOTICE] Ket noi SMTP: " + e.getMessage());
         }
+    }
+
+    @Test
+    public void testJwtContainsAndValidatesTokenVersion() {
+        String secret = java.util.Base64.getEncoder().encodeToString(new byte[32]);
+        com.example.TuVanSinhVien.service.JwtService jwtService =
+                new com.example.TuVanSinhVien.service.JwtService(secret, 15);
+        com.example.TuVanSinhVien.entity.TaiKhoan account = com.example.TuVanSinhVien.entity.TaiKhoan.builder()
+                .maTK(42)
+                .tenDangNhap("student42")
+                .matKhau("hash")
+                .hoTen("Sinh viên 42")
+                .email("student42@example.edu.vn")
+                .vaiTro("SinhVien")
+                .trangThai("HoatDong")
+                .tokenVersion(3)
+                .build();
+
+        String token = jwtService.createAccessToken(account);
+        io.jsonwebtoken.Claims claims = jwtService.parse(token);
+        Assertions.assertEquals("student42", claims.getSubject());
+        Assertions.assertEquals(3, claims.get("tokenVersion", Integer.class));
+        Assertions.assertEquals("SinhVien", claims.get("role", String.class));
     }
 }

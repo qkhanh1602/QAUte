@@ -37,39 +37,14 @@ public class ChatService {
                 DonVi donVi = donViRepo.findById(maDonVi)
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị tư vấn."));
 
-                // Tự động gán Cố vấn phụ trách của đơn vị để sẵn sàng kết nối và trả lời
-                List<NguoiTuVan> advisors = nguoiTuVanRepo.findByDonVi_MaDonVi(maDonVi);
-                NguoiTuVan assignedAdvisor = advisors.isEmpty() ? null : advisors.get(0);
-
                 PhienChat session = PhienChat.builder()
                     .sinhVien(sv)
                     .donVi(donVi)
-                    .nguoiTuVan(assignedAdvisor)
-                    .trangThai(assignedAdvisor != null ? "DangHoatDong" : "ChoTiepNhan")
+                    .nguoiTuVan(null)
+                    .trangThai("ChoTiepNhan")
                     .thoiGianBatDau(LocalDateTime.now())
                     .build();
-                session = phienChatRepo.save(session);
-
-                // Gửi tin nhắn chào mừng tự động từ Cố vấn phụ trách
-                if (assignedAdvisor != null) {
-                    String welcomeText = "[🤖 Trả lời tự động]\n" +
-                        "Chào em " + sv.getTaiKhoan().getHoTen() + "! Thầy/Cô (" + 
-                        assignedAdvisor.getTaiKhoan().getHoTen() + " - " + donVi.getTenDonVi() + 
-                        ") đã kết nối với em.\n" +
-                        "Em có thể đặt câu hỏi chi tiết hoặc gõ từ khóa thắc mắc (ví dụ: 'rút học phần', 'học bổng', 'giấy xác nhận'...) để hệ thống hỗ trợ giải đáp nhanh nhất nhé!";
-
-                    TinNhanChat welcomeMsg = TinNhanChat.builder()
-                        .phienChat(session)
-                        .taiKhoanGui(assignedAdvisor.getTaiKhoan())
-                        .clientMessageId(UUID.randomUUID())
-                        .loaiTinNhan("VanBan")
-                        .noiDung(welcomeText)
-                        .thoiGianGui(LocalDateTime.now())
-                        .build();
-                    tinNhanRepo.save(welcomeMsg);
-                }
-
-                return session;
+                return phienChatRepo.save(session);
             });
     }
 
@@ -77,6 +52,15 @@ public class ChatService {
     public void advisorJoinSession(Integer maPhienChat, NguoiTuVan cv) {
         PhienChat session = phienChatRepo.findById(maPhienChat)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiên tư vấn trực tuyến."));
+        if (!session.getDonVi().getMaDonVi().equals(cv.getDonVi().getMaDonVi())) {
+            throw new SecurityException("Bạn chỉ được tiếp nhận phiên chat thuộc đơn vị của mình.");
+        }
+        if (session.getNguoiTuVan() != null && !session.getNguoiTuVan().getMaCV().equals(cv.getMaCV())) {
+            throw new SecurityException("Phiên chat đã được cố vấn khác tiếp nhận.");
+        }
+        if (!"ChoTiepNhan".equals(session.getTrangThai()) && !"DangHoatDong".equals(session.getTrangThai())) {
+            throw new IllegalStateException("Phiên chat không còn hoạt động.");
+        }
         session.setNguoiTuVan(cv);
         session.setTrangThai("DangHoatDong");
         phienChatRepo.save(session);
@@ -97,6 +81,9 @@ public class ChatService {
         if (!isStudent && !isAdvisor) {
             throw new SecurityException("Người gửi không thuộc phiên tư vấn trực tuyến này.");
         }
+        if ("KetThuc".equals(session.getTrangThai()) || "GianDoan".equals(session.getTrangThai())) {
+            throw new IllegalStateException("Phiên chat đã kết thúc hoặc bị gián đoạn.");
+        }
 
         // Lưu tin nhắn của người gửi
         TinNhanChat msg = TinNhanChat.builder()
@@ -108,11 +95,6 @@ public class ChatService {
             .thoiGianGui(LocalDateTime.now())
             .build();
         msg = tinNhanRepo.save(msg);
-
-        // NẾU SINH VIÊN GỬI: Kích hoạt trợ lý phản hồi tự động
-        if (isStudent && session.getNguoiTuVan() != null) {
-            triggerAutoReply(session, noiDung.trim());
-        }
 
         return msg;
     }
@@ -190,7 +172,8 @@ public class ChatService {
         return null;
     }
 
-    public List<TinNhanChat> getMessages(Integer maPhienChat) {
+    public List<TinNhanChat> getMessages(Integer maPhienChat, TaiKhoan viewer) {
+        requireParticipant(getRequiredSession(maPhienChat), viewer);
         return tinNhanRepo.findByPhienChat_MaPhienChatOrderByThoiGianGuiAsc(maPhienChat);
     }
 
@@ -203,15 +186,39 @@ public class ChatService {
         });
     }
 
-    public List<PhienChat> getWaitingQueue() {
-        return phienChatRepo.findByTrangThaiOrderByThoiGianBatDauAsc("ChoTiepNhan");
+    public List<PhienChat> getWaitingQueue(Integer maDonVi) {
+        return phienChatRepo.findByTrangThaiOrderByThoiGianBatDauAsc("ChoTiepNhan").stream()
+                .filter(session -> session.getDonVi().getMaDonVi().equals(maDonVi))
+                .toList();
     }
 
     public List<PhienChat> getAdvisorSessions(Integer maCV) {
         return phienChatRepo.findByNguoiTuVan_MaCVOrderByThoiGianBatDauDesc(maCV);
     }
 
-    public PhienChat getSessionById(Integer maPhienChat) {
-        return phienChatRepo.findById(maPhienChat).orElse(null);
+    public PhienChat getAdvisorSession(Integer maPhienChat, NguoiTuVan advisor) {
+        PhienChat session = getRequiredSession(maPhienChat);
+        boolean assigned = session.getNguoiTuVan() != null && session.getNguoiTuVan().getMaCV().equals(advisor.getMaCV());
+        boolean waitingInDepartment = session.getNguoiTuVan() == null
+                && "ChoTiepNhan".equals(session.getTrangThai())
+                && session.getDonVi().getMaDonVi().equals(advisor.getDonVi().getMaDonVi());
+        if (!assigned && !waitingInDepartment) {
+            throw new SecurityException("Bạn không có quyền xem phiên chat này.");
+        }
+        return session;
+    }
+
+    private PhienChat getRequiredSession(Integer maPhienChat) {
+        return phienChatRepo.findById(maPhienChat)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiên chat."));
+    }
+
+    private void requireParticipant(PhienChat session, TaiKhoan viewer) {
+        boolean student = session.getSinhVien().getTaiKhoan().getMaTK().equals(viewer.getMaTK());
+        boolean advisor = session.getNguoiTuVan() != null
+                && session.getNguoiTuVan().getTaiKhoan().getMaTK().equals(viewer.getMaTK());
+        if (!student && !advisor) {
+            throw new SecurityException("Bạn không thuộc phiên chat này.");
+        }
     }
 }

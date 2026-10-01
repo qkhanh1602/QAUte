@@ -16,6 +16,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,16 +26,25 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    @Value("${app.allowed-origins:http://localhost:8080,http://127.0.0.1:8080}")
+    private String[] allowedOrigins;
+
     private final RoleBasedAuthenticationSuccessHandler successHandler;
     private final CustomAuthenticationFailureHandler failureHandler;
     private final CaptchaAuthenticationFilter captchaFilter;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(RoleBasedAuthenticationSuccessHandler successHandler,
                           CustomAuthenticationFailureHandler failureHandler,
-                          CaptchaAuthenticationFilter captchaFilter) {
+                          CaptchaAuthenticationFilter captchaFilter,
+                          CustomAccessDeniedHandler accessDeniedHandler,
+                          JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
         this.captchaFilter = captchaFilter;
+        this.accessDeniedHandler = accessDeniedHandler;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -51,7 +61,7 @@ public class SecurityConfig {
             // 1. Chống CSRF (chỉ miễn trừ WebSocket & REST API nếu dùng token)
             .csrf(csrf -> csrf
                 .csrfTokenRequestHandler(csrfRequestHandler)
-                .ignoringRequestMatchers("/ws/**", "/api/**")
+                .ignoringRequestMatchers("/ws/**", "/api/auth/token")
             )
             // 2. CORS Allowlist
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -96,7 +106,8 @@ public class SecurityConfig {
                     "/images/**",
                     "/webjars/**",
                     "/ws/**",
-                    "/api/public/**"
+                    "/api/public/**",
+                    "/api/auth/token"
                 ).permitAll()
                 .requestMatchers("/student/**").hasRole("SinhVien")
                 .requestMatchers("/advisor/**").hasRole("CoVan")
@@ -105,6 +116,7 @@ public class SecurityConfig {
             )
             // 6. Bộ lọc kiểm tra Brute-force & CAPTCHA trước UsernamePasswordAuthenticationFilter
             .addFilterBefore(captchaFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, CaptchaAuthenticationFilter.class)
             // 7. Form Login với Custom Failure Handler
             .formLogin(form -> form
                 .loginPage("/login")
@@ -120,6 +132,10 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
+            )
+            // 9. Xử lý từ chối truy cập thông minh (Redirect theo role thay vì lỗi 403)
+            .exceptionHandling(exceptions -> exceptions
+                .accessDeniedHandler(accessDeniedHandler)
             );
 
         return http.build();
@@ -128,11 +144,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:8080",
-            "http://127.0.0.1:8080",
-            "http://localhost:3000"
-        ));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);

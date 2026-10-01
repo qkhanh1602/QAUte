@@ -31,6 +31,12 @@ public class TicketService {
         }
         DonVi donVi = donViRepo.findById(maDonVi).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị yêu cầu."));
         LinhVucTuVan linhVuc = linhVucRepo.findById(maLinhVuc).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực yêu cầu."));
+        if (!Boolean.TRUE.equals(donVi.getHoatDong())) {
+            throw new IllegalArgumentException("Đơn vị tư vấn đang tạm ngừng tiếp nhận yêu cầu.");
+        }
+        if (!linhVuc.getDonVi().getMaDonVi().equals(donVi.getMaDonVi()) || !"HoatDong".equals(linhVuc.getTrangThai())) {
+            throw new IllegalArgumentException("Lĩnh vực tư vấn không thuộc đơn vị đã chọn hoặc đang tạm ngừng.");
+        }
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime hanTiepNhan = slaService.calculateBusinessDeadline(now, 24);
         LocalDateTime hanSLA = slaService.calculateBusinessDeadline(now, 48);
@@ -47,6 +53,12 @@ public class TicketService {
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         if (!"ChoTiepNhan".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Phiếu này đã được tiếp nhận hoặc xử lý bởi cố vấn khác.");
+        }
+        if (!ticket.getDonVi().getMaDonVi().equals(cv.getDonVi().getMaDonVi())) {
+            throw new SecurityException("Bạn chỉ được tiếp nhận phiếu thuộc đơn vị của mình.");
+        }
+        if (!Boolean.TRUE.equals(cv.getNhanTuVan())) {
+            throw new IllegalStateException("Tài khoản cố vấn hiện không ở trạng thái nhận tư vấn.");
         }
         LocalDateTime now = LocalDateTime.now();
         ticket.setCoVanPhuTrach(cv);
@@ -65,11 +77,16 @@ public class TicketService {
     }
 
     @Transactional
-    public void replyTicket(Integer maYeuCau, TaiKhoan sender, String noiDung, Boolean deXuatFaq) {
+    public void replyTicket(Integer maYeuCau, NguoiTuVan advisor, String noiDung, Boolean deXuatFaq) {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu trả lời không được để trống.");
         }
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        requireAssignedAdvisor(ticket, advisor);
+        if (!"DangXuLy".equals(ticket.getTrangThai())) {
+            throw new IllegalStateException("Chỉ được phản hồi phiếu đang xử lý.");
+        }
+        TaiKhoan sender = advisor.getTaiKhoan();
         LocalDateTime now = LocalDateTime.now();
         // Thêm phản hồi
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("TraLoi").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(deXuatFaq != null && deXuatFaq).build();
@@ -96,11 +113,16 @@ public class TicketService {
     }
 
     @Transactional
-    public void studentFollowUp(Integer maYeuCau, TaiKhoan sender, String noiDung) {
+    public void studentFollowUp(Integer maYeuCau, SinhVien student, String noiDung) {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu hỏi thêm không được để trống.");
         }
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        requireTicketOwner(ticket, student);
+        if (!"DaPhanHoi".equals(ticket.getTrangThai())) {
+            throw new IllegalStateException("Chỉ được hỏi thêm sau khi cố vấn đã phản hồi.");
+        }
+        TaiKhoan sender = student.getTaiKhoan();
         LocalDateTime now = LocalDateTime.now();
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("HoiThem").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(false).build();
         phanHoiRepo.save(ph);
@@ -117,12 +139,14 @@ public class TicketService {
     }
 
     @Transactional
-    public void closeTicket(Integer maYeuCau, TaiKhoan sender, String ketLuan) {
+    public void closeTicket(Integer maYeuCau, SinhVien student, String ketLuan) {
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        requireTicketOwner(ticket, student);
         if (!"DaPhanHoi".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể đóng phiếu đã có phản hồi.");
         }
         LocalDateTime now = LocalDateTime.now();
+        TaiKhoan sender = student.getTaiKhoan();
         ticket.setTrangThai("Dong");
         ticket.setNgayDong(now);
         ticket.setKetLuan(ketLuan != null ? ketLuan.trim() : "Đã hoàn tất tư vấn.");
@@ -152,10 +176,21 @@ public class TicketService {
     }
 
     @Transactional
-    public void transferTicket(Integer maYeuCau, Integer maDonViMoi, Integer maLinhVucMoi, String lyDo, TaiKhoan sender) {
+    public void transferTicket(Integer maYeuCau, Integer maDonViMoi, Integer maLinhVucMoi, String lyDo, NguoiTuVan advisor) {
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        requireAssignedAdvisor(ticket, advisor);
+        if (!"DangXuLy".equals(ticket.getTrangThai())) {
+            throw new IllegalStateException("Chỉ được chuyển tiếp phiếu đang xử lý.");
+        }
+        if (lyDo == null || lyDo.trim().length() < 5) {
+            throw new IllegalArgumentException("Lý do chuyển tiếp phải có ít nhất 5 ký tự.");
+        }
         DonVi donViMoi = donViRepo.findById(maDonViMoi).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị mới."));
         LinhVucTuVan linhVucMoi = linhVucRepo.findById(maLinhVucMoi).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực mới."));
+        if (!linhVucMoi.getDonVi().getMaDonVi().equals(donViMoi.getMaDonVi()) || !"HoatDong".equals(linhVucMoi.getTrangThai())) {
+            throw new IllegalArgumentException("Lĩnh vực mới không thuộc đơn vị mới hoặc đang tạm ngừng.");
+        }
+        TaiKhoan sender = advisor.getTaiKhoan();
         DonVi donViCu = ticket.getDonVi();
         LocalDateTime now = LocalDateTime.now();
         // Kết thúc phân công cũ nếu có
@@ -185,8 +220,35 @@ public class TicketService {
         return ticketRepo.findByDonVi_MaDonViAndTrangThaiOrderByNgayTaoAsc(maDonVi, "ChoTiepNhan");
     }
 
-    public YeuCauTuVan getTicketById(Integer maYeuCau) {
-        return ticketRepo.findById(maYeuCau).orElse(null);
+    public YeuCauTuVan getStudentTicket(Integer maYeuCau, SinhVien student) {
+        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElse(null);
+        if (ticket == null) return null;
+        requireTicketOwner(ticket, student);
+        return ticket;
+    }
+
+    public YeuCauTuVan getAdvisorTicket(Integer maYeuCau, NguoiTuVan advisor) {
+        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElse(null);
+        if (ticket == null) return null;
+        boolean assigned = ticket.getCoVanPhuTrach() != null && ticket.getCoVanPhuTrach().getMaCV().equals(advisor.getMaCV());
+        boolean waitingInDepartment = "ChoTiepNhan".equals(ticket.getTrangThai())
+                && ticket.getDonVi().getMaDonVi().equals(advisor.getDonVi().getMaDonVi());
+        if (!assigned && !waitingInDepartment) {
+            throw new SecurityException("Bạn không có quyền xem phiếu tư vấn này.");
+        }
+        return ticket;
+    }
+
+    private void requireTicketOwner(YeuCauTuVan ticket, SinhVien student) {
+        if (!ticket.getSinhVien().getMaSV().equals(student.getMaSV())) {
+            throw new SecurityException("Bạn chỉ được thao tác trên phiếu tư vấn của mình.");
+        }
+    }
+
+    private void requireAssignedAdvisor(YeuCauTuVan ticket, NguoiTuVan advisor) {
+        if (ticket.getCoVanPhuTrach() == null || !ticket.getCoVanPhuTrach().getMaCV().equals(advisor.getMaCV())) {
+            throw new SecurityException("Phiếu này không được phân công cho bạn.");
+        }
     }
 
     @java.lang.SuppressWarnings("all")

@@ -19,12 +19,21 @@ public class AppointmentService {
 
     @Transactional
     public KhungGioTuVan createSlot(NguoiTuVan cv, LocalDateTime start, LocalDateTime end, String hinhThuc, String diaDiemLink) {
+        if (start == null || end == null || start.isBefore(LocalDateTime.now().plusMinutes(15))) {
+            throw new IllegalArgumentException("Khung giờ phải bắt đầu trong tương lai và cách hiện tại ít nhất 15 phút.");
+        }
         if (end.isBefore(start) || end.isEqual(start)) {
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
         long minutes = ChronoUnit.MINUTES.between(start, end);
         if (minutes != 45 && minutes != 60) {
             throw new IllegalArgumentException("Thời lượng khung giờ tư vấn phải đúng 45 hoặc 60 phút.");
+        }
+        if (!"TrucTuyen".equals(hinhThuc) && !"TrucTiep".equals(hinhThuc)) {
+            throw new IllegalArgumentException("Hình thức tư vấn chỉ có thể là TrucTuyen hoặc TrucTiep.");
+        }
+        if (diaDiemLink == null || diaDiemLink.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập liên kết hoặc địa điểm tư vấn.");
         }
         if (slotRepo.existsOverlappingSlot(cv.getMaCV(), start, end)) {
             throw new IllegalArgumentException("Khung giờ bị trùng hoặc giao nhau với khung giờ khác của bạn.");
@@ -92,11 +101,12 @@ public class AppointmentService {
     }
 
     @Transactional
-    public void approveAppointment(Integer maLichHen, String linkHopPhong) {
+    public void approveAppointment(Integer maLichHen, Integer maCV, String linkHopPhong) {
         if (linkHopPhong == null || linkHopPhong.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng cung cấp link họp trực tuyến hoặc địa điểm phòng tư vấn.");
         }
         LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        requireAppointmentAdvisor(app, maCV);
         if (!"ChoDuyet".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể phê duyệt lịch hẹn đang chờ duyệt.");
         }
@@ -110,11 +120,12 @@ public class AppointmentService {
     }
 
     @Transactional
-    public void rejectAppointment(Integer maLichHen, String lyDo) {
+    public void rejectAppointment(Integer maLichHen, Integer maCV, String lyDo) {
         if (lyDo == null || lyDo.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập lý do từ chối lịch hẹn.");
         }
         LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        requireAppointmentAdvisor(app, maCV);
         if (!"ChoDuyet".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể từ chối lịch hẹn đang chờ duyệt.");
         }
@@ -128,13 +139,17 @@ public class AppointmentService {
     }
 
     @Transactional
-    public void completeAppointment(Integer maLichHen, String ketLuan) {
+    public void completeAppointment(Integer maLichHen, Integer maCV, String ketLuan) {
         if (ketLuan == null || ketLuan.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng ghi nhận kết luận buổi tư vấn.");
         }
         LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        requireAppointmentAdvisor(app, maCV);
         if (!"DaXacNhan".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể hoàn thành buổi hẹn đã được xác nhận.");
+        }
+        if (LocalDateTime.now().isBefore(app.getKhungGio().getKetThuc())) {
+            throw new IllegalStateException("Chỉ được hoàn thành lịch hẹn sau khi khung giờ tư vấn kết thúc.");
         }
         LocalDateTime now = LocalDateTime.now();
         app.setTrangThai("HoanThanh");
@@ -194,6 +209,12 @@ public class AppointmentService {
 
     public List<LichHenTuVan> getAdvisorAppointments(Integer maCV) {
         return appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(maCV);
+    }
+
+    private void requireAppointmentAdvisor(LichHenTuVan appointment, Integer maCV) {
+        if (maCV == null || !appointment.getNguoiTuVan().getMaCV().equals(maCV)) {
+            throw new SecurityException("Bạn không có quyền xử lý lịch hẹn của cố vấn khác.");
+        }
     }
 
     public List<KhungGioTuVan> getAdvisorSlots(Integer maCV) {

@@ -17,54 +17,108 @@
     
     <style>
         :root {
-            /* === BẢNG MÀU CHUẨN QAUTE === */
-            --qaute-primary: #2563EB;          /* Màu chính: Xanh dương (37, 99, 235) */
+            /* === BẢNG MÀU CHUẨN MỚI QAUTE === */
+            --qaute-navbar: #1E3A5F;           /* Navbar chính: Xanh navy (30, 58, 95) */
+            --qaute-navbar-rgb: 30, 58, 95;
+            --qaute-navbar-hover: #294E78;     /* Navbar hover: Navy sáng (41, 78, 120) */
+            --qaute-primary: #2563EB;          /* Màu chủ đạo / nút chính: Xanh dương (37, 99, 235) */
             --qaute-primary-rgb: 37, 99, 235;
-            --qaute-primary-hover: #1D4ED8;    /* Hover / nhấn: Xanh đậm (29, 78, 216) */
-            --qaute-sidebar: #1E3A5F;          /* Sidebar / Header: Xanh navy (30, 58, 95) */
-            --qaute-sidebar-rgb: 30, 58, 95;
-            --qaute-secondary: #14B8A6;        /* Màu phụ: Xanh ngọc (20, 184, 166) */
-            --qaute-secondary-rgb: 20, 184, 166;
-            --qaute-bg: #F8FAFC;               /* Nền form / trang: Xám xanh rất nhạt (248, 250, 252) */
-            --qaute-card-bg: #FFFFFF;          /* Nền card/panel: Trắng (255, 255, 255) */
-            --qaute-border: #E2E8F0;           /* Viền: Xám nhạt (226, 232, 240) */
-            --qaute-text: #1E293B;             /* Chữ chính: Xám đen (30, 41, 59) */
-            --qaute-muted: #64748B;            /* Chữ phụ: Xám (100, 116, 139) */
-            --qaute-success: #22C55E;          /* Thành công: Xanh lá (34, 197, 94) */
-            --qaute-warning: #F59E0B;          /* Cảnh báo: Vàng cam (245, 158, 11) */
-            --qaute-danger: #EF4444;           /* Lỗi / Xóa: Đỏ (239, 68, 68) */
+            --qaute-primary-hover: #1D4ED8;    /* Hover nút chính: Xanh đậm (29, 78, 216) */
+            --qaute-secondary: #0F766E;        /* Màu phụ: Xanh teal (15, 118, 110) */
+            --qaute-secondary-rgb: 15, 118, 110;
+            --qaute-teal-light: #14B8A6;       /* Teal sáng: (20, 184, 166) */
+            --qaute-teal-light-rgb: 20, 184, 166;
+            --qaute-bg: #F8FAFC;               /* Background toàn trang: Xám trắng (248, 250, 252) */
+            --qaute-bg-section: #F1F5F9;       /* Background section: (241, 245, 249) */
+            --qaute-card-bg: #FFFFFF;          /* Card: Trắng (255, 255, 255) */
+            --qaute-border: #E2E8F0;           /* Border: Xám nhạt (226, 232, 240) */
+            --qaute-heading: #0F172A;          /* Chữ tiêu đề: (15, 23, 42) */
+            --qaute-text: #334155;             /* Chữ thường: (51, 65, 85) */
+            --qaute-muted: #64748B;            /* Chữ phụ: (100, 116, 139) */
+            --qaute-success: #16A34A;          /* Thành công: (22, 163, 74) */
+            --qaute-success-rgb: 22, 163, 74;
+            --qaute-warning: #D97706;          /* Cảnh báo: (217, 119, 6) */
+            --qaute-warning-rgb: 217, 119, 6;
+            --qaute-danger: #DC2626;           /* Lỗi: (220, 38, 38) */
+            --qaute-danger-rgb: 220, 38, 38;
 
-            /* Bootstrap Overrides */
+            /* Backward compatibility alias */
+            --qaute-sidebar: var(--qaute-navbar);
+
+            /* Bootstrap 5.3 Overrides */
             --bs-primary: #2563EB;
             --bs-primary-rgb: 37, 99, 235;
-            --bs-secondary: #14B8A6;
-            --bs-secondary-rgb: 20, 184, 166;
-            --bs-success: #22C55E;
-            --bs-success-rgb: 34, 197, 94;
-            --bs-warning: #F59E0B;
-            --bs-warning-rgb: 245, 158, 11;
-            --bs-danger: #EF4444;
-            --bs-danger-rgb: 239, 68, 68;
+            --bs-secondary: #0F766E;
+            --bs-secondary-rgb: 15, 118, 110;
             --bs-info: #14B8A6;
             --bs-info-rgb: 20, 184, 166;
+            --bs-success: #16A34A;
+            --bs-success-rgb: 22, 163, 74;
+            --bs-warning: #D97706;
+            --bs-warning-rgb: 217, 119, 6;
+            --bs-danger: #DC2626;
+            --bs-danger-rgb: 220, 38, 38;
+            --bs-light: #F1F5F9;
+            --bs-light-rgb: 241, 245, 249;
+            --bs-tertiary-bg: #F1F5F9;
             --bs-body-bg: #F8FAFC;
-            --bs-body-color: #1E293B;
+            --bs-body-color: #334155;
+            --bs-secondary-color: #64748B;
+            --bs-heading-color: #0F172A;
             --bs-border-color: #E2E8F0;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--qaute-bg);
-            color: var(--qaute-text);
+            background-color: var(--qaute-bg) !important;
+            color: var(--qaute-text) !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
+        /* === TYPOGRAPHY === */
+        h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+            color: var(--qaute-heading) !important;
+            font-weight: 700;
+        }
+
+        .text-dark {
+            color: var(--qaute-heading) !important;
+        }
+
+        .text-body {
+            color: var(--qaute-text) !important;
+        }
+
+        .text-secondary {
+            color: var(--qaute-muted) !important;
+        }
+
+        .text-muted {
+            color: var(--qaute-muted) !important;
+        }
+
+        .text-primary {
+            color: var(--qaute-primary) !important;
+        }
+
+        .text-success {
+            color: var(--qaute-success) !important;
+        }
+
+        .text-warning {
+            color: var(--qaute-warning) !important;
+        }
+
+        .text-danger {
+            color: var(--qaute-danger) !important;
+        }
+
         /* === NAVBAR CHÍNH === */
         .navbar-qaute {
-            background-color: var(--qaute-sidebar);
-            background-image: linear-gradient(135deg, #1E3A5F 0%, #172d49 100%);
+            background-color: var(--qaute-navbar) !important;
+            background-image: none !important;
             box-shadow: 0 4px 20px -2px rgba(30, 58, 95, 0.35);
             padding: 0.75rem 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -82,7 +136,7 @@
         }
 
         .brand-badge {
-            background-color: var(--qaute-secondary);
+            background-color: var(--qaute-teal-light); /* #14B8A6 */
             color: #FFFFFF;
             font-size: 0.72rem;
             padding: 3px 8px;
@@ -93,7 +147,7 @@
         }
 
         .nav-link-qaute {
-            color: rgba(255, 255, 255, 0.88) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
             font-weight: 500;
             font-size: 0.95rem;
             padding: 0.5rem 0.9rem !important;
@@ -106,35 +160,51 @@
 
         .nav-link-qaute:hover {
             color: #FFFFFF !important;
-            background-color: rgba(255, 255, 255, 0.12);
+            background-color: var(--qaute-navbar-hover) !important; /* #294E78 Navbar hover */
         }
 
         .nav-link-qaute.active {
             color: #FFFFFF !important;
-            background-color: var(--qaute-primary);
+            background-color: var(--qaute-primary) !important; /* #2563EB */
             font-weight: 600;
         }
 
-        /* === CARD & PANEL === */
-        .qaute-card {
-            background-color: var(--qaute-card-bg);
-            border: 1px solid var(--qaute-border);
+        .navbar-qaute .dropdown-toggle:hover {
+            background-color: var(--qaute-navbar-hover) !important;
+        }
+
+        /* === BACKGROUND SECTION & CARD === */
+        .qaute-section-bg, .bg-section {
+            background-color: var(--qaute-bg-section) !important; /* #F1F5F9 */
+        }
+
+        .bg-light {
+            background-color: var(--qaute-bg-section) !important; /* #F1F5F9 */
+        }
+
+        .qaute-card, .card {
+            background-color: var(--qaute-card-bg) !important; /* #FFFFFF */
+            border: 1px solid var(--qaute-border) !important;  /* #E2E8F0 */
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(30, 41, 59, 0.04), 0 2px 4px -2px rgba(30, 41, 59, 0.04);
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .qaute-card-hover:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 24px -4px rgba(30, 41, 59, 0.08);
-            border-color: #cbd5e1;
+            box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1 !important;
+        }
+
+        .border, .border-top, .border-bottom, .border-start, .border-end {
+            border-color: var(--qaute-border) !important;
         }
 
         /* === BUTTONS === */
-        .btn-qaute-primary {
-            background: linear-gradient(135deg, var(--qaute-primary) 0%, #3b82f6 100%);
-            background-color: var(--qaute-primary);
-            border: none;
+        .btn-qaute-primary, .btn-primary {
+            background: linear-gradient(135deg, var(--qaute-primary) 0%, #3b82f6 100%) !important;
+            background-color: var(--qaute-primary) !important; /* #2563EB */
+            border-color: var(--qaute-primary) !important;
             color: #FFFFFF !important;
             font-weight: 600;
             padding: 0.6rem 1.3rem;
@@ -143,33 +213,36 @@
             box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
         }
 
-        .btn-qaute-primary:hover, .btn-qaute-primary:focus {
-            background: linear-gradient(135deg, var(--qaute-primary-hover) 0%, var(--qaute-primary) 100%);
-            background-color: var(--qaute-primary-hover);
+        .btn-qaute-primary:hover, .btn-qaute-primary:focus,
+        .btn-primary:hover, .btn-primary:focus {
+            background: linear-gradient(135deg, var(--qaute-primary-hover) 0%, var(--qaute-primary) 100%) !important;
+            background-color: var(--qaute-primary-hover) !important; /* #1D4ED8 */
+            border-color: var(--qaute-primary-hover) !important;
             color: #FFFFFF !important;
             transform: translateY(-1px);
             box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
         }
 
-        .btn-qaute-outline {
-            border: 1.5px solid var(--qaute-primary);
-            color: var(--qaute-primary);
+        .btn-qaute-outline, .btn-outline-primary {
+            border: 1.5px solid var(--qaute-primary) !important;
+            color: var(--qaute-primary) !important;
             font-weight: 600;
             padding: 0.55rem 1.2rem;
             border-radius: 0.6rem;
-            background: transparent;
+            background: transparent !important;
             transition: all 0.2s ease;
         }
 
-        .btn-qaute-outline:hover {
-            background-color: var(--qaute-primary);
+        .btn-qaute-outline:hover, .btn-outline-primary:hover {
+            background-color: var(--qaute-primary) !important;
+            border-color: var(--qaute-primary) !important;
             color: #FFFFFF !important;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         }
 
         .btn-qaute-accent {
-            background-color: var(--qaute-secondary);
-            border: none;
+            background-color: var(--qaute-teal-light) !important; /* #14B8A6 */
+            border: none !important;
             color: #FFFFFF !important;
             font-weight: 700;
             padding: 0.55rem 1.2rem;
@@ -179,10 +252,101 @@
         }
 
         .btn-qaute-accent:hover {
-            background-color: #0d9488;
+            background-color: var(--qaute-secondary) !important; /* #0F766E */
             color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+        }
+
+        .btn-success {
+            background-color: var(--qaute-success) !important; /* #16A34A */
+            border-color: var(--qaute-success) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-success:hover {
+            background-color: #15803d !important;
+            border-color: #15803d !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-outline-success {
+            border-color: var(--qaute-success) !important;
+            color: var(--qaute-success) !important;
+        }
+        .btn-outline-success:hover {
+            background-color: var(--qaute-success) !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-warning {
+            background-color: var(--qaute-warning) !important; /* #D97706 */
+            border-color: var(--qaute-warning) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-warning:hover {
+            background-color: #b45309 !important;
+            border-color: #b45309 !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-outline-warning {
+            border-color: var(--qaute-warning) !important;
+            color: var(--qaute-warning) !important;
+        }
+        .btn-outline-warning:hover {
+            background-color: var(--qaute-warning) !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-danger {
+            background-color: var(--qaute-danger) !important; /* #DC2626 */
+            border-color: var(--qaute-danger) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-danger:hover {
+            background-color: #b91c1c !important;
+            border-color: #b91c1c !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-outline-danger {
+            border-color: var(--qaute-danger) !important;
+            color: var(--qaute-danger) !important;
+        }
+        .btn-outline-danger:hover {
+            background-color: var(--qaute-danger) !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-secondary {
+            background-color: var(--qaute-secondary) !important; /* #0F766E */
+            border-color: var(--qaute-secondary) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-secondary:hover {
+            background-color: #115e59 !important;
+            border-color: #115e59 !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-info {
+            background-color: var(--qaute-teal-light) !important; /* #14B8A6 */
+            border-color: var(--qaute-teal-light) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-info:hover {
+            background-color: var(--qaute-secondary) !important; /* #0F766E */
+            border-color: var(--qaute-secondary) !important;
+            color: #FFFFFF !important;
+        }
+
+        .btn-outline-info {
+            border-color: var(--qaute-teal-light) !important;
+            color: var(--qaute-secondary) !important;
+        }
+        .btn-outline-info:hover {
+            background-color: var(--qaute-teal-light) !important;
+            color: #FFFFFF !important;
         }
 
         /* === SUBNAV & SIDEBAR STYLES === */
@@ -191,7 +355,7 @@
             border: 1px solid var(--qaute-border);
             border-radius: 50rem;
             padding: 0.35rem 0.5rem;
-            box-shadow: 0 2px 4px rgba(30, 41, 59, 0.03);
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03);
         }
 
         .qaute-sidebar-card {
@@ -202,7 +366,7 @@
         }
 
         .qaute-sidebar-header {
-            background-color: var(--qaute-sidebar);
+            background-color: var(--qaute-navbar);
             color: #FFFFFF;
             padding: 0.85rem 1.2rem;
             font-weight: 700;
@@ -225,32 +389,80 @@
 
         .status-ChoTiepNhan, .status-ChoDuyet {
             background-color: #FEF3C7;
-            color: #92400E;
+            color: var(--qaute-warning); /* #D97706 */
             border: 1px solid #FDE68A;
         }
 
         .status-DangXuLy {
-            background-color: #DBEAFE;
-            color: #1D4ED8;
-            border: 1px solid #BFDBFE;
+            background-color: #CCFBF1;
+            color: var(--qaute-secondary); /* #0F766E */
+            border: 1px solid #99F6E4;
         }
 
         .status-DaPhanHoi, .status-DaXacNhan, .status-HoanThanh {
             background-color: #DCFCE7;
-            color: #15803D;
+            color: var(--qaute-success); /* #16A34A */
             border: 1px solid #86EFAC;
         }
 
         .status-TuChoi, .status-Huy {
             background-color: #FEE2E2;
-            color: #B91C1C;
+            color: var(--qaute-danger); /* #DC2626 */
             border: 1px solid #FECACA;
         }
 
         .status-Dong {
-            background-color: #F1F5F9;
-            color: #475569;
-            border: 1px solid #E2E8F0;
+            background-color: var(--qaute-bg-section); /* #F1F5F9 */
+            color: var(--qaute-muted); /* #64748B */
+            border: 1px solid var(--qaute-border); /* #E2E8F0 */
+        }
+
+        /* === ALERTS === */
+        .alert-success {
+            background-color: #F0FDF4 !important;
+            color: #166534 !important;
+            border-color: #BBF7D0 !important;
+        }
+        .alert-warning {
+            background-color: #FFFBEB !important;
+            color: #92400E !important;
+            border-color: #FDE68A !important;
+        }
+        .alert-danger {
+            background-color: #FEF2F2 !important;
+            color: #991B1B !important;
+            border-color: #FECACA !important;
+        }
+        .alert-info {
+            background-color: #F0FDFA !important;
+            color: #115E59 !important;
+            border-color: #99F6E4 !important;
+        }
+
+        /* === BOOTSTRAP SUBTLE BADGES & BACKGROUNDS === */
+        .bg-primary-subtle {
+            background-color: #EFF6FF !important;
+            color: var(--qaute-primary) !important;
+        }
+        .bg-secondary-subtle {
+            background-color: #F0FDFA !important;
+            color: var(--qaute-secondary) !important;
+        }
+        .bg-success-subtle {
+            background-color: #F0FDF4 !important;
+            color: var(--qaute-success) !important;
+        }
+        .bg-warning-subtle {
+            background-color: #FFFBEB !important;
+            color: var(--qaute-warning) !important;
+        }
+        .bg-danger-subtle {
+            background-color: #FEF2F2 !important;
+            color: var(--qaute-danger) !important;
+        }
+        .bg-info-subtle {
+            background-color: #F0FDFA !important;
+            color: var(--qaute-teal-light) !important;
         }
 
         /* === HERO BANNER === */
@@ -275,26 +487,34 @@
         }
 
         .chat-bubble-receiver {
-            background-color: #FFFFFF;
-            color: var(--qaute-text);
-            border: 1px solid var(--qaute-border);
+            background-color: var(--qaute-card-bg); /* #FFFFFF */
+            color: var(--qaute-text); /* #334155 */
+            border: 1px solid var(--qaute-border); /* #E2E8F0 */
             border-radius: 1.2rem 1.2rem 1.2rem 0.2rem;
             padding: 0.8rem 1.1rem;
             max-width: 75%;
-            box-shadow: 0 2px 4px rgba(30, 41, 59, 0.04);
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
         }
 
         .rating-stars {
-            color: var(--qaute-warning);
+            color: var(--qaute-warning); /* #D97706 */
             font-size: 1.2rem;
         }
 
         /* === FORM CONTROLS FOCUS === */
+        .form-control, .form-select {
+            color: var(--qaute-text);
+            background-color: var(--qaute-card-bg);
+            border: 1px solid var(--qaute-border);
+        }
+
         .form-control:focus, .form-select:focus {
             border-color: var(--qaute-primary);
             box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+            color: var(--qaute-heading);
         }
     </style>
+    <link th:href="@{/css/qaute-theme.css}" rel="stylesheet">
 </head>
 
 <body>
@@ -317,7 +537,6 @@
                     </defs>
                 </svg>
                 <span class="fw-extrabold text-white">QAUTE</span>
-                <span class="brand-badge">UTE Advisory</span>
             </a>
             
             <button class="navbar-toggler text-white border-white border-opacity-50" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-label="Menu">
@@ -333,17 +552,17 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-qaute" th:href="@{/faq}">
-                            <i class="bi bi-question-circle me-1"></i>Hỏi đáp FAQ
+                            <i class="bi bi-question-circle me-1"></i>Hỏi đáp
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-qaute" th:href="@{/articles}">
-                            <i class="bi bi-journal-text me-1"></i>Cẩm nang
+                            <i class="bi bi-journal-text me-1"></i>Bài viết
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-qaute" th:href="@{/advisors}">
-                            <i class="bi bi-people me-1"></i>Đội ngũ Cố vấn
+                            <i class="bi bi-people me-1"></i>Cố vấn
                         </a>
                     </li>
                 </ul>
@@ -381,10 +600,13 @@
                         <!-- User Profile Dropdown -->
                         <div class="dropdown">
                             <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center gap-2 p-1 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1);">
-                                <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 13px;">
-                                    <span sec:authentication="name" th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
+                                <div class="user-avatar user-avatar-sm">
+                                    <img th:if="${#authentication.principal.avatarUrl != null and !#strings.isEmpty(#authentication.principal.avatarUrl)}"
+                                         th:src="${#authentication.principal.avatarUrl}" alt="Ảnh đại diện">
+                                    <span th:unless="${#authentication.principal.avatarUrl != null and !#strings.isEmpty(#authentication.principal.avatarUrl)}"
+                                          th:text="${#authentication.principal.avatarInitial}">U</span>
                                 </div>
-                                <span class="d-none d-md-inline fw-semibold text-white pe-2" sec:authentication="name">User</span>
+                                <span class="d-none d-md-inline fw-semibold text-white pe-2" th:text="${#authentication.principal.hoTen}">Người dùng</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2 p-2" style="min-width: 220px;">
                                 <li class="px-3 py-2 border-bottom">

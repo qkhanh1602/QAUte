@@ -1,0 +1,422 @@
+:root {
+    --qaute-navbar: #ffffff;
+    --qaute-navbar-rgb: 255, 255, 255;
+    --qaute-navbar-hover: #f0fdf4;
+    --qaute-primary: #166534;
+    --qaute-primary-rgb: 22, 101, 52;
+    --qaute-primary-hover: #14532d;
+    --qaute-secondary: #15803d;
+    --qaute-secondary-rgb: 21, 128, 61;
+    --qaute-teal-light: #22c55e;
+    --qaute-teal-light-rgb: 34, 197, 94;
+    --qaute-bg: #f6faf7;
+    --qaute-bg-section: #eef8f1;
+    --qaute-card-bg: #ffffff;
+    --qaute-border: #e2e8e4;
+    --qaute-heading: #17251d;
+    --qaute-text: #37463d;
+    --qaute-muted: #6b7280;
+    --qaute-success: #15803d;
+    --qaute-success-rgb: 21, 128, 61;
+    --bs-primary: #166534;
+    --bs-primary-rgb: 22, 101, 52;
+    --bs-secondary: #15803d;
+    --bs-secondary-rgb: 21, 128, 61;
+    --bs-success: #15803d;
+    --bs-success-rgb: 21, 128, 61;
+    --bs-info: #22c55e;
+    --bs-info-rgb: 34, 197, 94;
+    --bs-light: #f0fdf4;
+    --bs-light-rgb: 240, 253, 244;
+    --bs-body-bg: #f6faf7;
+    --bs-body-color: #37463d;
+    --bs-heading-color: #17251d;
+    --bs-border-color: #e2e8e4;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--qaute-bg) !important;
+    color: var(--qaute-text) !important;
+}
+
+a { color: var(--qaute-primary); }
+a:hover { color: var(--qaute-primary-hover); }
+
+.text-primary { color: var(--qaute-primary) !important; }
+.text-success { color: var(--qaute-secondary) !important; }
+.bg-primary { background-color: var(--qaute-primary) !important; }
+.bg-success { background-color: var(--qaute-secondary) !important; }
+.bg-primary-subtle, .bg-success-subtle, .bg-info-subtle {
+    background-color: #ecfdf3 !important;
+    color: var(--qaute-primary) !important;
+}
+
+.navbar-qaute {
+    background: rgba(255, 255, 255, .96) !important;
+    border-bottom: 1px solid #e6eee8 !important;
+    box-shadow: 0 8px 24px rgba(20, 83, 45, .07) !important;
+    backdrop-filter: blur(14px);
+}
+
+.navbar-brand-qaute,
+.navbar-brand-qaute .text-white {
+    color: #173b27 !important;
+}
+
+.navbar-brand-qaute svg rect { fill: var(--qaute-primary); }
+.navbar-brand-qaute svg [stroke="#14B8A6"] { stroke: #86efac; }
+.navbar-brand-qaute svg [fill="#14B8A6"] { fill: #86efac; }
+
+.nav-link-qaute {
+    color: #263b2e !important;
+    border-radius: .7rem !important;
+    position: relative;
+}
+
+.nav-link-qaute:hover,
+.nav-link-qaute:focus,
+.nav-link-qaute.active {
+    color: var(--qaute-primary) !important;
+    background: #ecfdf3 !important;
+}
+
+.navbar-qaute .btn-outline-light {
+    color: var(--qaute-primary) !important;
+    border-color: #a7d7b6 !important;
+    background: #fff !important;
+}
+
+.navbar-qaute .btn-outline-light:hover {
+    color: #fff !important;
+    border-color: var(--qaute-primary) !important;
+    background: var(--qaute-primary) !important;
+}
+
+.navbar-qaute .dropdown-toggle,
+.navbar-qaute .dropdown-toggle .text-white {
+    color: #263b2e !important;
+}
+
+.navbar-qaute .dropdown-toggle { background: #f0fdf4 !important; }
+.navbar-qaute .dropdown-toggle .bg-white { background: #dcfce7 !important; }
+.navbar-toggler { color: var(--qaute-primary) !important; border-color: #bbd9c4 !important; }
+
+.qaute-card,
+.card {
+    border-color: var(--qaute-border) !important;
+    box-shadow: 0 8px 28px rgba(20, 83, 45, .055) !important;
+}
+
+.qaute-card-hover:hover {
+    border-color: #a7d7b6 !important;
+    box-shadow: 0 16px 34px rgba(20, 83, 45, .11) !important;
+}
+
+.btn-primary,
+.btn-qaute-primary,
+.btn-qaute-accent {
+    color: #fff !important;
+    background: var(--qaute-primary) !important;
+    border-color: var(--qaute-primary) !important;
+    box-shadow: 0 6px 16px rgba(22, 101, 52, .18) !important;
+}
+
+.btn-primary:hover,
+.btn-qaute-primary:hover,
+.btn-qaute-accent:hover {
+    background: var(--qaute-primary-hover) !important;
+    border-color: var(--qaute-primary-hover) !important;
+}
+
+.btn-outline-primary {
+    color: var(--qaute-primary) !important;
+    border-color: #83bf96 !important;
+}
+
+.btn-outline-primary:hover {
+    color: #fff !important;
+    background: var(--qaute-primary) !important;
+    border-color: var(--qaute-primary) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #47a968 !important;
+    box-shadow: 0 0 0 .2rem rgba(34, 197, 94, .14) !important;
+}
+
+.qaute-sidebar-header { background: var(--qaute-primary) !important; }
+.chat-bubble-sender { background: var(--qaute-primary) !important; }
+
+.dashboard-hero,
+.public-page-hero {
+    background: linear-gradient(125deg, #14532d 0%, #166534 55%, #22c55e 145%) !important;
+}
+
+.dashboard-hero h1,
+.dashboard-hero h2,
+.dashboard-hero h3,
+.dashboard-hero h4,
+.public-page-hero h1,
+.public-page-hero h2,
+.public-page-hero h3,
+.public-page-hero h4 {
+    color: #fff !important;
+}
+
+.auth-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 10% 8%, rgba(34, 197, 94, .12), transparent 30%),
+        radial-gradient(circle at 92% 90%, rgba(22, 101, 52, .1), transparent 28%),
+        #f6faf7 !important;
+}
+
+.auth-page .qaute-card {
+    border: 1px solid #dce9df !important;
+    box-shadow: 0 24px 60px rgba(20, 83, 45, .12) !important;
+}
+
+.auth-brand-mark rect { fill: var(--qaute-primary); }
+.auth-brand-mark [stroke="#14B8A6"] { stroke: #86efac; }
+.auth-brand-mark [fill="#14B8A6"] { fill: #86efac; }
+
+.home-shell {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.home-section { padding: 2.3rem 0; }
+.section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .45rem;
+    color: var(--qaute-primary);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+.section-kicker::before {
+    content: "";
+    width: 5px;
+    height: 20px;
+    border-radius: 10px;
+    background: #22c55e;
+}
+.section-title { font-size: clamp(1.45rem, 2.4vw, 1.9rem); letter-spacing: -.035em; }
+
+.home-shell > .sticky-top {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+}
+
+.home-shell > .sticky-top .navbar-qaute {
+    background: rgba(255, 255, 255, .88) !important;
+    border-bottom-color: rgba(255, 255, 255, .7) !important;
+    box-shadow: 0 10px 30px rgba(20, 83, 45, .06) !important;
+}
+
+.home-hero {
+    min-height: 650px;
+    padding: 8rem 0 3.75rem;
+    display: flex;
+    align-items: center;
+    background-image:
+        linear-gradient(90deg,
+            rgba(246, 250, 247, .96) 0%,
+            rgba(246, 250, 247, .90) 25%,
+            rgba(246, 250, 247, .64) 43%,
+            rgba(246, 250, 247, .20) 61%,
+            rgba(246, 250, 247, .02) 82%),
+        linear-gradient(0deg, rgba(22, 101, 52, .10), transparent 38%),
+        url('/images/home/qaute-campus.webp');
+    background-size: cover;
+    background-position: center, center, center 48%;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid #dfece2;
+    overflow: hidden;
+}
+.hero-copy { width: 100%; padding: 1rem 0; }
+.hero-content { width: min(55%, 760px); }
+.hero-eyebrow {
+    color: #55705f;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+}
+.hero-title {
+    margin: .65rem 0 .75rem;
+    font-size: clamp(2.35rem, 3.7vw, 3.35rem);
+    line-height: 1.04;
+    letter-spacing: -.055em;
+}
+.hero-title span { color: var(--qaute-primary); }
+.hero-description { max-width: 620px; font-size: 1.02rem; line-height: 1.75; color: #5c6d62; }
+.hero-search {
+    max-width: 690px;
+    padding: .45rem;
+    background: #fff;
+    border: 1px solid #d9e7dc;
+    border-radius: 1rem;
+    box-shadow: 0 14px 34px rgba(20, 83, 45, .1);
+}
+.hero-search .form-control { min-height: 48px; border: 0 !important; box-shadow: none !important; }
+.hero-search .btn { min-width: 128px; border-radius: .75rem; }
+.quick-topic {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: .3rem .75rem;
+    color: #3f5a49;
+    background: rgba(255,255,255,.76);
+    border: 1px solid #dbe9df;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.quick-topic:hover { color: var(--qaute-primary); background: #fff; border-color: #9dcbae; }
+
+.category-card {
+    height: 100%;
+    padding: 1.15rem;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--qaute-border);
+    border-radius: .9rem;
+    text-decoration: none;
+    transition: .2s ease;
+}
+.category-card:hover { color: inherit; background: #f0fdf4; border-color: #a7d7b6; transform: translateY(-2px); }
+.category-icon {
+    width: 46px;
+    height: 46px;
+    color: var(--qaute-primary);
+    background: #e9f8ee;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+}
+
+.qa-panel { background: #fff; border: 1px solid var(--qaute-border); border-radius: 1rem; overflow: hidden; }
+.qa-tabs { padding: .75rem 1rem; border-bottom: 1px solid var(--qaute-border); }
+.qa-tab {
+    padding: .65rem 1rem;
+    color: #53635a;
+    border: 0;
+    border-radius: .65rem;
+    background: transparent;
+    font-weight: 650;
+}
+.qa-tab.active { color: var(--qaute-primary); background: #eaf8ee; }
+.question-row { display: grid; grid-template-columns: 72px minmax(0, 1fr) 90px; gap: 1rem; padding: 1.15rem; border-bottom: 1px solid #edf1ee; }
+.question-row:last-child { border-bottom: 0; }
+.question-stat { color: #718078; text-align: center; font-size: .76rem; }
+.question-stat strong { display: block; color: var(--qaute-primary); font-size: 1rem; }
+.question-title { color: #1e3527; font-weight: 750; text-decoration: none; }
+.question-title:hover { color: var(--qaute-primary); }
+.question-tag { color: var(--qaute-primary); background: #eaf8ee; border: 1px solid #d3ecda; }
+
+.side-cta { background: linear-gradient(145deg, #f4fbf5, #e7f7eb); border: 1px solid #d8ebdc; }
+.user-avatar,
+.advisor-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #fff;
+    background: var(--qaute-primary);
+    border: 2px solid rgba(255, 255, 255, .92);
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgba(20, 83, 45, .16);
+    font-weight: 750;
+    line-height: 1;
+    text-transform: uppercase;
+}
+.user-avatar img,
+.advisor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-avatar-sm { width: 32px; height: 32px; font-size: .78rem; }
+.user-avatar-md { width: 44px; height: 44px; font-size: 1rem; }
+.user-avatar-lg { width: 80px; height: 80px; font-size: 2rem; }
+.user-avatar-xl { width: 70px; height: 70px; font-size: 1.75rem; }
+
+.article-card { overflow: hidden; }
+.article-accent { height: 5px; background: linear-gradient(90deg, #166534, #22c55e); }
+
+.receiving-faculty-list {
+    display: grid;
+    gap: .4rem;
+    max-height: 245px;
+    padding-right: .35rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #a7d7b6 transparent;
+}
+
+.receiving-faculty-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: .5rem .6rem;
+    color: #37463d;
+    background: #f6faf7;
+    border: 1px solid #e2e8e4;
+    border-radius: .65rem;
+    line-height: 1.35;
+}
+
+.receiving-faculty-item i {
+    flex: 0 0 auto;
+    margin-top: .12rem;
+    color: var(--qaute-primary);
+    font-size: .78rem;
+}
+
+footer[style] {
+    background: #103d24 !important;
+    border-top-color: #22c55e !important;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse { padding-top: 1rem; }
+    .navbar-qaute .d-flex.align-items-center.gap-2 { align-items: stretch !important; }
+    .home-hero {
+        min-height: 610px;
+        padding-top: 7.25rem;
+        background-image:
+            linear-gradient(90deg, rgba(246,250,247,.98) 0%, rgba(246,250,247,.94) 38%, rgba(246,250,247,.68) 65%, rgba(246,250,247,.22) 100%),
+            linear-gradient(0deg, rgba(22,101,52,.09), transparent 40%),
+            url('/images/home/qaute-campus.webp');
+    }
+    .hero-content { width: 68%; }
+}
+
+@media (max-width: 575.98px) {
+    .home-hero {
+        min-height: 620px;
+        padding: 6.5rem 0 2rem;
+        background-position: 68% center;
+        background-image:
+            linear-gradient(90deg, rgba(246,250,247,.98) 0%, rgba(246,250,247,.94) 62%, rgba(246,250,247,.68) 100%),
+            linear-gradient(0deg, rgba(22,101,52,.12), transparent 48%),
+            url('/images/home/qaute-campus.webp');
+    }
+    .hero-content { width: 100%; }
+    .hero-title { font-size: 2.35rem; }
+    .hero-search { align-items: stretch !important; flex-wrap: wrap; }
+    .hero-search .input-group-text { display: none; }
+    .hero-search .btn { width: 100%; }
+    .question-row { grid-template-columns: 52px minmax(0, 1fr); }
+    .question-row > :last-child { grid-column: 2; text-align: left !important; }
+    .qa-tabs { overflow-x: auto; flex-wrap: nowrap !important; }
+    .qa-tab { white-space: nowrap; }
+}

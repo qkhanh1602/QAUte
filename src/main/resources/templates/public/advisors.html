@@ -21,8 +21,9 @@
     <div class="row g-4">
         <div class="col-md-6 col-lg-4" th:each="cv : ${advisors}">
             <div class="qaute-card qaute-card-hover p-4 text-center h-100 d-flex flex-column">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-person-workspace fs-1"></i>
+                <div class="user-avatar user-avatar-lg mx-auto mb-3">
+                    <img th:if="${cv.taiKhoan.avatarUrl != null and !#strings.isEmpty(cv.taiKhoan.avatarUrl)}" th:src="${cv.taiKhoan.avatarUrl}" alt="Ảnh cố vấn">
+                    <span th:unless="${cv.taiKhoan.avatarUrl != null and !#strings.isEmpty(cv.taiKhoan.avatarUrl)}" th:text="${cv.taiKhoan.avatarInitial}">A</span>
                 </div>
                 <h5 class="fw-bold mb-1 text-dark" th:text="${cv.taiKhoan.hoTen}">Họ tên cố vấn</h5>
                 <div class="text-primary small fw-semibold mb-1" th:text="${cv.hocHamHocVi + ' - ' + cv.chucVu}">Học hàm/Học vị - Chức vụ</div>

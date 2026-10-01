@@ -41,10 +41,10 @@ public class YeuCauXacMinhOTP {
     @Column(name = "DaDungLuc")
     private LocalDateTime daDungLuc;
 
-    @Column(name = "SoLanNhapSai", nullable = false)
+    @Column(name = "SoLanNhapSai", nullable = false, columnDefinition = "tinyint")
     private Integer soLanNhapSai;
 
-    @Column(name = "SoLanGui", nullable = false)
+    @Column(name = "SoLanGui", nullable = false, columnDefinition = "tinyint")
     private Integer soLanGui;
 
     @Column(name = "GuiLaiSau", nullable = false)

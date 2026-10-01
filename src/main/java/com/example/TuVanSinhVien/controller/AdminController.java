@@ -14,6 +14,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.SecureRandom;
+
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -22,6 +24,8 @@ public class AdminController {
     private final CatalogService catalogService;
     private final ContentService contentService;
     private final PasswordEncoder passwordEncoder;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -48,6 +52,7 @@ public class AdminController {
             } else {
                 u.setTrangThai("HoatDong");
             }
+            u.setTokenVersion((u.getTokenVersion() == null ? 0 : u.getTokenVersion()) + 1);
             taiKhoanRepo.save(u);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái tài khoản #" + id + " thành công!");
         });
@@ -57,12 +62,29 @@ public class AdminController {
     @PostMapping("/users/{id}/reset-password")
     public String resetPassword(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         taiKhoanRepo.findById(id).ifPresent(u -> {
-            u.setMatKhau(passwordEncoder.encode("123456"));
+            String temporaryPassword = generateTemporaryPassword();
+            u.setMatKhau(passwordEncoder.encode(temporaryPassword));
             u.setBatBuocDoiMatKhau(true);
+            u.setTokenVersion((u.getTokenVersion() == null ? 0 : u.getTokenVersion()) + 1);
             taiKhoanRepo.save(u);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã đặt lại mật khẩu cho tài khoản \'" + u.getTenDangNhap() + "\' thành \'123456\'.");
+            redirectAttributes.addFlashAttribute("successMessage", "Mật khẩu tạm thời của '" + u.getTenDangNhap()
+                    + "' là '" + temporaryPassword + "'. Mật khẩu chỉ hiển thị lần này.");
         });
         return "redirect:/admin/users";
+    }
+
+    private String generateTemporaryPassword() {
+        StringBuilder value = new StringBuilder("Aa7!");
+        while (value.length() < 14) {
+            value.append(PASSWORD_CHARS.charAt(SECURE_RANDOM.nextInt(PASSWORD_CHARS.length())));
+        }
+        for (int i = value.length() - 1; i > 0; i--) {
+            int j = SECURE_RANDOM.nextInt(i + 1);
+            char tmp = value.charAt(i);
+            value.setCharAt(i, value.charAt(j));
+            value.setCharAt(j, tmp);
+        }
+        return value.toString();
     }
 
     @GetMapping("/catalogs")

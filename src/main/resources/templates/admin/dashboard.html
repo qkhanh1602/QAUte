@@ -6,8 +6,15 @@
 <div th:replace="~{fragments/header :: navbar}"></div>
 
 <div class="container py-4">
+    <!-- Thông báo nếu vừa bị chặn khi vào link sinh viên -->
+    <div th:if="${param.denied}" class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mb-4 rounded-3 shadow-sm border-warning" role="alert">
+        <i class="bi bi-info-circle-fill text-warning fs-5 flex-shrink-0"></i>
+        <span>Tài khoản <strong>Quản trị viên</strong> không có hồ sơ sinh viên để mở các trang dành riêng cho sinh viên (như chat trực tuyến SV, gửi phiếu, đặt lịch). Hệ thống đã tự động đưa bạn về Bảng điều khiển Quản trị.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <!-- Admin Header Banner -->
-    <div class="qaute-card p-4 p-md-5 mb-4 text-white border-0 shadow-sm" style="background: linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 50%, #2563EB 100%) !important; border-radius: 1.5rem;">
+    <div class="qaute-card dashboard-hero p-4 p-md-5 mb-4 text-white border-0 shadow-sm" style="border-radius: 1.5rem;">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <span class="badge bg-danger text-white px-3 py-1 rounded-pill mb-2 fw-bold">
@@ -153,7 +160,7 @@ new Chart(ctxStatus, {
         labels: ['Chờ tiếp nhận', 'Đang xử lý', 'Đã phản hồi', 'Đã đóng'],
         datasets: [{
             data: [choTiepNhan, dangXuLy, daPhanHoi, dong],
-            backgroundColor: ['#f59e0b', '#0284c7', '#10b981', '#64748b']
+            backgroundColor: ['#D97706', '#0F766E', '#16A34A', '#64748B']
         }]
     },
     options: {
@@ -178,7 +185,7 @@ new Chart(ctxDept, {
         datasets: [{
             label: 'Số lượng phiếu tư vấn',
             data: deptValues.length > 0 ? deptValues : [1, 1, 0, 0],
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#166534',
             borderRadius: 6
         }]
     },

@@ -167,8 +167,10 @@ public class ApiController {
     }
 
     @PostMapping("/notifications/{id}/read")
-    public ResponseEntity<Void> markNotificationRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
+    public ResponseEntity<Void> markNotificationRead(@PathVariable Long id,
+                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) return ResponseEntity.status(401).build();
+        notificationService.markAsRead(id, userDetails.getMaTK());
         return ResponseEntity.ok().build();
     }
 

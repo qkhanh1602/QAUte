@@ -6,8 +6,15 @@
 <div th:replace="~{fragments/header :: navbar}"></div>
 
 <div class="container py-4">
+    <!-- Thông báo nếu vừa bị chặn -->
+    <div th:if="${param.denied}" class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mb-4 rounded-3 shadow-sm border-warning" role="alert">
+        <i class="bi bi-shield-exclamation text-warning fs-5 flex-shrink-0"></i>
+        <span>Bạn không có quyền truy cập vào các chức năng của Cán bộ hoặc Quản trị viên. Hệ thống đã đưa bạn về Cổng Sinh viên.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <!-- Student Header Banner -->
-    <div class="qaute-card p-4 p-md-5 mb-4 text-white border-0 shadow-sm" style="background: linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 60%, #2563EB 100%) !important; border-radius: 1.5rem;">
+    <div class="qaute-card dashboard-hero p-4 p-md-5 mb-4 text-white border-0 shadow-sm" style="border-radius: 1.5rem;">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-25 px-3 py-1 rounded-pill mb-2">

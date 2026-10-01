@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-css('Truy cập bị từ chối - 403')}"></head>
+<body class="d-flex flex-column min-vh-100" style="background-color: var(--qaute-bg);">
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container my-auto py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="qaute-card p-5 text-center shadow-lg border-0">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; background-color: #FEE2E2; color: #DC2626;">
+                    <i class="bi bi-shield-x fs-1"></i>
+                </div>
+
+                <h3 class="fw-extrabold text-dark mb-2">Truy cập bị từ chối</h3>
+                <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill mb-3 fw-semibold">Mã lỗi: 403 Forbidden</span>
+
+                <p class="text-secondary small mb-4" style="line-height: 1.6;">
+                    Tài khoản hiện tại của bạn không có quyền truy cập vào đường dẫn này hoặc chức năng này dành riêng cho vai trò người dùng khác (Sinh viên / Cố vấn / Quản trị viên).
+                </p>
+
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <!-- Nút điều hướng theo vai trò -->
+                    <div sec:authorize="hasRole('Admin')">
+                        <a th:href="@{/admin/dashboard}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                            <i class="bi bi-speedometer2 me-1"></i>Về Bảng Quản trị
+                        </a>
+                    </div>
+                    <div sec:authorize="hasRole('CoVan')">
+                        <a th:href="@{/advisor/dashboard}" class="btn btn-warning text-dark rounded-pill px-4 fw-bold">
+                            <i class="bi bi-briefcase me-1"></i>Về Bàn Cố vấn
+                        </a>
+                    </div>
+                    <div sec:authorize="hasRole('SinhVien')">
+                        <a th:href="@{/student/dashboard}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                            <i class="bi bi-mortarboard me-1"></i>Về Cổng Sinh viên
+                        </a>
+                    </div>
+                    <a th:href="@{/}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-house me-1"></i>Về Trang chủ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

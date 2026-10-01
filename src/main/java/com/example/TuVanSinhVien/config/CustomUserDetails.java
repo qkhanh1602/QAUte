@@ -42,6 +42,14 @@ public class CustomUserDetails implements UserDetails {
         return taiKhoan.getMaTK();
     }
 
+    public String getAvatarUrl() {
+        return taiKhoan.getAvatarUrl();
+    }
+
+    public String getAvatarInitial() {
+        return taiKhoan.getAvatarInitial();
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;

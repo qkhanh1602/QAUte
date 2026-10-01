@@ -22,6 +22,10 @@ public class TaiKhoan {
     private String email;
     @Column(name = "SoDienThoai", length = 15)
     private String soDienThoai;
+    @Column(name = "AvatarUrl", length = 1000)
+    private String avatarUrl;
+    @Column(name = "AvatarPublicId", length = 500)
+    private String avatarPublicId;
     @Column(name = "VaiTro", nullable = false, length = 20)
     private String vaiTro; // SinhVien, CoVan, Admin
     @Column(name = "TrangThai", nullable = false, length = 20)
@@ -366,6 +370,27 @@ public class TaiKhoan {
         return this.soDienThoai;
     }
 
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public String getAvatarPublicId() {
+        return avatarPublicId;
+    }
+
+    /**
+     * Chữ đại diện theo tên gọi cuối, tương tự avatar mặc định của Gmail.
+     * Ví dụ: "Nguyễn Văn An" trả về "A".
+     */
+    public String getAvatarInitial() {
+        if (hoTen == null || hoTen.isBlank()) {
+            return "U";
+        }
+        String[] nameParts = hoTen.trim().split("\\s+");
+        String lastNamePart = nameParts[nameParts.length - 1];
+        return lastNamePart.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
+    }
+
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     public String getVaiTro() {
@@ -454,6 +479,14 @@ public class TaiKhoan {
     @lombok.Generated
     public void setSoDienThoai(final String soDienThoai) {
         this.soDienThoai = soDienThoai;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public void setAvatarPublicId(String avatarPublicId) {
+        this.avatarPublicId = avatarPublicId;
     }
 
     @java.lang.SuppressWarnings("all")

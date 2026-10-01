@@ -75,8 +75,13 @@ public class StudentController {
     @GetMapping("/tickets/{id}")
     public String ticketDetail(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         SinhVien sv = getStudentOrThrow(userDetails);
-        YeuCauTuVan ticket = ticketService.getTicketById(id);
-        if (ticket == null || !ticket.getSinhVien().getMaSV().equals(sv.getMaSV())) {
+        YeuCauTuVan ticket;
+        try {
+            ticket = ticketService.getStudentTicket(id, sv);
+        } catch (SecurityException e) {
+            return "redirect:/student/tickets";
+        }
+        if (ticket == null) {
             return "redirect:/student/tickets";
         }
         model.addAttribute("ticket", ticket);
@@ -88,7 +93,7 @@ public class StudentController {
     public String followUpTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            ticketService.studentFollowUp(id, sv.getTaiKhoan(), noiDung);
+            ticketService.studentFollowUp(id, sv, noiDung);
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu hỏi bổ sung tới cố vấn!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -100,7 +105,7 @@ public class StudentController {
     public String closeTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false) String ketLuan, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            ticketService.closeTicket(id, sv.getTaiKhoan(), ketLuan);
+            ticketService.closeTicket(id, sv, ketLuan);
             redirectAttributes.addFlashAttribute("successMessage", "Đã đóng phiếu tư vấn.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -175,7 +180,7 @@ public class StudentController {
         if (targetDonVi != null) {
             PhienChat session = chatService.getOrCreateSession(sv, targetDonVi);
             model.addAttribute("currentSession", session);
-            model.addAttribute("messages", chatService.getMessages(session.getMaPhienChat()));
+            model.addAttribute("messages", chatService.getMessages(session.getMaPhienChat(), sv.getTaiKhoan()));
             model.addAttribute("selectedDonVi", targetDonVi);
         }
         model.addAttribute("student", sv);

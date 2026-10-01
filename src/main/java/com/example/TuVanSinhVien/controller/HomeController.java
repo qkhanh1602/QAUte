@@ -35,6 +35,7 @@ public class HomeController {
     public String faq(@RequestParam(required = false) Integer linhVuc, @RequestParam(required = false) String kw, Model model) {
         model.addAttribute("faqs", contentService.getPublicFaqs(linhVuc, kw));
         model.addAttribute("linhVucList", catalogService.getAllActiveLinhVuc());
+        model.addAttribute("donViList", catalogService.getAllActiveDonVi());
         model.addAttribute("selectedLinhVuc", linhVuc);
         model.addAttribute("kw", kw);
         return "public/faq";

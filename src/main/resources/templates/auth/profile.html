@@ -20,8 +20,9 @@
             <!-- Profile Info Card -->
             <div class="qaute-card p-4 mb-4 shadow-sm border-0">
                 <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fs-2 fw-bold" style="width: 70px; height: 70px;">
-                        <span th:text="${#strings.substring(user.hoTen, 0, 1).toUpperCase()}">U</span>
+                    <div class="user-avatar user-avatar-xl">
+                        <img th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}" th:src="${user.avatarUrl}" alt="Ảnh đại diện">
+                        <span th:unless="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}" th:text="${user.avatarInitial}">U</span>
                     </div>
                     <div>
                         <h4 class="fw-bold mb-1 text-dark" th:text="${user.hoTen}">Họ tên người dùng</h4>
@@ -41,16 +42,30 @@
                     </div>
                 </div>
 
+                <form th:action="@{/profile/avatar}" method="post" enctype="multipart/form-data" class="mb-4">
+                    <label class="form-label small fw-semibold">Ảnh đại diện</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="file" name="avatar" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" required>
+                        <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">Tải ảnh lên</button>
+                    </div>
+                    <div class="form-text">JPG, PNG hoặc WEBP; tối đa 5 MB. Ảnh được lưu trên Cloudinary.</div>
+                </form>
+
                 <form th:action="@{/profile/update}" method="post">
                     <h6 class="fw-bold text-dark mb-3">Cập nhật thông tin liên lạc</h6>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Địa chỉ Email</label>
-                            <input type="email" name="email" th:value="${user.email}" class="form-control form-control-sm" required>
+                            <label class="form-label small fw-semibold">Họ và tên</label>
+                            <input type="text" name="hoTen" th:value="${user.hoTen}" minlength="2" maxlength="100" class="form-control form-control-sm" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Số điện thoại</label>
                             <input type="text" name="soDienThoai" th:value="${user.soDienThoai}" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Địa chỉ Email</label>
+                            <input type="email" th:value="${user.email}" class="form-control form-control-sm" readonly>
+                            <div class="form-text">Email đăng ký chỉ được đổi qua quy trình xác minh OTP.</div>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold rounded-pill">Lưu thông tin</button>
@@ -68,7 +83,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Mật khẩu mới</label>
-                            <input type="password" name="newPassword" class="form-control form-control-sm" placeholder="Tối thiểu 6 ký tự" required>
+                            <input type="password" name="newPassword" class="form-control form-control-sm" minlength="8" maxlength="72" placeholder="8–72 ký tự, gồm chữ và số" required>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-outline-danger btn-sm px-4 fw-semibold rounded-pill">Đổi mật khẩu</button>

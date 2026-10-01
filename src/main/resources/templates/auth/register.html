@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: header-css('Đăng ký tài khoản Sinh viên')}"></head>
-<body class="bg-light py-5">
+<body class="auth-page py-5">
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="text-center mb-4">
                 <a th:href="@{/}" class="d-inline-flex align-items-center gap-2 text-decoration-none mb-2">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="auth-brand-mark flex-shrink-0">
                         <rect width="40" height="40" rx="10" fill="url(#qauteLogoRegGrad)"/>
                         <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"/>
                         <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"/>
@@ -22,9 +22,8 @@
                         </defs>
                     </svg>
                     <span class="fs-2 fw-extrabold text-dark tracking-tight">QAUTE</span>
-                    <span class="badge" style="background-color: #14B8A6; font-size: 0.7rem;">UTE ADVISORY</span>
                 </a>
-                <p class="text-muted small">Cổng Đăng Ký Tài Khoản Sinh Viên</p>
+                <p class="text-muted small">Tạo tài khoản để sử dụng dịch vụ tư vấn sinh viên</p>
             </div>
 
             <div class="qaute-card p-4 p-md-5 shadow-lg border-0">
@@ -57,7 +56,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Email trường / cá nhân *</label>
-                            <input type="email" name="email" class="form-control form-control-sm" placeholder="email@student.ute.edu.vn" required>
+                            <input type="email" name="email" class="form-control form-control-sm" placeholder="email@example.com" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Số điện thoại</label>

@@ -11,6 +11,7 @@ import com.example.TuVanSinhVien.repository.YeuCauXacMinhOTPRepository;
 import com.example.TuVanSinhVien.service.CaptchaService;
 import com.example.TuVanSinhVien.service.LoginAttemptService;
 import com.example.TuVanSinhVien.service.OtpService;
+import com.example.TuVanSinhVien.service.ProfileService;
 import com.example.TuVanSinhVien.service.SecurityAuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +26,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -45,6 +47,7 @@ public class AuthController {
     private final CaptchaService captchaService;
     private final LoginAttemptService loginAttemptService;
     private final SecurityAuditService auditService;
+    private final ProfileService profileService;
 
     public AuthController(TaiKhoanRepository taiKhoanRepo,
                           SinhVienRepository sinhVienRepo,
@@ -53,7 +56,8 @@ public class AuthController {
                           OtpService otpService,
                           CaptchaService captchaService,
                           LoginAttemptService loginAttemptService,
-                          SecurityAuditService auditService) {
+                          SecurityAuditService auditService,
+                          ProfileService profileService) {
         this.taiKhoanRepo = taiKhoanRepo;
         this.sinhVienRepo = sinhVienRepo;
         this.otpRepo = otpRepo;
@@ -62,6 +66,7 @@ public class AuthController {
         this.captchaService = captchaService;
         this.loginAttemptService = loginAttemptService;
         this.auditService = auditService;
+        this.profileService = profileService;
     }
 
     @GetMapping("/login")
@@ -152,15 +157,15 @@ public class AuthController {
             redirectAttributes.addFlashAttribute("errorMessage", "Mã số sinh viên (MSSV) '" + mssv.trim() + "' đã tồn tại trong hệ thống.");
             return "redirect:/register";
         }
-        if (matKhau == null || matKhau.trim().length() < 6) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu phải có tối thiểu 6 ký tự.");
+        if (matKhau == null || !matKhau.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,72}$")) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu phải dài 8–72 ký tự, có ít nhất một chữ và một số.");
             return "redirect:/register";
         }
 
         // 2. Lưu thông tin đăng ký vào session
         RegistrationRequest regDto = new RegistrationRequest(
                 tenDangNhap.trim(),
-                matKhau,
+                passwordEncoder.encode(matKhau),
                 hoTen.trim(),
                 email.trim().toLowerCase(),
                 soDienThoai != null ? soDienThoai.trim() : null,
@@ -238,7 +243,7 @@ public class AuthController {
         LocalDateTime now = LocalDateTime.now();
         TaiKhoan tk = TaiKhoan.builder()
                 .tenDangNhap(regDto.getTenDangNhap())
-                .matKhau(passwordEncoder.encode(regDto.getMatKhau()))
+                .matKhau(regDto.getMatKhau())
                 .hoTen(regDto.getHoTen())
                 .email(regDto.getEmail())
                 .soDienThoai(regDto.getSoDienThoai())
@@ -310,16 +315,33 @@ public class AuthController {
 
     @PostMapping("/profile/update")
     public String updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                @RequestParam String soDienThoai,
-                                @RequestParam String email,
+                                @RequestParam String hoTen,
+                                @RequestParam(required = false) String soDienThoai,
                                 RedirectAttributes redirectAttributes) {
         if (userDetails == null) return "redirect:/login";
-        TaiKhoan tk = taiKhoanRepo.findById(userDetails.getMaTK()).orElse(null);
-        if (tk != null) {
-            tk.setSoDienThoai(soDienThoai.trim());
-            tk.setEmail(email.trim());
-            taiKhoanRepo.save(tk);
+        try {
+            TaiKhoan updatedAccount = profileService.updateProfile(userDetails.getMaTK(), hoTen, soDienThoai);
+            userDetails.getTaiKhoan().setHoTen(updatedAccount.getHoTen());
+            userDetails.getTaiKhoan().setSoDienThoai(updatedAccount.getSoDienThoai());
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin liên hệ thành công!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/profile";
+    }
+
+    @PostMapping(value = "/profile/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String updateAvatar(@AuthenticationPrincipal CustomUserDetails userDetails,
+                               @RequestParam("avatar") MultipartFile avatar,
+                               RedirectAttributes redirectAttributes) {
+        if (userDetails == null) return "redirect:/login";
+        try {
+            TaiKhoan updatedAccount = profileService.updateAvatar(userDetails.getMaTK(), avatar);
+            userDetails.getTaiKhoan().setAvatarUrl(updatedAccount.getAvatarUrl());
+            userDetails.getTaiKhoan().setAvatarPublicId(updatedAccount.getAvatarPublicId());
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật ảnh đại diện thành công!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/profile";
     }
@@ -336,20 +358,14 @@ public class AuthController {
             String clientIp = CustomAuthenticationFailureHandler.getClientIp(request);
             String userAgent = request.getHeader("User-Agent");
 
-            if (!passwordEncoder.matches(oldPassword, tk.getMatKhau())) {
-                auditService.logEvent(tk, "DOI_MAT_KHAU_THAT_BAI", false, clientIp, userAgent, "Mật khẩu cũ không chính xác");
-                redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu hiện tại không chính xác!");
-                return "redirect:/profile";
+            try {
+                profileService.changePassword(userDetails.getMaTK(), oldPassword, newPassword);
+                auditService.logEvent(tk, "DOI_MAT_KHAU_THANH_CONG", true, clientIp, userAgent, "Người dùng đã đổi mật khẩu thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công. Phiên token cũ đã bị thu hồi!");
+            } catch (IllegalArgumentException e) {
+                auditService.logEvent(tk, "DOI_MAT_KHAU_THAT_BAI", false, clientIp, userAgent, e.getMessage());
+                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             }
-            if (newPassword.length() < 6) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu mới phải có tối thiểu 6 ký tự!");
-                return "redirect:/profile";
-            }
-            tk.setMatKhau(passwordEncoder.encode(newPassword));
-            tk.setBatBuocDoiMatKhau(false);
-            taiKhoanRepo.save(tk);
-            auditService.logEvent(tk, "DOI_MAT_KHAU_THANH_CONG", true, clientIp, userAgent, "Người dùng đã đổi mật khẩu thành công");
-            redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công!");
         }
         return "redirect:/profile";
     }

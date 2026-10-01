@@ -30,8 +30,8 @@ public class NotificationService {
     }
 
     @Transactional
-    public void markAsRead(Long maThongBao) {
-        thongBaoRepository.findById(maThongBao).ifPresent(tb -> {
+    public void markAsRead(Long maThongBao, Integer maTK) {
+        thongBaoRepository.findByMaThongBaoAndTaiKhoanNhan_MaTK(maThongBao, maTK).ifPresent(tb -> {
             tb.setDaDoc(true);
             thongBaoRepository.save(tb);
         });

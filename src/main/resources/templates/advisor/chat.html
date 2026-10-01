@@ -37,9 +37,9 @@
             <div class="qaute-card mb-4 border-0 shadow-sm overflow-hidden">
                 <div class="p-3 text-white fw-bold d-flex justify-content-between align-items-center" style="background-color: var(--qaute-sidebar);">
                     <span class="d-flex align-items-center gap-2">
-                        <i class="bi bi-hourglass-split" style="color: #F59E0B;"></i>Hàng đợi sinh viên
+                        <i class="bi bi-hourglass-split text-warning"></i>Hàng đợi sinh viên
                     </span>
-                    <span class="badge" style="background-color: #F59E0B; color: #1E293B;" th:text="${#lists.size(waitingQueue)}">0</span>
+                    <span class="badge" style="background-color: var(--qaute-warning); color: #FFFFFF;" th:text="${#lists.size(waitingQueue)}">0</span>
                 </div>
                 <div class="p-3">
                     <div th:if="${#lists.isEmpty(waitingQueue)}" class="text-muted small text-center py-2">
@@ -63,9 +63,9 @@
             <div class="qaute-card border-0 shadow-sm overflow-hidden">
                 <div class="p-3 text-white fw-bold d-flex justify-content-between align-items-center" style="background-color: var(--qaute-sidebar);">
                     <span class="d-flex align-items-center gap-2">
-                        <i class="bi bi-chat-dots" style="color: #14B8A6;"></i>Phiên chat của bạn
+                        <i class="bi bi-chat-dots" style="color: var(--qaute-teal-light);"></i>Phiên chat của bạn
                     </span>
-                    <span class="badge" style="background-color: #14B8A6;" th:text="${#lists.size(mySessions)}">0</span>
+                    <span class="badge" style="background-color: var(--qaute-teal-light);" th:text="${#lists.size(mySessions)}">0</span>
                 </div>
                 <div class="p-3">
                 <div th:if="${#lists.isEmpty(mySessions)}" class="text-muted small text-center py-2">
@@ -96,8 +96,9 @@
                 <!-- Header -->
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="bi bi-person-fill"></i>
+                        <div class="user-avatar user-avatar-md">
+                            <img th:if="${currentSession.sinhVien.taiKhoan.avatarUrl != null and !#strings.isEmpty(currentSession.sinhVien.taiKhoan.avatarUrl)}" th:src="${currentSession.sinhVien.taiKhoan.avatarUrl}" alt="Ảnh sinh viên">
+                            <span th:unless="${currentSession.sinhVien.taiKhoan.avatarUrl != null and !#strings.isEmpty(currentSession.sinhVien.taiKhoan.avatarUrl)}" th:text="${currentSession.sinhVien.taiKhoan.avatarInitial}">S</span>
                         </div>
                         <div>
                             <div class="fw-bold text-dark" th:text="${currentSession.sinhVien.taiKhoan.hoTen}">Nguyễn Văn An</div>
@@ -108,14 +109,14 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="advisorMessageStream" style="background: #f8fafc;">
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="advisorMessageStream" style="background: var(--qaute-bg);">
                     <div th:if="${#lists.isEmpty(messages)}" class="text-center my-auto text-muted small">
                         Chưa có tin nhắn trong phiên này. Hãy gửi lời chào đến sinh viên!
                     </div>
 
                     <div th:each="m : ${messages}" th:class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
                         <div th:class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}"
-                             th:style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #eff6ff; border-left: 4px solid #3b82f6;' : ''}">
+                             th:style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #f0fdf4; border-left: 4px solid #166534;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
                                 <span th:text="${m.taiKhoanGui.hoTen}">Họ tên</span>
                                 <span th:if="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}" class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">

@@ -72,7 +72,12 @@ public class AdvisorController {
     @GetMapping("/tickets/{id}")
     public String ticketDetail(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-        YeuCauTuVan ticket = ticketService.getTicketById(id);
+        YeuCauTuVan ticket;
+        try {
+            ticket = ticketService.getAdvisorTicket(id, cv);
+        } catch (SecurityException e) {
+            return "redirect:/advisor/tickets";
+        }
         if (ticket == null) {
             return "redirect:/advisor/tickets";
         }
@@ -88,7 +93,7 @@ public class AdvisorController {
     public String replyTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) Boolean deXuatFaq, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            ticketService.replyTicket(id, cv.getTaiKhoan(), noiDung, deXuatFaq);
+            ticketService.replyTicket(id, cv, noiDung, deXuatFaq);
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu trả lời tư vấn thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -100,7 +105,7 @@ public class AdvisorController {
     public String transferTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Integer maDonViMoi, @RequestParam Integer maLinhVucMoi, @RequestParam String lyDo, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            ticketService.transferTicket(id, maDonViMoi, maLinhVucMoi, lyDo, cv.getTaiKhoan());
+            ticketService.transferTicket(id, maDonViMoi, maLinhVucMoi, lyDo, cv);
             redirectAttributes.addFlashAttribute("successMessage", "Đã chuyển tiếp yêu cầu sang đơn vị mới.");
             return "redirect:/advisor/tickets";
         } catch (Exception e) {
@@ -141,7 +146,8 @@ public class AdvisorController {
     @PostMapping("/appointments/{id}/approve")
     public String approveAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String linkHopPhong, RedirectAttributes redirectAttributes) {
         try {
-            appointmentService.approveAppointment(id, linkHopPhong);
+            NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            appointmentService.approveAppointment(id, cv.getMaCV(), linkHopPhong);
             redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt lịch hẹn tư vấn!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -152,7 +158,8 @@ public class AdvisorController {
     @PostMapping("/appointments/{id}/reject")
     public String rejectAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String lyDo, RedirectAttributes redirectAttributes) {
         try {
-            appointmentService.rejectAppointment(id, lyDo);
+            NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            appointmentService.rejectAppointment(id, cv.getMaCV(), lyDo);
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối lịch hẹn.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -163,7 +170,8 @@ public class AdvisorController {
     @PostMapping("/appointments/{id}/complete")
     public String completeAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String ketLuan, RedirectAttributes redirectAttributes) {
         try {
-            appointmentService.completeAppointment(id, ketLuan);
+            NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            appointmentService.completeAppointment(id, cv.getMaCV(), ketLuan);
             redirectAttributes.addFlashAttribute("successMessage", "Đã ghi nhận hoàn tất buổi tư vấn.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -175,16 +183,18 @@ public class AdvisorController {
     public String chatDashboard(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false) Integer sessionId, Model model) {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
         model.addAttribute("advisor", cv);
-        model.addAttribute("waitingQueue", chatService.getWaitingQueue());
+        model.addAttribute("waitingQueue", chatService.getWaitingQueue(cv.getDonVi().getMaDonVi()));
         model.addAttribute("mySessions", chatService.getAdvisorSessions(cv.getMaCV()));
         if (sessionId != null) {
-            PhienChat session = chatService.getSessionById(sessionId);
-            if (session != null) {
+            try {
+                PhienChat session = chatService.getAdvisorSession(sessionId, cv);
                 if (session.getNguoiTuVan() == null) {
                     chatService.advisorJoinSession(sessionId, cv);
                 }
                 model.addAttribute("currentSession", session);
-                model.addAttribute("messages", chatService.getMessages(sessionId));
+                model.addAttribute("messages", chatService.getMessages(sessionId, cv.getTaiKhoan()));
+            } catch (RuntimeException e) {
+                model.addAttribute("errorMessage", e.getMessage());
             }
         }
         return "advisor/chat";
