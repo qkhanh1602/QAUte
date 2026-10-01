@@ -116,6 +116,7 @@ public class SecurityConfig {
                     "/css/**",
                     "/js/**",
                     "/images/**",
+                    "/decorators/**",
                     "/webjars/**",
                     "/ws/**",
                     "/api/public/**",
