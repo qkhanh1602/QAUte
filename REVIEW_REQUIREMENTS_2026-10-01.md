@@ -33,7 +33,7 @@ Nhận xét của nhóm đúng về hầu hết khoảng trống tại thời đ
 
 ## Điểm ngoài danh sách cần lưu ý
 
-- Source hiện dùng **Thymeleaf** làm view engine và **SiteMesh 3.3** làm decorator thật cho toàn bộ MVC HTML: SiteMesh lấy `title`, `head`, `body`, giữ lớp CSS của `body` và bọc kết quả trong layout chung. JSP/JSTL vẫn chưa được dùng; nếu tiêu chí chấm bắt buộc đồng thời cả JSP/JSTL thì đây vẫn là sai khác kiến trúc cần xử lý riêng.
+- Source dùng **JSP/JSTL thật trong decorator chung** và **SiteMesh 3.3** áp dụng decorator đó cho toàn bộ MVC HTML: JSTL xác định biến thể layout/nội dung hỗ trợ truy cập theo request, SiteMesh lấy `title`, `head`, `body`, giữ lớp CSS của `body` rồi ghép vào JSP layout. Các view nội dung hiện hữu vẫn dùng Thymeleaf; JSP/JSTL không phải dependency trang trí mà tham gia render mọi trang.
 - Source và cấu hình hiện thống nhất dùng **SQL Server**. MongoDB, MySQL và PostgreSQL không được dùng đồng thời; đây là lựa chọn hợp lý theo yêu cầu chốt SQL Server.
 - Google SSO chưa thể kiểm thử end-to-end nếu chưa có OAuth Client của Google. Các biến cần cấu hình đã có trong `.env.example`.
 - UC11 còn mô tả chức năng sửa thông tin/phân lại vai trò của tài khoản hiện hữu. Bản hiện tại có tạo, lọc, khóa/mở, đặt lại mật khẩu và duyệt cố vấn; chưa cho đổi vai trò tùy ý vì đổi vai trò có thể làm thiếu hồ sơ `SinhVien`/`NguoiTuVan` liên kết.
@@ -41,8 +41,8 @@ Nhận xét của nhóm đúng về hầu hết khoảng trống tại thời đ
 
 ## Xác minh kỹ thuật
 
-- `mvnw test`: 8 test, 0 lỗi, 1 test bỏ qua.
-- SiteMesh smoke test trên `/`, `/login`, `/register`, `/advisors`, `/articles`: HTTP 200; response có `data-layout-engine="sitemesh"`, đúng 1 `DOCTYPE`/`html`, giữ class `body` của trang và không còn thẻ SiteMesh chưa xử lý.
+- `mvnw test`: 9 test, 0 lỗi, 1 test bỏ qua; trong đó có integration test khởi động Tomcat và xác nhận JSP/JSTL + SiteMesh trên response thật.
+- JSP/JSTL + SiteMesh smoke test trên `/`, `/login`, `/register`, `/advisors`, `/articles`: HTTP 200; response có `data-view-engine="jsp-jstl"` và `data-layout-engine="sitemesh"`, đúng 1 `DOCTYPE`/`html`, giữ class `body` của trang và không còn directive JSP/JSTL/SiteMesh chưa xử lý.
 - Spring ApplicationContext khởi động thành công với SQL Server QAUTE và kiểm tra schema bằng `ddl-auto=validate`.
 - Smoke test HTTP thành công cho trang công khai, đăng nhập và các trang Sinh viên/Cố vấn/Admin.
 - Xuất Excel, báo cáo PDF, biên bản PDF và file mẫu import đều trả HTTP 200 với đúng content type.

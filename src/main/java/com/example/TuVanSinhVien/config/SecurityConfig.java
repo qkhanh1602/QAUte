@@ -1,5 +1,6 @@
 package com.example.TuVanSinhVien.config;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -98,6 +99,8 @@ public class SecurityConfig {
             )
             // 5. Phân quyền Request
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.INCLUDE).permitAll()
+                .requestMatchers("/WEB-INF/**").denyAll()
                 .requestMatchers(
                     "/",
                     "/faq/**",
@@ -116,7 +119,6 @@ public class SecurityConfig {
                     "/css/**",
                     "/js/**",
                     "/images/**",
-                    "/decorators/**",
                     "/webjars/**",
                     "/ws/**",
                     "/api/public/**",
