@@ -20,6 +20,8 @@ public interface YeuCauTuVanRepository extends JpaRepository<YeuCauTuVan, Intege
 
     List<YeuCauTuVan> findByTrangThaiOrderByNgayTaoDesc(String trangThai);
 
+    List<YeuCauTuVan> findByTrangThaiAndHanTuDongDongLessThanEqual(String trangThai, LocalDateTime deadline);
+
     long countByTrangThai(String trangThai);
 
     @Query("SELECT COUNT(y) FROM YeuCauTuVan y WHERE y.trangThai IN ('DaPhanHoi', 'Dong')")
@@ -36,4 +38,9 @@ public interface YeuCauTuVanRepository extends JpaRepository<YeuCauTuVan, Intege
 
     @Query("SELECT y.trangThai, COUNT(y) FROM YeuCauTuVan y GROUP BY y.trangThai")
     List<Object[]> countGroupByTrangThai();
+
+    @Query("SELECT y FROM YeuCauTuVan y WHERE (:fromTime IS NULL OR y.ngayTao >= :fromTime) AND (:toTime IS NULL OR y.ngayTao < :toTime) AND (:unitId IS NULL OR y.donVi.maDonVi = :unitId) ORDER BY y.ngayTao DESC")
+    List<YeuCauTuVan> findForReport(@Param("fromTime") LocalDateTime fromTime,
+                                   @Param("toTime") LocalDateTime toTime,
+                                   @Param("unitId") Integer unitId);
 }

@@ -22,4 +22,10 @@ public interface KhungGioTuVanRepository extends JpaRepository<KhungGioTuVan, In
 
     @Query("SELECT COUNT(k) > 0 FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.batDau < :end AND k.ketThuc > :start")
     boolean existsOverlappingSlot(@Param("maCV") Integer maCV, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT k FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.batDau >= :fromTime AND k.batDau < :toTime ORDER BY k.batDau ASC")
+    List<KhungGioTuVan> findAdvisorSlotsInRange(@Param("maCV") Integer maCV, @Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
+
+    @Query("SELECT COUNT(k) FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.batDau >= :fromTime AND k.batDau < :toTime")
+    long countOpenSlotsInRange(@Param("maCV") Integer maCV, @Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
 }

@@ -69,6 +69,7 @@
                             <div class="fw-bold text-dark" th:text="${currentSession.donVi.tenDonVi}">Phòng Đào tạo</div>
                             <small th:if="${currentSession.nguoiTuVan != null}" class="text-success fw-semibold">
                                 <i class="bi bi-person-check-fill me-1"></i>Cố vấn: <span th:text="${currentSession.nguoiTuVan.taiKhoan.hoTen}">Thầy Khoa</span>
+                                · <span id="advisorPresence" th:attr="data-username=${currentSession.nguoiTuVan.taiKhoan.tenDangNhap}" th:text="${advisorPresence}">Ngoại tuyến</span>
                             </small>
                             <small th:unless="${currentSession.nguoiTuVan != null}" class="text-warning fw-semibold">
                                 <i class="bi bi-hourglass-split me-1"></i>Đang chờ Cố vấn tiếp nhận...
@@ -79,7 +80,7 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="messageStream" style="background: var(--qaute-bg);">
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="messageStream" th:attr="data-session-id=${currentSession.maPhienChat},data-user-id=${student.taiKhoan.maTK}" style="background: var(--qaute-bg);">
                     <div th:if="${#lists.isEmpty(messages)}" class="text-center my-auto text-muted small">
                         <i class="bi bi-chat-text fs-2 mb-2 d-block text-secondary"></i>
                         Chưa có tin nhắn nào trong phiên này. Hãy gửi tin nhắn đầu tiên!
@@ -95,6 +96,7 @@
                                 </span>
                             </div>
                             <div style="white-space: pre-line;" th:text="${m.noiDung}">Nội dung tin nhắn...</div>
+                            <div class="mt-2" th:if="${messageAttachments != null and messageAttachments[m.maTinNhan] != null}"><a th:each="file : ${messageAttachments[m.maTinNhan]}" th:href="@{'/attachments/' + ${file.maTep}}" class="btn btn-sm btn-light border" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> <span th:text="${file.tenGoc}">Tệp</span></a></div>
                             <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;" th:text="${#temporals.format(m.thoiGianGui, 'HH:mm')}">14:30</div>
                         </div>
                     </div>
@@ -111,8 +113,9 @@
 
                 <!-- Chat Input Form -->
                 <div class="p-3 bg-white rounded-bottom-4">
-                    <form th:action="@{'/student/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" class="d-flex gap-2">
-                        <input type="text" id="chatInput" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập tin nhắn hoặc chọn gợi ý bên trên..." required autocomplete="off">
+                    <form id="chatSendForm" th:action="@{'/student/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                        <label class="btn btn-outline-secondary rounded-circle mb-0" title="Đính kèm ảnh hoặc PDF"><i class="bi bi-paperclip"></i><input type="file" name="attachment" accept=".jpg,.jpeg,.png,.pdf" hidden></label>
+                        <input type="text" id="chatInput" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập tin nhắn hoặc gửi tệp..." autocomplete="off">
                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
                             <i class="bi bi-send-fill"></i>
                         </button>
@@ -138,6 +141,39 @@ window.addEventListener('DOMContentLoaded', () => {
         stream.scrollTop = stream.scrollHeight;
     }
 });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
+<script>
+const presenceElement = document.getElementById('advisorPresence');
+if (presenceElement && window.SockJS && window.StompJs) {
+    const client = new StompJs.Client({webSocketFactory: () => new SockJS('/ws'), reconnectDelay: 5000});
+    client.onConnect = () => {
+        client.subscribe('/queue/presence', frame => {
+            const event = JSON.parse(frame.body);
+            if (event.username === presenceElement.dataset.username) presenceElement.textContent = event.status;
+        });
+        client.subscribe('/user/queue/chat', frame => appendLiveMessage(JSON.parse(frame.body)));
+    };
+    document.getElementById('chatSendForm')?.addEventListener('submit', event => {
+        const form = event.currentTarget, file = form.querySelector('input[type=file]').files[0], input = form.querySelector('[name=noiDung]');
+        if (!file && input.value.trim() && client.connected) {
+            event.preventDefault();
+            client.publish({destination:'/app/chat.send', body:JSON.stringify({sessionId:Number(document.getElementById('messageStream').dataset.sessionId), content:input.value.trim()})});
+            input.value='';
+        }
+    });
+    client.activate();
+}
+function appendLiveMessage(message) {
+    const stream=document.getElementById('messageStream');
+    if (!stream || Number(stream.dataset.sessionId)!==message.sessionId) return;
+    const wrap=document.createElement('div'); wrap.className=Number(stream.dataset.userId)===message.senderId?'d-flex justify-content-end':'d-flex justify-content-start';
+    const bubble=document.createElement('div'); bubble.className=Number(stream.dataset.userId)===message.senderId?'chat-bubble-sender':'chat-bubble-receiver';
+    const sender=document.createElement('div'); sender.className='small fw-bold mb-1 opacity-75'; sender.textContent=message.senderName;
+    const content=document.createElement('div'); content.style.whiteSpace='pre-line'; content.textContent=message.content;
+    bubble.append(sender,content); wrap.appendChild(bubble); stream.appendChild(wrap); stream.scrollTop=stream.scrollHeight;
+}
 </script>
 
 <div th:replace="~{fragments/footer :: footer}"></div>

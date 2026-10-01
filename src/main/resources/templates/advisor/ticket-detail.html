@@ -52,11 +52,15 @@
                     <div class="text-secondary" style="white-space: pre-line; line-height: 1.7;" th:text="${ticket.noiDung}">
                         Nội dung câu hỏi...
                     </div>
+                    <div class="mt-3 d-flex flex-wrap gap-2" th:if="${!#lists.isEmpty(ticketAttachments)}">
+                        <a th:each="file : ${ticketAttachments}" th:href="@{'/attachments/' + ${file.maTep}}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> <span th:text="${file.tenGoc}">Tệp</span></a>
+                    </div>
                 </div>
             </div>
 
             <!-- Conversation History -->
             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-square-dots-fill text-primary me-2"></i>Lịch sử trao đổi</h5>
+            <a th:href="@{'/advisor/tickets/' + ${ticket.maYeuCau} + '/record.pdf'}" class="btn btn-sm btn-outline-danger mb-3"><i class="bi bi-file-earmark-pdf"></i> In biên bản PDF</a>
             <div class="d-flex flex-column gap-3 mb-4">
                 <div th:each="ph : ${ticket.phanHoiList}"
                      th:class="${ph.loaiPhanHoi == 'TraLoi' ? 'qaute-card p-4 border-start border-4 border-success shadow-sm' : 'qaute-card p-4 border-start border-4 border-primary shadow-sm'}">
@@ -77,6 +81,9 @@
                     <div class="text-secondary" style="white-space: pre-line; line-height: 1.8;" th:text="${ph.noiDungTraLoi}">
                         Nội dung phản hồi...
                     </div>
+                    <div class="mt-2 d-flex flex-wrap gap-2" th:if="${replyAttachments[ph.maPhanHoi] != null and !#lists.isEmpty(replyAttachments[ph.maPhanHoi])}">
+                        <a th:each="file : ${replyAttachments[ph.maPhanHoi]}" th:href="@{'/attachments/' + ${file.maTep}}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> <span th:text="${file.tenGoc}">Tệp</span></a>
+                    </div>
                 </div>
             </div>
 
@@ -96,11 +103,12 @@
                     </select>
                 </div>
 
-                <form th:action="@{'/advisor/tickets/' + ${ticket.maYeuCau} + '/reply'}" method="post">
+                <form th:action="@{'/advisor/tickets/' + ${ticket.maYeuCau} + '/reply'}" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Nội dung giải đáp chi tiết *</label>
                         <textarea name="noiDung" id="replyTextarea" rows="6" class="form-control" placeholder="Nhập câu trả lời giải đáp căn cứ theo quy định của Trường..." required></textarea>
                     </div>
+                    <div class="mb-3"><label class="form-label small fw-semibold">Tệp minh chứng (không bắt buộc)</label><input type="file" name="attachment" class="form-control" accept=".jpg,.jpeg,.png,.pdf"><div class="form-text">JPG, PNG hoặc PDF; nhỏ hơn 10 MB.</div></div>
 
                     <div class="form-check mb-4">
                         <input class="form-check-input" type="checkbox" name="deXuatFaq" value="true" id="deXuatCheck">

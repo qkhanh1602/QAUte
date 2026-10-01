@@ -109,7 +109,7 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="advisorMessageStream" style="background: var(--qaute-bg);">
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="advisorMessageStream" th:attr="data-session-id=${currentSession.maPhienChat},data-user-id=${advisor.taiKhoan.maTK}" style="background: var(--qaute-bg);">
                     <div th:if="${#lists.isEmpty(messages)}" class="text-center my-auto text-muted small">
                         Chưa có tin nhắn trong phiên này. Hãy gửi lời chào đến sinh viên!
                     </div>
@@ -124,6 +124,7 @@
                                 </span>
                             </div>
                             <div style="white-space: pre-line;" th:text="${m.noiDung}">Nội dung...</div>
+                            <div class="mt-2" th:if="${messageAttachments != null and messageAttachments[m.maTinNhan] != null}"><a th:each="file : ${messageAttachments[m.maTinNhan]}" th:href="@{'/attachments/' + ${file.maTep}}" class="btn btn-sm btn-light border" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> <span th:text="${file.tenGoc}">Tệp</span></a></div>
                             <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;" th:text="${#temporals.format(m.thoiGianGui, 'HH:mm')}">14:30</div>
                         </div>
                     </div>
@@ -131,8 +132,9 @@
 
                 <!-- Chat Input Form -->
                 <div class="p-3 border-top bg-white rounded-bottom-4">
-                    <form th:action="@{'/advisor/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" class="d-flex gap-2">
-                        <input type="text" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập câu trả lời cho sinh viên..." required autocomplete="off">
+                    <form id="advisorChatSendForm" th:action="@{'/advisor/chat/' + ${currentSession.maPhienChat} + '/send'}" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                        <label class="btn btn-outline-secondary rounded-circle mb-0" title="Đính kèm ảnh hoặc PDF"><i class="bi bi-paperclip"></i><input type="file" name="attachment" accept=".jpg,.jpeg,.png,.pdf" hidden></label>
+                        <input type="text" name="noiDung" class="form-control rounded-pill px-3 shadow-none" placeholder="Nhập câu trả lời hoặc gửi tệp..." autocomplete="off">
                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
                             <i class="bi bi-send-fill"></i>
                         </button>
@@ -150,6 +152,32 @@ window.addEventListener('DOMContentLoaded', () => {
         stream.scrollTop = stream.scrollHeight;
     }
 });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
+<script>
+if (window.SockJS && window.StompJs) {
+    const presenceClient = new StompJs.Client({webSocketFactory: () => new SockJS('/ws'), reconnectDelay: 5000});
+    presenceClient.onConnect = () => presenceClient.subscribe('/user/queue/chat', frame => appendAdvisorLiveMessage(JSON.parse(frame.body)));
+    document.getElementById('advisorChatSendForm')?.addEventListener('submit', event => {
+        const form=event.currentTarget, file=form.querySelector('input[type=file]').files[0], input=form.querySelector('[name=noiDung]');
+        if (!file && input.value.trim() && presenceClient.connected) {
+            event.preventDefault();
+            presenceClient.publish({destination:'/app/chat.send', body:JSON.stringify({sessionId:Number(document.getElementById('advisorMessageStream').dataset.sessionId), content:input.value.trim()})});
+            input.value='';
+        }
+    });
+    presenceClient.activate();
+}
+function appendAdvisorLiveMessage(message) {
+    const stream=document.getElementById('advisorMessageStream');
+    if (!stream || Number(stream.dataset.sessionId)!==message.sessionId) return;
+    const wrap=document.createElement('div'); wrap.className=Number(stream.dataset.userId)===message.senderId?'d-flex justify-content-end':'d-flex justify-content-start';
+    const bubble=document.createElement('div'); bubble.className=Number(stream.dataset.userId)===message.senderId?'chat-bubble-sender':'chat-bubble-receiver';
+    const sender=document.createElement('div'); sender.className='small fw-bold mb-1 opacity-75'; sender.textContent=message.senderName;
+    const content=document.createElement('div'); content.style.whiteSpace='pre-line'; content.textContent=message.content;
+    bubble.append(sender,content); wrap.appendChild(bubble); stream.appendChild(wrap); stream.scrollTop=stream.scrollHeight;
+}
 </script>
 
 <div th:replace="~{fragments/footer :: footer}"></div>

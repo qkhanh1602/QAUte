@@ -4,6 +4,7 @@ package com.example.TuVanSinhVien.service;
 import com.example.TuVanSinhVien.entity.*;
 import com.example.TuVanSinhVien.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -39,6 +40,63 @@ public class CatalogService {
 
     public List<LinhVucTuVan> getAllLinhVuc() {
         return linhVucRepo.findAll();
+    }
+
+    @Transactional
+    public DonVi saveDonVi(Integer id, String code, String name, String type, String email, String phone) {
+        String normalizedCode = code == null ? "" : code.trim().toUpperCase();
+        if (!normalizedCode.matches("^[A-Z0-9_-]{2,30}$") || name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã hoặc tên đơn vị không hợp lệ.");
+        }
+        if (!List.of("Khoa", "PhongBan", "TrungTam").contains(type)) {
+            throw new IllegalArgumentException("Loại đơn vị không hợp lệ.");
+        }
+        DonVi unit = id == null ? new DonVi() : donViRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị."));
+        donViRepo.findByMaDonViCode(normalizedCode).filter(existing -> !existing.getMaDonVi().equals(id))
+                .ifPresent(existing -> { throw new IllegalArgumentException("Mã đơn vị đã tồn tại."); });
+        unit.setMaDonViCode(normalizedCode);
+        unit.setTenDonVi(name.trim());
+        unit.setLoaiDonVi(type);
+        unit.setEmail(email == null || email.isBlank() ? null : email.trim().toLowerCase());
+        unit.setSoDienThoai(phone == null || phone.isBlank() ? null : phone.trim());
+        if (unit.getHoatDong() == null) unit.setHoatDong(true);
+        return donViRepo.save(unit);
+    }
+
+    @Transactional
+    public void toggleDonVi(Integer id) {
+        DonVi unit = donViRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị."));
+        unit.setHoatDong(!Boolean.TRUE.equals(unit.getHoatDong()));
+        donViRepo.save(unit);
+    }
+
+    @Transactional
+    public LinhVucTuVan saveLinhVuc(Integer id, String code, String name, String description,
+                                    Integer unitId, boolean sensitive) {
+        String normalizedCode = code == null ? "" : code.trim().toUpperCase();
+        if (!normalizedCode.matches("^[A-Z0-9_-]{2,30}$") || name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã hoặc tên lĩnh vực không hợp lệ.");
+        }
+        DonVi unit = donViRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị phụ trách."));
+        LinhVucTuVan field = id == null ? new LinhVucTuVan() : linhVucRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực."));
+        linhVucRepo.findByMaLinhVucCode(normalizedCode).filter(existing -> !existing.getMaLinhVuc().equals(id))
+                .ifPresent(existing -> { throw new IllegalArgumentException("Mã lĩnh vực đã tồn tại."); });
+        field.setMaLinhVucCode(normalizedCode);
+        field.setTenLinhVuc(name.trim());
+        field.setMoTa(description == null || description.isBlank() ? null : description.trim());
+        field.setDonVi(unit);
+        field.setNhayCam(sensitive);
+        if (field.getTrangThai() == null) field.setTrangThai("HoatDong");
+        return linhVucRepo.save(field);
+    }
+
+    @Transactional
+    public void toggleLinhVuc(Integer id) {
+        LinhVucTuVan field = linhVucRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực."));
+        field.setTrangThai("HoatDong".equals(field.getTrangThai()) ? "TamDung" : "HoatDong");
+        linhVucRepo.save(field);
     }
 
     @java.lang.SuppressWarnings("all")

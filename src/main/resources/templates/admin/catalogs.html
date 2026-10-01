@@ -11,7 +11,14 @@
             <h2 class="fw-bold text-dark m-0">Quản Lý Danh Mục Đơn Vị & Lĩnh Vực</h2>
             <p class="text-muted mb-0 small">Cơ cấu tổ chức phòng ban, khoa và các lĩnh vực tiếp nhận tư vấn</p>
         </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#unitModal"><i class="bi bi-building-add me-1"></i>Thêm đơn vị</button>
+            <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#fieldModal"><i class="bi bi-tag me-1"></i>Thêm lĩnh vực</button>
+        </div>
     </div>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
     <!-- Admin Nav -->
     <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
@@ -42,6 +49,7 @@
                                 <th>Tên Đơn vị</th>
                                 <th>Loại</th>
                                 <th>Trạng thái</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -52,6 +60,15 @@
                                 <td>
                                     <span th:if="${d.hoatDong}" class="badge bg-success-subtle text-success">Đang hoạt động</span>
                                     <span th:unless="${d.hoatDong}" class="badge bg-danger-subtle text-danger">Tạm dừng</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-light btn-sm border" data-bs-toggle="collapse" th:data-bs-target="${'#edit-unit-' + d.maDonVi}">Sửa</button>
+                                    <form th:action="@{'/admin/catalogs/units/' + ${d.maDonVi} + '/toggle'}" method="post" class="d-inline"><button class="btn btn-outline-warning btn-sm" type="submit" th:text="${d.hoatDong ? 'Ngưng' : 'Bật'}"></button></form>
+                                    <form th:id="${'edit-unit-' + d.maDonVi}" class="collapse mt-2" th:action="@{/admin/catalogs/units/save}" method="post" style="min-width:240px">
+                                        <input type="hidden" name="id" th:value="${d.maDonVi}"><input class="form-control form-control-sm mb-1" name="code" th:value="${d.maDonViCode}" required><input class="form-control form-control-sm mb-1" name="name" th:value="${d.tenDonVi}" required>
+                                        <select class="form-select form-select-sm mb-1" name="type"><option value="Khoa" th:selected="${d.loaiDonVi == 'Khoa'}">Khoa</option><option value="PhongBan" th:selected="${d.loaiDonVi == 'PhongBan'}">Phòng ban</option><option value="TrungTam" th:selected="${d.loaiDonVi == 'TrungTam'}">Trung tâm</option></select>
+                                        <input class="form-control form-control-sm mb-1" name="email" th:value="${d.email}" placeholder="Email"><input class="form-control form-control-sm mb-1" name="phone" th:value="${d.soDienThoai}" placeholder="Số điện thoại"><button class="btn btn-primary btn-sm w-100">Lưu</button>
+                                    </form>
                                 </td>
                             </tr>
                         </tbody>
@@ -73,6 +90,7 @@
                                 <th>Đơn vị phụ trách</th>
                                 <th>Đặc thù</th>
                                 <th>Trạng thái</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -83,6 +101,14 @@
                                 <td>
                                     <span th:if="${l.nhayCam}" class="badge bg-warning-subtle text-warning-emphasis">Nhạy cảm / Bảo mật</span>
                                     <span th:unless="${l.nhayCam}" class="text-muted">Thông thường</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-light btn-sm border" data-bs-toggle="collapse" th:data-bs-target="${'#edit-field-' + l.maLinhVuc}">Sửa</button>
+                                    <form th:action="@{'/admin/catalogs/fields/' + ${l.maLinhVuc} + '/toggle'}" method="post" class="d-inline"><button class="btn btn-outline-warning btn-sm" type="submit" th:text="${l.trangThai == 'HoatDong' ? 'Ngưng' : 'Bật'}"></button></form>
+                                    <form th:id="${'edit-field-' + l.maLinhVuc}" class="collapse mt-2" th:action="@{/admin/catalogs/fields/save}" method="post" style="min-width:260px">
+                                        <input type="hidden" name="id" th:value="${l.maLinhVuc}"><input class="form-control form-control-sm mb-1" name="code" th:value="${l.maLinhVucCode}" required><input class="form-control form-control-sm mb-1" name="name" th:value="${l.tenLinhVuc}" required><textarea class="form-control form-control-sm mb-1" name="description" th:text="${l.moTa}" placeholder="Mô tả"></textarea>
+                                        <select class="form-select form-select-sm mb-1" name="unitId" required><option th:each="unit : ${donViList}" th:value="${unit.maDonVi}" th:text="${unit.tenDonVi}" th:selected="${unit.maDonVi == l.donVi.maDonVi}"></option></select><label class="small"><input type="checkbox" name="sensitive" value="true" th:checked="${l.nhayCam}"> Nội dung nhạy cảm</label><button class="btn btn-primary btn-sm w-100 mt-1">Lưu</button>
+                                    </form>
                                 </td>
                                 <td>
                                     <span th:if="${l.trangThai == 'HoatDong'}" class="badge bg-success-subtle text-success">Hoạt động</span>
@@ -96,6 +122,9 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="unitModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" th:action="@{/admin/catalogs/units/save}" method="post"><div class="modal-header"><h5 class="modal-title">Thêm đơn vị</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input class="form-control" name="code" placeholder="Mã đơn vị" required><input class="form-control" name="name" placeholder="Tên đơn vị" required><select class="form-select" name="type"><option value="Khoa">Khoa</option><option value="PhongBan">Phòng ban</option><option value="TrungTam">Trung tâm</option></select><input class="form-control" name="email" type="email" placeholder="Email"><input class="form-control" name="phone" placeholder="Số điện thoại"></div><div class="modal-footer"><button class="btn btn-primary">Lưu đơn vị</button></div></form></div></div>
+<div class="modal fade" id="fieldModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" th:action="@{/admin/catalogs/fields/save}" method="post"><div class="modal-header"><h5 class="modal-title">Thêm lĩnh vực</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input class="form-control" name="code" placeholder="Mã lĩnh vực" required><input class="form-control" name="name" placeholder="Tên lĩnh vực" required><textarea class="form-control" name="description" placeholder="Mô tả"></textarea><select class="form-select" name="unitId" required><option value="">Chọn đơn vị</option><option th:each="unit : ${donViList}" th:value="${unit.maDonVi}" th:text="${unit.tenDonVi}"></option></select><label><input type="checkbox" name="sensitive" value="true"> Nội dung nhạy cảm</label></div><div class="modal-footer"><button class="btn btn-primary">Lưu lĩnh vực</button></div></form></div></div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 

@@ -83,6 +83,11 @@
                     </button>
                 </form>
 
+                <div th:if="${googleSsoEnabled}" class="text-center my-3 position-relative"><hr><span class="position-absolute top-50 start-50 translate-middle bg-white px-2 small text-muted">hoặc</span></div>
+                <a th:if="${googleSsoEnabled}" th:href="@{/oauth2/authorization/google}" class="btn btn-outline-secondary w-100 py-2 fw-semibold rounded-3 mb-3">
+                    <i class="bi bi-google me-2"></i>Đăng nhập với Google trường
+                </a>
+
 
 
                 <div class="text-center small text-muted">

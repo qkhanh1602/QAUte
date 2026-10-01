@@ -11,8 +11,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/advisor")
@@ -23,6 +29,8 @@ public class AdvisorController {
     private final ChatService chatService;
     private final CatalogService catalogService;
     private final NotificationService notificationService;
+    private final AttachmentService attachmentService;
+    private final ConsultationRecordPdfService recordPdfService;
 
     private NguoiTuVan getAdvisorOrThrow(CustomUserDetails userDetails) {
         if (userDetails == null) {
@@ -86,14 +94,19 @@ public class AdvisorController {
         model.addAttribute("mauTraLoiList", catalogService.getMauTraLoiByDonVi(cv.getDonVi().getMaDonVi()));
         model.addAttribute("donViList", catalogService.getAllActiveDonVi());
         model.addAttribute("linhVucList", catalogService.getAllActiveLinhVuc());
+        addTicketAttachments(model, ticket);
         return "advisor/ticket-detail";
     }
 
     @PostMapping("/tickets/{id}/reply")
-    public String replyTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) Boolean deXuatFaq, RedirectAttributes redirectAttributes) {
+    public String replyTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) Boolean deXuatFaq, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            ticketService.replyTicket(id, cv, noiDung, deXuatFaq);
+            PhanHoiTuVan reply = ticketService.replyTicket(id, cv, noiDung, deXuatFaq);
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToReply(attachment, cv.getTaiKhoan(), reply); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Câu trả lời đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/advisor/tickets/" + id; }
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu trả lời tư vấn thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -119,7 +132,21 @@ public class AdvisorController {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
         model.addAttribute("advisor", cv);
         model.addAttribute("slots", appointmentService.getAdvisorSlots(cv.getMaCV()));
+        model.addAttribute("nextWeekSlotCount", appointmentService.countNextWeekOpenSlots(cv.getMaCV()));
         return "advisor/slots";
+    }
+
+    @PostMapping("/slots/copy-previous-week")
+    public String copyPreviousWeekSlots(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                        RedirectAttributes redirectAttributes) {
+        NguoiTuVan advisor = getAdvisorOrThrow(userDetails);
+        int copied = appointmentService.copyPreviousWeekSlots(advisor);
+        if (copied == 0) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không có khung giờ phù hợp để sao chép hoặc các khung giờ tuần này đã tồn tại.");
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Đã sao chép " + copied + " khung giờ từ tuần trước.");
+        }
+        return "redirect:/advisor/slots";
     }
 
     @PostMapping("/slots/new")
@@ -193,6 +220,8 @@ public class AdvisorController {
                 }
                 model.addAttribute("currentSession", session);
                 model.addAttribute("messages", chatService.getMessages(sessionId, cv.getTaiKhoan()));
+                model.addAttribute("messageAttachments", chatService.getMessages(sessionId, cv.getTaiKhoan()).stream()
+                        .collect(Collectors.toMap(TinNhanChat::getMaTinNhan, m -> attachmentService.getMessageAttachments(m.getMaTinNhan()))));
             } catch (RuntimeException e) {
                 model.addAttribute("errorMessage", e.getMessage());
             }
@@ -201,24 +230,47 @@ public class AdvisorController {
     }
 
     @PostMapping("/chat/{sessionId}/send")
-    public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, RedirectAttributes redirectAttributes) {
+    public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false, defaultValue = "") String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            chatService.sendMessage(sessionId, cv.getTaiKhoan(), noiDung, "VanBan");
+            if ((noiDung == null || noiDung.isBlank()) && (attachment == null || attachment.isEmpty())) throw new IllegalArgumentException("Vui lòng nhập nội dung hoặc chọn tệp.");
+            TinNhanChat message = chatService.sendMessage(sessionId, cv.getTaiKhoan(), noiDung.isBlank() ? "Đã gửi một tệp đính kèm" : noiDung, attachment != null && !attachment.isEmpty() ? "Tep" : "VanBan");
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToMessage(attachment, cv.getTaiKhoan(), message); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Tin nhắn đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); }
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/advisor/chat?sessionId=" + sessionId;
     }
 
+    private void addTicketAttachments(Model model, YeuCauTuVan ticket) {
+        model.addAttribute("ticketAttachments", attachmentService.getTicketAttachments(ticket.getMaYeuCau()));
+        Map<Integer, List<TepDinhKem>> replyAttachments = ticket.getPhanHoiList().stream().collect(Collectors.toMap(
+                PhanHoiTuVan::getMaPhanHoi, reply -> attachmentService.getReplyAttachments(reply.getMaPhanHoi())));
+        model.addAttribute("replyAttachments", replyAttachments);
+    }
+
+    @GetMapping("/tickets/{id}/record.pdf")
+    public ResponseEntity<byte[]> ticketRecord(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        NguoiTuVan advisor = getAdvisorOrThrow(userDetails);
+        YeuCauTuVan ticket = ticketService.getAdvisorTicket(id, advisor);
+        byte[] pdf = recordPdfService.exportTicket(ticket);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=BienBanTuVan-" + id + ".pdf").body(pdf);
+    }
+
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public AdvisorController(final NguoiTuVanRepository nguoiTuVanRepo, final TicketService ticketService, final AppointmentService appointmentService, final ChatService chatService, final CatalogService catalogService, final NotificationService notificationService) {
+    public AdvisorController(final NguoiTuVanRepository nguoiTuVanRepo, final TicketService ticketService, final AppointmentService appointmentService, final ChatService chatService, final CatalogService catalogService, final NotificationService notificationService, final AttachmentService attachmentService, final ConsultationRecordPdfService recordPdfService) {
         this.nguoiTuVanRepo = nguoiTuVanRepo;
         this.ticketService = ticketService;
         this.appointmentService = appointmentService;
         this.chatService = chatService;
         this.catalogService = catalogService;
         this.notificationService = notificationService;
+        this.attachmentService = attachmentService;
+        this.recordPdfService = recordPdfService;
     }
 }

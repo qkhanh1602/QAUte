@@ -11,9 +11,16 @@
             <h2 class="fw-bold text-dark m-0">Quản Lý Khung Giờ Tư Vấn (Slots)</h2>
             <p class="text-muted mb-0 small">Thiết lập các khung giờ mở để sinh viên có thể đăng ký lịch tư vấn trực tiếp hoặc trực tuyến</p>
         </div>
-        <button type="button" class="btn btn-qaute-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#newSlotModal">
-            <i class="bi bi-plus-circle-fill me-2"></i>Mở khung giờ mới
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <form th:action="@{/advisor/slots/copy-previous-week}" method="post">
+                <button type="submit" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-copy me-1"></i>Sao chép lịch tuần trước
+                </button>
+            </form>
+            <button type="button" class="btn btn-qaute-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#newSlotModal">
+                <i class="bi bi-plus-circle-fill me-2"></i>Mở khung giờ mới
+            </button>
+        </div>
     </div>
 
     <!-- Advisor Nav -->
@@ -41,6 +48,10 @@
     </div>
     <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
         <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Lỗi</span>
+    </div>
+    <div th:if="${nextWeekSlotCount < 2}" class="alert alert-warning d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Tuần tới bạn mới có <strong th:text="${nextWeekSlotCount}">0</strong>/2 khung giờ rảnh. QĐ24 yêu cầu đăng ký tối thiểu 2 khung giờ trước Chủ nhật.</span>
     </div>
 
     <!-- Info -->

@@ -10,6 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 
 @Controller
@@ -21,6 +27,9 @@ public class StudentController {
     private final ChatService chatService;
     private final CatalogService catalogService;
     private final NotificationService notificationService;
+    private final AttachmentService attachmentService;
+    private final PresenceService presenceService;
+    private final ConsultationRecordPdfService recordPdfService;
 
     private SinhVien getStudentOrThrow(CustomUserDetails userDetails) {
         if (userDetails == null) {
@@ -60,10 +69,14 @@ public class StudentController {
     }
 
     @PostMapping("/tickets/new")
-    public String createTicket(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Integer maDonVi, @RequestParam Integer maLinhVuc, @RequestParam String tieuDe, @RequestParam String noiDung, @RequestParam(required = false) Boolean baoMatDanhTinh, RedirectAttributes redirectAttributes) {
+    public String createTicket(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Integer maDonVi, @RequestParam Integer maLinhVuc, @RequestParam String tieuDe, @RequestParam String noiDung, @RequestParam(required = false) Boolean baoMatDanhTinh, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
             YeuCauTuVan ticket = ticketService.createTicket(sv, maLinhVuc, maDonVi, tieuDe, noiDung, baoMatDanhTinh);
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToTicket(attachment, sv.getTaiKhoan(), ticket); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Phiếu đã được gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/student/tickets/" + ticket.getMaYeuCau(); }
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Gửi yêu cầu tư vấn thành công! Mã phiếu: #" + ticket.getMaYeuCau());
             return "redirect:/student/tickets/" + ticket.getMaYeuCau();
         } catch (Exception e) {
@@ -86,14 +99,19 @@ public class StudentController {
         }
         model.addAttribute("ticket", ticket);
         model.addAttribute("student", sv);
+        addTicketAttachments(model, ticket);
         return "student/ticket-detail";
     }
 
     @PostMapping("/tickets/{id}/follow-up")
-    public String followUpTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, RedirectAttributes redirectAttributes) {
+    public String followUpTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            ticketService.studentFollowUp(id, sv, noiDung);
+            PhanHoiTuVan reply = ticketService.studentFollowUp(id, sv, noiDung);
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToReply(attachment, sv.getTaiKhoan(), reply); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Câu hỏi bổ sung đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/student/tickets/" + id; }
+            }
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu hỏi bổ sung tới cố vấn!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -181,18 +199,29 @@ public class StudentController {
             PhienChat session = chatService.getOrCreateSession(sv, targetDonVi);
             model.addAttribute("currentSession", session);
             model.addAttribute("messages", chatService.getMessages(session.getMaPhienChat(), sv.getTaiKhoan()));
+            model.addAttribute("messageAttachments", chatService.getMessages(session.getMaPhienChat(), sv.getTaiKhoan()).stream()
+                    .collect(Collectors.toMap(TinNhanChat::getMaTinNhan, m -> attachmentService.getMessageAttachments(m.getMaTinNhan()))));
             model.addAttribute("selectedDonVi", targetDonVi);
+            if (session.getNguoiTuVan() != null) {
+                String username = session.getNguoiTuVan().getTaiKhoan().getTenDangNhap();
+                model.addAttribute("advisorPresence", presenceService.status(username, "DangHoatDong".equals(session.getTrangThai())));
+            }
         }
         model.addAttribute("student", sv);
         return "student/chat";
     }
 
     @PostMapping("/chat/{sessionId}/send")
-    public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, RedirectAttributes redirectAttributes) {
+    public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false, defaultValue = "") String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         Integer maDonVi = null;
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            TinNhanChat msg = chatService.sendMessage(sessionId, sv.getTaiKhoan(), noiDung, "VanBan");
+            if ((noiDung == null || noiDung.isBlank()) && (attachment == null || attachment.isEmpty())) throw new IllegalArgumentException("Vui lòng nhập nội dung hoặc chọn tệp.");
+            TinNhanChat msg = chatService.sendMessage(sessionId, sv.getTaiKhoan(), noiDung.isBlank() ? "Đã gửi một tệp đính kèm" : noiDung, attachment != null && !attachment.isEmpty() ? "Tep" : "VanBan");
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToMessage(attachment, sv.getTaiKhoan(), msg); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Tin nhắn đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); }
+            }
             maDonVi = msg.getPhienChat().getDonVi().getMaDonVi();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -208,14 +237,33 @@ public class StudentController {
         return "student/history";
     }
 
+    @GetMapping("/tickets/{id}/record.pdf")
+    public ResponseEntity<byte[]> ticketRecord(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        SinhVien student = getStudentOrThrow(userDetails);
+        YeuCauTuVan ticket = ticketService.getStudentTicket(id, student);
+        byte[] pdf = recordPdfService.exportTicket(ticket);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=BienBanTuVan-" + id + ".pdf").body(pdf);
+    }
+
+    private void addTicketAttachments(Model model, YeuCauTuVan ticket) {
+        model.addAttribute("ticketAttachments", attachmentService.getTicketAttachments(ticket.getMaYeuCau()));
+        Map<Integer, List<TepDinhKem>> replyAttachments = ticket.getPhanHoiList().stream().collect(Collectors.toMap(
+                PhanHoiTuVan::getMaPhanHoi, reply -> attachmentService.getReplyAttachments(reply.getMaPhanHoi())));
+        model.addAttribute("replyAttachments", replyAttachments);
+    }
+
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public StudentController(final SinhVienRepository sinhVienRepo, final TicketService ticketService, final AppointmentService appointmentService, final ChatService chatService, final CatalogService catalogService, final NotificationService notificationService) {
+    public StudentController(final SinhVienRepository sinhVienRepo, final TicketService ticketService, final AppointmentService appointmentService, final ChatService chatService, final CatalogService catalogService, final NotificationService notificationService, final AttachmentService attachmentService, final PresenceService presenceService, final ConsultationRecordPdfService recordPdfService) {
         this.sinhVienRepo = sinhVienRepo;
         this.ticketService = ticketService;
         this.appointmentService = appointmentService;
         this.chatService = chatService;
         this.catalogService = catalogService;
         this.notificationService = notificationService;
+        this.attachmentService = attachmentService;
+        this.presenceService = presenceService;
+        this.recordPdfService = recordPdfService;
     }
 }

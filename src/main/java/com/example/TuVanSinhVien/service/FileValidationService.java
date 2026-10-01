@@ -46,7 +46,7 @@ public class FileValidationService {
         }
 
         // 1. Kiểm tra kích thước <= 10MB
-        if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+        if (file.getSize() >= MAX_FILE_SIZE_BYTES) {
             log.warn("[UPLOAD-SECURITY] Tệp vượt quá kích thước 10MB: {} bytes", file.getSize());
             return new FileValidationResult(false, "Kích thước tệp vượt quá giới hạn cho phép (tối đa 10 MB).", null);
         }

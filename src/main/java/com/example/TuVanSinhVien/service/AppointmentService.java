@@ -6,6 +6,10 @@ import com.example.TuVanSinhVien.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -219,6 +223,31 @@ public class AppointmentService {
 
     public List<KhungGioTuVan> getAdvisorSlots(Integer maCV) {
         return slotRepo.findByNguoiTuVan_MaCVOrderByBatDauAsc(maCV);
+    }
+
+    @Transactional
+    public int copyPreviousWeekSlots(NguoiTuVan advisor) {
+        LocalDate monday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDateTime previousStart = monday.minusWeeks(1).atStartOfDay();
+        LocalDateTime previousEnd = monday.atStartOfDay();
+        int copied = 0;
+        for (KhungGioTuVan source : slotRepo.findAdvisorSlotsInRange(advisor.getMaCV(), previousStart, previousEnd)) {
+            LocalDateTime newStart = source.getBatDau().plusWeeks(1);
+            LocalDateTime newEnd = source.getKetThuc().plusWeeks(1);
+            if (newStart.isAfter(LocalDateTime.now()) && !slotRepo.existsOverlappingSlot(advisor.getMaCV(), newStart, newEnd)) {
+                slotRepo.save(KhungGioTuVan.builder()
+                        .nguoiTuVan(advisor).batDau(newStart).ketThuc(newEnd)
+                        .hinhThuc(source.getHinhThuc()).diaDiemLink(source.getDiaDiemLink()).trangThai("Mo")
+                        .build());
+                copied++;
+            }
+        }
+        return copied;
+    }
+
+    public long countNextWeekOpenSlots(Integer advisorId) {
+        LocalDate nextMonday = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        return slotRepo.countOpenSlotsInRange(advisorId, nextMonday.atStartOfDay(), nextMonday.plusWeeks(1).atTime(LocalTime.MIDNIGHT));
     }
 
     @java.lang.SuppressWarnings("all")

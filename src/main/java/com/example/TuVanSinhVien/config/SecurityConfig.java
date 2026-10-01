@@ -17,6 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,17 +36,23 @@ public class SecurityConfig {
     private final CaptchaAuthenticationFilter captchaFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
 
     public SecurityConfig(RoleBasedAuthenticationSuccessHandler successHandler,
                           CustomAuthenticationFailureHandler failureHandler,
                           CaptchaAuthenticationFilter captchaFilter,
                           CustomAccessDeniedHandler accessDeniedHandler,
-                          JwtAuthenticationFilter jwtAuthenticationFilter) {
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
+                          ObjectProvider<ClientRegistrationRepository> clientRegistrations) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
         this.captchaFilter = captchaFilter;
         this.accessDeniedHandler = accessDeniedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
+        this.clientRegistrations = clientRegistrations;
     }
 
     @Bean
@@ -94,8 +102,11 @@ public class SecurityConfig {
                     "/",
                     "/faq/**",
                     "/articles/**",
+                    "/attachments/**",
                     "/advisors/**",
                     "/login",
+                    "/oauth2/**",
+                    "/login/oauth2/**",
                     "/register",
                     "/advisor-register",
                     "/verify-otp",
@@ -139,6 +150,10 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             );
 
+        if (clientRegistrations.getIfAvailable() != null) {
+            http.oauth2Login(oauth -> oauth.loginPage("/login").successHandler(googleOAuth2SuccessHandler)
+                    .failureUrl("/login?msg=Đăng%20nhập%20Google%20không%20thành%20công"));
+        }
         return http.build();
     }
 

@@ -20,6 +20,7 @@ public class TicketService {
     private final LinhVucTuVanRepository linhVucRepo;
     private final SlaService slaService;
     private final NotificationService notificationService;
+    private final NguoiTuVanRepository nguoiTuVanRepo;
 
     @Transactional
     public YeuCauTuVan createTicket(SinhVien sv, Integer maLinhVuc, Integer maDonVi, String tieuDe, String noiDung, Boolean baoMatDanhTinh) {
@@ -77,7 +78,7 @@ public class TicketService {
     }
 
     @Transactional
-    public void replyTicket(Integer maYeuCau, NguoiTuVan advisor, String noiDung, Boolean deXuatFaq) {
+    public PhanHoiTuVan replyTicket(Integer maYeuCau, NguoiTuVan advisor, String noiDung, Boolean deXuatFaq) {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu trả lời không được để trống.");
         }
@@ -90,7 +91,7 @@ public class TicketService {
         LocalDateTime now = LocalDateTime.now();
         // Thêm phản hồi
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("TraLoi").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(deXuatFaq != null && deXuatFaq).build();
-        phanHoiRepo.save(ph);
+        ph = phanHoiRepo.save(ph);
         // Cập nhật trạng thái ticket
         ticket.setTrangThai("DaPhanHoi");
         if (ticket.getNgayPhanHoiDau() == null) {
@@ -110,10 +111,11 @@ public class TicketService {
         }
         // Báo cho sinh viên
         notificationService.sendNotification(ticket.getSinhVien().getTaiKhoan(), "Có câu trả lời cho yêu cầu tư vấn", "Câu hỏi \'" + ticket.getTieuDe() + "\' đã có phản hồi mới từ cố vấn.", "DienDan", "/student/tickets/" + ticket.getMaYeuCau());
+        return ph;
     }
 
     @Transactional
-    public void studentFollowUp(Integer maYeuCau, SinhVien student, String noiDung) {
+    public PhanHoiTuVan studentFollowUp(Integer maYeuCau, SinhVien student, String noiDung) {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu hỏi thêm không được để trống.");
         }
@@ -125,7 +127,7 @@ public class TicketService {
         TaiKhoan sender = student.getTaiKhoan();
         LocalDateTime now = LocalDateTime.now();
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("HoiThem").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(false).build();
-        phanHoiRepo.save(ph);
+        ph = phanHoiRepo.save(ph);
         // Đổi lại trạng thái sang DangXuLy và hủy hạn tự đóng
         ticket.setTrangThai("DangXuLy");
         ticket.setHanTuDongDong(null);
@@ -136,6 +138,7 @@ public class TicketService {
         if (ticket.getCoVanPhuTrach() != null) {
             notificationService.sendNotification(ticket.getCoVanPhuTrach().getTaiKhoan(), "Sinh viên đặt câu hỏi thêm", "Sinh viên có thêm câu hỏi đối với phiếu: \'" + ticket.getTieuDe() + "\'.", "DienDan", "/advisor/tickets/" + ticket.getMaYeuCau());
         }
+        return ph;
     }
 
     @Transactional
@@ -227,6 +230,67 @@ public class TicketService {
         return ticket;
     }
 
+    public List<YeuCauTuVan> getAllTickets() {
+        return ticketRepo.findAll();
+    }
+
+    @Transactional
+    public void assignTicket(Integer ticketId, Integer advisorId, TaiKhoan admin, String note) {
+        YeuCauTuVan ticket = ticketRepo.findById(ticketId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        NguoiTuVan advisor = nguoiTuVanRepo.findById(advisorId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy cố vấn."));
+        if (!"ChoTiepNhan".equals(ticket.getTrangThai())) {
+            throw new IllegalStateException("Chỉ được phân công phiếu đang chờ tiếp nhận.");
+        }
+        if (!ticket.getDonVi().getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) {
+            throw new IllegalArgumentException("Cố vấn phải thuộc đúng đơn vị đang tiếp nhận phiếu.");
+        }
+        if (!Boolean.TRUE.equals(advisor.getNhanTuVan()) || !"HoatDong".equals(advisor.getTaiKhoan().getTrangThai())) {
+            throw new IllegalStateException("Cố vấn đang không nhận tư vấn hoặc tài khoản chưa hoạt động.");
+        }
+        long activeAssignments = ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(advisorId).stream()
+                .filter(item -> "DangXuLy".equals(item.getTrangThai())).count();
+        if (activeAssignments >= advisor.getHanNgachTiepNhan()) {
+            throw new IllegalStateException("Cố vấn đã đạt hạn ngạch tiếp nhận hiện tại.");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        ticket.setCoVanPhuTrach(advisor);
+        ticket.setTrangThai("DangXuLy");
+        ticket.setNgayTiepNhan(now);
+        ticket.setNgayCapNhat(now);
+        ticketRepo.save(ticket);
+        phanCongRepo.save(PhanCongTuVan.builder().yeuCauTuVan(ticket).taiKhoanThucHien(admin)
+                .coVanPhuTrach(advisor).ngayPhanCong(now)
+                .ghiChu(note == null || note.isBlank() ? "Admin điều phối phiếu tư vấn." : note.trim()).build());
+        lichSuRepo.save(LichSuYeuCau.builder().yeuCauTuVan(ticket).taiKhoanThucHien(admin)
+                .hanhDong("PhanCong").trangThaiCu("ChoTiepNhan").trangThaiMoi("DangXuLy").ngayTao(now).build());
+        notificationService.sendNotification(advisor.getTaiKhoan(), "Bạn được phân công phiếu tư vấn",
+                "Phiếu #" + ticket.getMaYeuCau() + " - " + ticket.getTieuDe(), "DienDan",
+                "/advisor/tickets/" + ticket.getMaYeuCau());
+    }
+
+    @Transactional
+    public int autoCloseExpiredTickets(LocalDateTime now) {
+        int closed = 0;
+        for (YeuCauTuVan ticket : ticketRepo.findByTrangThaiAndHanTuDongDongLessThanEqual("DaPhanHoi", now)) {
+            ticket.setTrangThai("Dong");
+            ticket.setNgayDong(now);
+            ticket.setKetLuan("Hệ thống tự động đóng sau 7 ngày không có câu hỏi bổ sung.");
+            ticket.setNgayCapNhat(now);
+            ticketRepo.save(ticket);
+            lichSuRepo.save(LichSuYeuCau.builder().yeuCauTuVan(ticket).taiKhoanThucHien(null)
+                    .hanhDong("TuDongDong").trangThaiCu("DaPhanHoi").trangThaiMoi("Dong")
+                    .lyDo("Quá 7 ngày không có phản hồi thêm").ngayTao(now).build());
+            notificationService.sendNotificationOnce(ticket.getSinhVien().getTaiKhoan(),
+                    "AUTO_CLOSE_TICKET_" + ticket.getMaYeuCau(), "Phiếu tư vấn đã tự động đóng",
+                    "Phiếu '" + ticket.getTieuDe() + "' đã được đóng sau 7 ngày không có câu hỏi bổ sung.",
+                    "DienDan", "/student/tickets/" + ticket.getMaYeuCau());
+            closed++;
+        }
+        return closed;
+    }
+
     public YeuCauTuVan getAdvisorTicket(Integer maYeuCau, NguoiTuVan advisor) {
         YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElse(null);
         if (ticket == null) return null;
@@ -253,7 +317,7 @@ public class TicketService {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public TicketService(final YeuCauTuVanRepository ticketRepo, final PhanCongTuVanRepository phanCongRepo, final PhanHoiTuVanRepository phanHoiRepo, final LichSuYeuCauRepository lichSuRepo, final DanhGiaYeuCauRepository danhGiaRepo, final CauHoiFAQRepository faqRepo, final DonViRepository donViRepo, final LinhVucTuVanRepository linhVucRepo, final SlaService slaService, final NotificationService notificationService) {
+    public TicketService(final YeuCauTuVanRepository ticketRepo, final PhanCongTuVanRepository phanCongRepo, final PhanHoiTuVanRepository phanHoiRepo, final LichSuYeuCauRepository lichSuRepo, final DanhGiaYeuCauRepository danhGiaRepo, final CauHoiFAQRepository faqRepo, final DonViRepository donViRepo, final LinhVucTuVanRepository linhVucRepo, final SlaService slaService, final NotificationService notificationService, final NguoiTuVanRepository nguoiTuVanRepo) {
         this.ticketRepo = ticketRepo;
         this.phanCongRepo = phanCongRepo;
         this.phanHoiRepo = phanHoiRepo;
@@ -264,5 +328,6 @@ public class TicketService {
         this.linhVucRepo = linhVucRepo;
         this.slaService = slaService;
         this.notificationService = notificationService;
+        this.nguoiTuVanRepo = nguoiTuVanRepo;
     }
 }

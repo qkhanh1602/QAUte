@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header-css('Điều phối phiếu tư vấn')}"></head>
+<body>
+<div th:replace="~{fragments/header :: navbar}"></div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h2 class="fw-bold mb-1">Điều phối phiếu tư vấn</h2><p class="text-muted mb-0">Phân công phiếu mới cho cố vấn đúng đơn vị và còn hạn ngạch.</p></div>
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary rounded-pill">Quay lại tổng quan</a>
+    </div>
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div class="qaute-card p-4 shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Phiếu</th><th>Đơn vị</th><th>Trạng thái</th><th>Cố vấn</th><th>Điều phối</th></tr></thead>
+                <tbody>
+                <tr th:each="ticket : ${tickets}">
+                    <td><strong th:text="${'#' + ticket.maYeuCau + ' · ' + ticket.tieuDe}"></strong><div class="small text-muted" th:text="${#temporals.format(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}"></div></td>
+                    <td th:text="${ticket.donVi.tenDonVi}"></td>
+                    <td><span class="badge bg-secondary-subtle text-secondary" th:text="${ticket.trangThai}"></span></td>
+                    <td th:text="${ticket.coVanPhuTrach != null ? ticket.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}"></td>
+                    <td>
+                        <form th:if="${ticket.trangThai == 'ChoTiepNhan'}" th:action="@{'/admin/tickets/' + ${ticket.maYeuCau} + '/assign'}" method="post" class="d-flex flex-column gap-2" style="min-width:260px">
+                            <select name="advisorId" class="form-select form-select-sm" required>
+                                <option value="">Chọn cố vấn cùng đơn vị</option>
+                                <option th:each="advisor : ${advisors}" th:if="${advisor.donVi.maDonVi == ticket.donVi.maDonVi and advisor.nhanTuVan and advisor.taiKhoan.trangThai == 'HoatDong'}" th:value="${advisor.maCV}" th:text="${advisor.taiKhoan.hoTen + ' · ' + advisor.maCanBo}"></option>
+                            </select>
+                            <input name="note" class="form-control form-control-sm" maxlength="500" placeholder="Ghi chú phân công">
+                            <button class="btn btn-primary btn-sm rounded-pill" type="submit">Phân công</button>
+                        </form>
+                        <span th:unless="${ticket.trangThai == 'ChoTiepNhan'}" class="small text-muted">Đã xử lý điều phối</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(tickets)}"><td colspan="5" class="text-center text-muted py-4">Chưa có phiếu tư vấn.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

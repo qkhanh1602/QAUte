@@ -21,6 +21,19 @@ public class NotificationService {
         thongBaoRepository.save(tb);
     }
 
+    @Transactional
+    public boolean sendNotificationOnce(TaiKhoan recipient, String deduplicationKey, String title, String content, String type, String link) {
+        if (thongBaoRepository.existsByTaiKhoanNhan_MaTKAndKhoaChongLap(recipient.getMaTK(), deduplicationKey)) {
+            return false;
+        }
+        ThongBao notification = ThongBao.builder()
+                .taiKhoanNhan(recipient).tieuDe(title).noiDung(content).loaiThongBao(type)
+                .lienKet(link).daDoc(false).ngayTao(LocalDateTime.now()).khoaChongLap(deduplicationKey)
+                .build();
+        thongBaoRepository.save(notification);
+        return true;
+    }
+
     public List<ThongBao> getUserNotifications(Integer maTK) {
         return thongBaoRepository.findByTaiKhoanNhan_MaTKOrderByNgayTaoDesc(maTK);
     }

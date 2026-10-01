@@ -39,7 +39,7 @@
                     </div>
                 </div>
 
-                <form th:action="@{/student/tickets/new}" method="post" id="ticketForm">
+                <form th:action="@{/student/tickets/new}" method="post" enctype="multipart/form-data" id="ticketForm">
                     <!-- Department & Field Selector -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -74,6 +74,12 @@
                             <span id="bodyCounter" class="text-muted small">0/20 ký tự tối thiểu</span>
                         </div>
                         <textarea name="noiDung" id="noiDungInput" rows="6" class="form-control" placeholder="Mô tả cụ thể hoàn cảnh, câu hỏi và mong muốn hỗ trợ từ cố vấn (tối thiểu 20 ký tự)..." required minlength="20" oninput="updateBodyCount()"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">5. Tệp minh chứng (không bắt buộc)</label>
+                        <input type="file" name="attachment" class="form-control" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf">
+                        <div class="form-text">Hỗ trợ JPG, PNG hoặc PDF; dung lượng nhỏ hơn 10 MB.</div>
                     </div>
 
                     <!-- Anonymous Checkbox -->

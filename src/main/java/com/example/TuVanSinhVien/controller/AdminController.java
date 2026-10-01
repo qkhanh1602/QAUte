@@ -4,11 +4,16 @@ package com.example.TuVanSinhVien.controller;
 import com.example.TuVanSinhVien.config.CustomUserDetails;
 import com.example.TuVanSinhVien.entity.TaiKhoan;
 import com.example.TuVanSinhVien.entity.NguoiTuVan;
+import com.example.TuVanSinhVien.entity.BaiVietHuongDan;
 import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
 import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.service.CatalogService;
 import com.example.TuVanSinhVien.service.ContentService;
 import com.example.TuVanSinhVien.service.ReportService;
+import com.example.TuVanSinhVien.service.TicketService;
+import com.example.TuVanSinhVien.service.UserAccountService;
+import com.example.TuVanSinhVien.service.ReportExportService;
+import com.example.TuVanSinhVien.service.AttachmentService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -16,11 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/admin")
@@ -31,13 +41,57 @@ public class AdminController {
     private final ContentService contentService;
     private final PasswordEncoder passwordEncoder;
     private final NguoiTuVanRepository nguoiTuVanRepo;
+    private final TicketService ticketService;
+    private final UserAccountService userAccountService;
+    private final ReportExportService reportExportService;
+    private final AttachmentService attachmentService;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         model.addAttribute("summary", reportService.getDashboardSummary());
+        model.addAttribute("units", catalogService.getAllDonVi());
         return "admin/dashboard";
+    }
+
+    @GetMapping("/reports/export")
+    public ResponseEntity<byte[]> exportReport(@RequestParam(defaultValue = "xlsx") String format,
+                                               @RequestParam(required = false) LocalDate from,
+                                               @RequestParam(required = false) LocalDate to,
+                                               @RequestParam(required = false) Integer unitId) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new IllegalArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+        }
+        boolean pdf = "pdf".equalsIgnoreCase(format);
+        byte[] body = pdf ? reportExportService.exportPdf(from, to, unitId) : reportExportService.exportExcel(from, to, unitId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=QAUTE_BaoCao." + (pdf ? "pdf" : "xlsx"))
+                .contentType(MediaType.parseMediaType(pdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    @GetMapping("/tickets")
+    public String tickets(Model model) {
+        model.addAttribute("tickets", ticketService.getAllTickets());
+        model.addAttribute("advisors", nguoiTuVanRepo.findAllWithAccountAndUnit());
+        return "admin/tickets";
+    }
+
+    @PostMapping("/tickets/{id}/assign")
+    public String assignTicket(@PathVariable Integer id, @RequestParam Integer advisorId,
+                               @RequestParam(required = false) String note,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK())
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy tài khoản Admin."));
+            ticketService.assignTicket(id, advisorId, admin, note);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công phiếu #" + id + " thành công.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/tickets";
     }
 
     @GetMapping("/users")
@@ -50,6 +104,7 @@ public class AdminController {
         Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
                 .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity()));
         model.addAttribute("advisorProfiles", advisorProfiles);
+        model.addAttribute("units", catalogService.getAllActiveDonVi());
         model.addAttribute("selectedRole", role);
         return "admin/users";
     }
@@ -85,6 +140,62 @@ public class AdminController {
                     + "' là '" + temporaryPassword + "'. Mật khẩu chỉ hiển thị lần này.");
         });
         return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/students/create")
+    public String createStudent(@RequestParam String username, @RequestParam String password,
+                                @RequestParam String fullName, @RequestParam String email,
+                                @RequestParam(required = false) String phone, @RequestParam String studentCode,
+                                @RequestParam String faculty, @RequestParam String major,
+                                @RequestParam String className, @RequestParam String course,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            userAccountService.createStudent(username, password, fullName, email, phone, studentCode, faculty, major, className, course);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã tạo tài khoản sinh viên " + username + ".");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users?role=SinhVien";
+    }
+
+    @PostMapping("/users/staff/create")
+    public String createStaff(@RequestParam String role, @RequestParam String username, @RequestParam String password,
+                              @RequestParam String fullName, @RequestParam String email,
+                              @RequestParam(required = false) String phone,
+                              @RequestParam(required = false) String officerCode,
+                              @RequestParam(required = false) Integer unitId,
+                              @RequestParam(required = false) String academicTitle,
+                              @RequestParam(required = false) String position,
+                              @RequestParam(required = false) String expertise,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            if ("Admin".equals(role)) userAccountService.createAdmin(username, password, fullName, email, phone);
+            else if ("CoVan".equals(role)) userAccountService.createAdvisor(username, password, fullName, email, phone, officerCode, unitId, academicTitle, position, expertise);
+            else throw new IllegalArgumentException("Vai trò chỉ có thể là Cố vấn hoặc Quản trị viên.");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã tạo tài khoản " + username + ".");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users?role=" + role;
+    }
+
+    @PostMapping(value = "/users/students/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String importStudents(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            int imported = userAccountService.importStudents(file);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã nhập " + imported + " tài khoản sinh viên từ Excel.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users?role=SinhVien";
+    }
+
+    @GetMapping("/users/students/import-template")
+    public ResponseEntity<byte[]> downloadStudentImportTemplate() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=QAUTE_Mau_Import_SinhVien.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(userAccountService.createImportTemplate());
     }
 
     @PostMapping("/users/{id}/approve-advisor")
@@ -149,11 +260,100 @@ public class AdminController {
         return "admin/catalogs";
     }
 
+    @PostMapping("/catalogs/units/save")
+    public String saveUnit(@RequestParam(required = false) Integer id, @RequestParam String code,
+                           @RequestParam String name, @RequestParam String type,
+                           @RequestParam(required = false) String email, @RequestParam(required = false) String phone,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.saveDonVi(id, code, name, type, email, phone);
+            redirectAttributes.addFlashAttribute("successMessage", id == null ? "Đã thêm đơn vị." : "Đã cập nhật đơn vị.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/catalogs";
+    }
+
+    @PostMapping("/catalogs/units/{id}/toggle")
+    public String toggleUnit(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.toggleDonVi(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái đơn vị.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/catalogs";
+    }
+
+    @PostMapping("/catalogs/fields/save")
+    public String saveField(@RequestParam(required = false) Integer id, @RequestParam String code,
+                            @RequestParam String name, @RequestParam(required = false) String description,
+                            @RequestParam Integer unitId, @RequestParam(defaultValue = "false") boolean sensitive,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.saveLinhVuc(id, code, name, description, unitId, sensitive);
+            redirectAttributes.addFlashAttribute("successMessage", id == null ? "Đã thêm lĩnh vực." : "Đã cập nhật lĩnh vực.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/catalogs";
+    }
+
+    @PostMapping("/catalogs/fields/{id}/toggle")
+    public String toggleField(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.toggleLinhVuc(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái lĩnh vực.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/catalogs";
+    }
+
     @GetMapping("/content")
     public String content(Model model) {
         model.addAttribute("faqs", contentService.getAllFaqs());
         model.addAttribute("articles", contentService.getAllArticles());
+        model.addAttribute("fields", catalogService.getAllActiveLinhVuc());
         return "admin/content";
+    }
+
+    @PostMapping("/content/articles/save")
+    public String saveArticle(@RequestParam(required = false) Integer id, @RequestParam String title,
+                              @RequestParam(required = false) String summary, @RequestParam String content,
+                              @RequestParam(required = false) String keywords, @RequestParam Integer fieldId,
+                              @RequestParam(defaultValue = "false") boolean publish,
+                              @RequestParam(required = false) MultipartFile attachment,
+                              @AuthenticationPrincipal CustomUserDetails userDetails,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElseThrow();
+            BaiVietHuongDan article = contentService.saveArticle(id, title, summary, content, keywords, fieldId, publish, admin);
+            if (attachment != null && !attachment.isEmpty()) {
+                try { attachmentService.attachToArticle(attachment, admin, article); }
+                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Bài viết đã lưu nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/admin/content"; }
+            }
+            redirectAttributes.addFlashAttribute("successMessage", publish ? "Đã xuất bản bài viết." : "Đã lưu bản nháp.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/content";
+    }
+
+    @PostMapping("/content/faqs/save")
+    public String saveFaq(@RequestParam(required = false) Integer id, @RequestParam String question,
+                          @RequestParam String answer, @RequestParam(required = false) String keywords,
+                          @RequestParam Integer fieldId, @RequestParam(defaultValue = "false") boolean publish,
+                          @AuthenticationPrincipal CustomUserDetails userDetails,
+                          RedirectAttributes redirectAttributes) {
+        try {
+            TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElseThrow();
+            contentService.saveFaq(id, question, answer, keywords, fieldId, publish, admin);
+            redirectAttributes.addFlashAttribute("successMessage", publish ? "Đã công khai FAQ." : "Đã lưu FAQ nháp.");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/content";
     }
 
     @PostMapping("/content/faq/{id}/approve")
@@ -174,12 +374,16 @@ public class AdminController {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder, final NguoiTuVanRepository nguoiTuVanRepo) {
+    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder, final NguoiTuVanRepository nguoiTuVanRepo, final TicketService ticketService, final UserAccountService userAccountService, final ReportExportService reportExportService, final AttachmentService attachmentService) {
         this.reportService = reportService;
         this.taiKhoanRepo = taiKhoanRepo;
         this.catalogService = catalogService;
         this.contentService = contentService;
         this.passwordEncoder = passwordEncoder;
         this.nguoiTuVanRepo = nguoiTuVanRepo;
+        this.ticketService = ticketService;
+        this.userAccountService = userAccountService;
+        this.reportExportService = reportExportService;
+        this.attachmentService = attachmentService;
     }
 }

@@ -6,6 +6,7 @@ import com.example.TuVanSinhVien.entity.CauHoiFAQ;
 import com.example.TuVanSinhVien.service.CatalogService;
 import com.example.TuVanSinhVien.service.ContentService;
 import com.example.TuVanSinhVien.service.ReportService;
+import com.example.TuVanSinhVien.service.AttachmentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ public class HomeController {
     private final ContentService contentService;
     private final CatalogService catalogService;
     private final ReportService reportService;
+    private final AttachmentService attachmentService;
 
     @GetMapping("/")
     public String index(@RequestParam(required = false) String logout, Model model) {
@@ -58,6 +60,7 @@ public class HomeController {
         }
         model.addAttribute("article", article);
         model.addAttribute("recentArticles", contentService.getPublicArticles(null, null));
+        model.addAttribute("attachments", attachmentService.getArticleAttachments(id));
         return "public/article-detail";
     }
 
@@ -70,9 +73,10 @@ public class HomeController {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public HomeController(final ContentService contentService, final CatalogService catalogService, final ReportService reportService) {
+    public HomeController(final ContentService contentService, final CatalogService catalogService, final ReportService reportService, final AttachmentService attachmentService) {
         this.contentService = contentService;
         this.catalogService = catalogService;
         this.reportService = reportService;
+        this.attachmentService = attachmentService;
     }
 }

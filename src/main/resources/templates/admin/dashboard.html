@@ -34,7 +34,17 @@
                     <a th:href="@{/admin/catalogs}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold">
                         <i class="bi bi-folder2-open me-1"></i>Danh mục đơn vị
                     </a>
+                    <a th:href="@{/admin/tickets}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-diagram-2 me-1"></i>Điều phối phiếu
+                    </a>
                 </div>
+                <form class="row g-2 mt-3" th:action="@{/admin/reports/export}" method="get">
+                    <div class="col-auto"><input class="form-control form-control-sm" type="date" name="from" aria-label="Từ ngày"></div>
+                    <div class="col-auto"><input class="form-control form-control-sm" type="date" name="to" aria-label="Đến ngày"></div>
+                    <div class="col-auto"><select class="form-select form-select-sm" name="unitId"><option value="">Tất cả đơn vị</option><option th:each="unit : ${units}" th:value="${unit.maDonVi}" th:text="${unit.tenDonVi}"></option></select></div>
+                    <div class="col-auto"><button class="btn btn-success btn-sm" name="format" value="xlsx"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button></div>
+                    <div class="col-auto"><button class="btn btn-danger btn-sm" name="format" value="pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button></div>
+                </form>
             </div>
 
             <div class="col-md-4 text-md-end mt-4 mt-md-0">
@@ -60,6 +70,9 @@
         </a>
         <a th:href="@{/admin/catalogs}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
             <i class="bi bi-diagram-3 me-1"></i>Đơn vị & Lĩnh vực
+        </a>
+        <a th:href="@{/admin/tickets}" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary">
+            <i class="bi bi-diagram-2 me-1"></i>Điều phối phiếu
         </a>
     </div>
 

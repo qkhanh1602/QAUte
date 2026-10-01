@@ -11,6 +11,10 @@
             <h2 class="fw-bold text-dark m-0">Kiểm Duyệt & Xuất Bản Nội Dung</h2>
             <p class="text-muted mb-0 small">Phê duyệt câu hỏi FAQ và bài viết hướng dẫn trước khi công khai lên cổng thông tin</p>
         </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#faqEditor"><i class="bi bi-question-circle me-1"></i>Tạo FAQ</button>
+            <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#articleEditor"><i class="bi bi-pencil-square me-1"></i>Soạn bài viết</button>
+        </div>
     </div>
 
     <!-- Admin Nav -->
@@ -33,6 +37,7 @@
     <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
         <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
     </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3" th:text="${errorMessage}"></div>
 
     <!-- FAQs Section -->
     <div class="qaute-card p-4 border-0 shadow-sm mb-4">
@@ -116,6 +121,9 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="articleEditor" tabindex="-1"><div class="modal-dialog modal-lg"><form class="modal-content" th:action="@{/admin/content/articles/save}" method="post" enctype="multipart/form-data" onsubmit="document.getElementById('articleContent').value=document.getElementById('richEditor').innerHTML"><div class="modal-header"><h5 class="modal-title">Soạn bài viết hướng dẫn</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body d-grid gap-3"><input class="form-control" name="title" placeholder="Tiêu đề bài viết" required><select class="form-select" name="fieldId" required><option value="">Chọn lĩnh vực</option><option th:each="field : ${fields}" th:value="${field.maLinhVuc}" th:text="${field.tenLinhVuc}"></option></select><textarea class="form-control" name="summary" maxlength="500" placeholder="Tóm tắt"></textarea><div class="btn-group btn-group-sm" role="group"><button type="button" class="btn btn-outline-secondary" onclick="document.execCommand('bold')"><b>B</b></button><button type="button" class="btn btn-outline-secondary" onclick="document.execCommand('italic')"><i>I</i></button><button type="button" class="btn btn-outline-secondary" onclick="document.execCommand('insertUnorderedList')">Danh sách</button></div><div id="richEditor" class="form-control" contenteditable="true" style="min-height:220px" aria-label="Nội dung bài viết"></div><input type="hidden" id="articleContent" name="content"><input type="file" class="form-control" name="attachment" accept=".jpg,.jpeg,.png,.pdf"><div class="form-text">Đính kèm quy chế JPG, PNG hoặc PDF; nhỏ hơn 10 MB.</div><input class="form-control" name="keywords" placeholder="Từ khóa, phân cách bằng dấu phẩy"><label class="form-check"><input class="form-check-input" type="checkbox" name="publish" value="true"><span class="form-check-label">Xuất bản ngay; bỏ chọn để lưu nháp</span></label></div><div class="modal-footer"><button class="btn btn-primary">Lưu bài viết</button></div></form></div></div>
+<div class="modal fade" id="faqEditor" tabindex="-1"><div class="modal-dialog"><form class="modal-content" th:action="@{/admin/content/faqs/save}" method="post"><div class="modal-header"><h5 class="modal-title">Tạo câu hỏi FAQ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body d-grid gap-2"><input class="form-control" name="question" placeholder="Câu hỏi" required><textarea class="form-control" name="answer" rows="5" placeholder="Câu trả lời" required></textarea><select class="form-select" name="fieldId" required><option value="">Chọn lĩnh vực</option><option th:each="field : ${fields}" th:value="${field.maLinhVuc}" th:text="${field.tenLinhVuc}"></option></select><input class="form-control" name="keywords" placeholder="Từ khóa"><label class="form-check"><input class="form-check-input" type="checkbox" name="publish" value="true"><span class="form-check-label">Công khai ngay; bỏ chọn để lưu nháp</span></label></div><div class="modal-footer"><button class="btn btn-primary">Lưu FAQ</button></div></form></div></div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 

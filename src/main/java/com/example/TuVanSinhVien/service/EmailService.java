@@ -67,6 +67,25 @@ public class EmailService {
         }
     }
 
+    public boolean sendNotificationEmail(String toEmail, String subject, String htmlBody) {
+        if (mailSender == null || toEmail == null || toEmail.isBlank()) {
+            return false;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("qaute.edu@gmail.com", "QAUTE - Ban Tư Vấn Sinh Viên");
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+            mailSender.send(message);
+            return true;
+        } catch (Exception ex) {
+            log.warn("[EMAIL-SERVICE] Không thể gửi thông báo tới {}: {}", toEmail, ex.getMessage());
+            return false;
+        }
+    }
+
     private void printConsoleOtpBox(String toEmail, String otpCode, int expiryMinutes) {
         String line = "================================================================================";
         log.info("\n{}\n[QAUTE - MÃ XÁC THỰC EMAIL OTP]\nNgười nhận: {}\nMã OTP: [{}]\nHiệu lực: {} phút\n{}\n",

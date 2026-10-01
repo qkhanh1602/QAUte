@@ -5,6 +5,8 @@ import com.example.TuVanSinhVien.entity.*;
 import com.example.TuVanSinhVien.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 public class ContentService {
     private final CauHoiFAQRepository faqRepo;
     private final BaiVietHuongDanRepository articleRepo;
+    private final LinhVucTuVanRepository fieldRepo;
 
     public List<CauHoiFAQ> getPublicFaqs(Integer maLinhVuc, String keyword) {
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -79,10 +82,56 @@ public class ContentService {
         return articleRepo.findAll();
     }
 
+    @Transactional
+    public BaiVietHuongDan saveArticle(Integer id, String title, String summary, String htmlContent,
+                                       String keywords, Integer fieldId, boolean publish, TaiKhoan admin) {
+        if (title == null || title.trim().length() < 5 || htmlContent == null || Jsoup.parse(htmlContent).text().length() < 20) {
+            throw new IllegalArgumentException("Tiêu đề phải có ít nhất 5 ký tự và nội dung ít nhất 20 ký tự.");
+        }
+        LinhVucTuVan field = fieldRepo.findById(fieldId).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực."));
+        BaiVietHuongDan article = id == null ? new BaiVietHuongDan() : articleRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài viết."));
+        article.setTieuDe(title.trim());
+        article.setTomTat(summary == null ? null : summary.trim());
+        article.setNoiDung(Jsoup.clean(htmlContent, Safelist.basic()));
+        article.setTuKhoa(keywords == null ? null : keywords.trim());
+        article.setLinhVuc(field);
+        if (article.getTaiKhoanAdmin() == null) article.setTaiKhoanAdmin(admin);
+        if (article.getLuotXem() == null) article.setLuotXem(0);
+        if (article.getNgayTao() == null) article.setNgayTao(LocalDateTime.now());
+        article.setTrangThai(publish ? "XuatBan" : "BanNhao");
+        article.setNgayDang(publish ? LocalDateTime.now() : null);
+        article.setTaiKhoanDuyet(publish ? admin : null);
+        return articleRepo.save(article);
+    }
+
+    @Transactional
+    public CauHoiFAQ saveFaq(Integer id, String question, String answer, String keywords,
+                             Integer fieldId, boolean publish, TaiKhoan admin) {
+        if (question == null || question.trim().length() < 5 || answer == null || answer.trim().length() < 10) {
+            throw new IllegalArgumentException("Câu hỏi hoặc câu trả lời quá ngắn.");
+        }
+        LinhVucTuVan field = fieldRepo.findById(fieldId).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực."));
+        CauHoiFAQ faq = id == null ? new CauHoiFAQ() : faqRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy FAQ."));
+        faq.setCauHoi(question.trim());
+        faq.setCauTraLoi(Jsoup.clean(answer, Safelist.none()));
+        faq.setTuKhoa(keywords == null ? null : keywords.trim());
+        faq.setLinhVuc(field);
+        if (faq.getTaiKhoanDeXuat() == null) faq.setTaiKhoanDeXuat(admin);
+        if (faq.getLuotXem() == null) faq.setLuotXem(0);
+        if (faq.getNgayTao() == null) faq.setNgayTao(LocalDateTime.now());
+        faq.setTrangThai(publish ? "HienThi" : "BanNhao");
+        faq.setTaiKhoanDuyet(publish ? admin : null);
+        faq.setNgayDuyet(publish ? LocalDateTime.now() : null);
+        return faqRepo.save(faq);
+    }
+
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public ContentService(final CauHoiFAQRepository faqRepo, final BaiVietHuongDanRepository articleRepo) {
+    public ContentService(final CauHoiFAQRepository faqRepo, final BaiVietHuongDanRepository articleRepo, final LinhVucTuVanRepository fieldRepo) {
         this.faqRepo = faqRepo;
         this.articleRepo = articleRepo;
+        this.fieldRepo = fieldRepo;
     }
 }
