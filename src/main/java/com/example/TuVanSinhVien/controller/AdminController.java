@@ -3,6 +3,8 @@ package com.example.TuVanSinhVien.controller;
 
 import com.example.TuVanSinhVien.config.CustomUserDetails;
 import com.example.TuVanSinhVien.entity.TaiKhoan;
+import com.example.TuVanSinhVien.entity.NguoiTuVan;
+import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
 import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.service.CatalogService;
 import com.example.TuVanSinhVien.service.ContentService;
@@ -10,11 +12,15 @@ import com.example.TuVanSinhVien.service.ReportService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.SecureRandom;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -24,6 +30,7 @@ public class AdminController {
     private final CatalogService catalogService;
     private final ContentService contentService;
     private final PasswordEncoder passwordEncoder;
+    private final NguoiTuVanRepository nguoiTuVanRepo;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
@@ -40,6 +47,9 @@ public class AdminController {
         } else {
             model.addAttribute("users", taiKhoanRepo.findAll());
         }
+        Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
+                .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity()));
+        model.addAttribute("advisorProfiles", advisorProfiles);
         model.addAttribute("selectedRole", role);
         return "admin/users";
     }
@@ -47,6 +57,10 @@ public class AdminController {
     @PostMapping("/users/{id}/toggle-status")
     public String toggleUserStatus(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         taiKhoanRepo.findById(id).ifPresent(u -> {
+            if ("ChoDuyet".equals(u.getTrangThai())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Hồ sơ cố vấn chờ duyệt phải dùng nút Phê duyệt hoặc Từ chối.");
+                return;
+            }
             if ("HoatDong".equals(u.getTrangThai())) {
                 u.setTrangThai("Khoa");
             } else {
@@ -71,6 +85,47 @@ public class AdminController {
                     + "' là '" + temporaryPassword + "'. Mật khẩu chỉ hiển thị lần này.");
         });
         return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/approve-advisor")
+    @Transactional
+    public String approveAdvisor(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        TaiKhoan account = taiKhoanRepo.findById(id).orElse(null);
+        if (account == null || !"CoVan".equals(account.getVaiTro()) || !"ChoDuyet".equals(account.getTrangThai())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hồ sơ cố vấn không tồn tại hoặc không còn chờ duyệt.");
+            return "redirect:/admin/users?role=CoVan";
+        }
+        NguoiTuVan advisor = nguoiTuVanRepo.findByTaiKhoan_MaTK(id).orElse(null);
+        if (advisor == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Tài khoản chưa có hồ sơ chuyên môn cố vấn.");
+            return "redirect:/admin/users?role=CoVan";
+        }
+        account.setTrangThai("HoatDong");
+        account.setTokenVersion((account.getTokenVersion() == null ? 0 : account.getTokenVersion()) + 1);
+        advisor.setNhanTuVan(true);
+        taiKhoanRepo.save(account);
+        nguoiTuVanRepo.save(advisor);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt cố vấn " + account.getHoTen() + ".");
+        return "redirect:/admin/users?role=CoVan";
+    }
+
+    @PostMapping("/users/{id}/reject-advisor")
+    @Transactional
+    public String rejectAdvisor(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        TaiKhoan account = taiKhoanRepo.findById(id).orElse(null);
+        if (account == null || !"CoVan".equals(account.getVaiTro()) || !"ChoDuyet".equals(account.getTrangThai())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Hồ sơ cố vấn không tồn tại hoặc không còn chờ duyệt.");
+            return "redirect:/admin/users?role=CoVan";
+        }
+        account.setTrangThai("Khoa");
+        account.setTokenVersion((account.getTokenVersion() == null ? 0 : account.getTokenVersion()) + 1);
+        nguoiTuVanRepo.findByTaiKhoan_MaTK(id).ifPresent(advisor -> {
+            advisor.setNhanTuVan(false);
+            nguoiTuVanRepo.save(advisor);
+        });
+        taiKhoanRepo.save(account);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối hồ sơ cố vấn " + account.getHoTen() + ".");
+        return "redirect:/admin/users?role=CoVan";
     }
 
     private String generateTemporaryPassword() {
@@ -119,11 +174,12 @@ public class AdminController {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder) {
+    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder, final NguoiTuVanRepository nguoiTuVanRepo) {
         this.reportService = reportService;
         this.taiKhoanRepo = taiKhoanRepo;
         this.catalogService = catalogService;
         this.contentService = contentService;
         this.passwordEncoder = passwordEncoder;
+        this.nguoiTuVanRepo = nguoiTuVanRepo;
     }
 }

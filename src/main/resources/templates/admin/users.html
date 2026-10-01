@@ -33,6 +33,9 @@
     <div th:if="${successMessage}" class="alert alert-success py-2 small mb-3">
         <i class="bi bi-check-circle-fill me-1"></i><span th:text="${successMessage}">Thành công</span>
     </div>
+    <div th:if="${errorMessage}" class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${errorMessage}">Không thể cập nhật</span>
+    </div>
 
     <!-- Role Filter -->
     <div class="d-flex gap-2 mb-4">
@@ -62,7 +65,17 @@
                     <tr th:each="u : ${users}">
                         <td><strong class="text-secondary" th:text="${'#' + u.maTK}">#1</strong></td>
                         <td><code class="fw-bold text-dark" th:text="${u.tenDangNhap}">username</code></td>
-                        <td class="fw-semibold text-dark" th:text="${u.hoTen}">Họ tên</td>
+                        <td>
+                            <div class="fw-semibold text-dark" th:text="${u.hoTen}">Họ tên</div>
+                            <div th:if="${u.vaiTro == 'CoVan' and advisorProfiles[u.maTK] != null}"
+                                 th:with="advisor=${advisorProfiles[u.maTK]}" class="small text-muted mt-1">
+                                <div><i class="bi bi-person-badge me-1"></i><span th:text="${advisor.maCanBo}">Mã cán bộ</span></div>
+                                <div><i class="bi bi-building me-1"></i><span th:text="${advisor.donVi.tenDonVi}">Đơn vị</span></div>
+                                <div th:if="${advisor.hocHamHocVi != null and !#strings.isEmpty(advisor.hocHamHocVi)}"
+                                     th:text="${advisor.hocHamHocVi + ' · ' + advisor.chucVu}">Học vị · Chức vụ</div>
+                                <div th:text="${advisor.chuyenMon}">Chuyên môn</div>
+                            </div>
+                        </td>
                         <td class="small">
                             <div th:text="${u.email}">email@ute.edu.vn</div>
                             <small class="text-muted" th:text="${u.soDienThoai != null ? u.soDienThoai : '-'}">09xxxxxxxx</small>
@@ -75,10 +88,19 @@
                         <td>
                             <span th:if="${u.trangThai == 'HoatDong'}" class="badge bg-success-subtle text-success">Hoạt động</span>
                             <span th:if="${u.trangThai == 'Khoa'}" class="badge bg-danger-subtle text-danger">Bị khóa</span>
+                            <span th:if="${u.trangThai == 'ChoDuyet'}" class="badge bg-warning-subtle text-warning">Chờ duyệt</span>
                         </td>
                         <td class="small text-muted" th:text="${#temporals.format(u.ngayTao, 'dd/MM/yyyy')}">21/09/2026</td>
                         <td>
-                            <div class="d-flex gap-1">
+                            <div th:if="${u.vaiTro == 'CoVan' and u.trangThai == 'ChoDuyet'}" class="d-flex gap-1 flex-wrap">
+                                <form th:action="@{'/admin/users/' + ${u.maTK} + '/approve-advisor'}" method="post" class="m-0">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill"><i class="bi bi-check2 me-1"></i>Phê duyệt</button>
+                                </form>
+                                <form th:action="@{'/admin/users/' + ${u.maTK} + '/reject-advisor'}" method="post" class="m-0" onsubmit="return confirm('Từ chối hồ sơ cố vấn này?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill"><i class="bi bi-x-lg me-1"></i>Từ chối</button>
+                                </form>
+                            </div>
+                            <div th:unless="${u.vaiTro == 'CoVan' and u.trangThai == 'ChoDuyet'}" class="d-flex gap-1">
                                 <!-- Lock/Unlock Button -->
                                 <form th:action="@{'/admin/users/' + ${u.maTK} + '/toggle-status'}" method="post" class="m-0">
                                     <button th:if="${u.trangThai == 'HoatDong'}" type="submit" class="btn btn-outline-danger btn-sm rounded-pill" title="Khóa tài khoản">

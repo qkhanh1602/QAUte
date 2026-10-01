@@ -14,7 +14,7 @@ BEGIN
   MaOTP uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
   MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
   Email varchar(254) NOT NULL,
-  MucDich varchar(30) NOT NULL CHECK (MucDich IN ('DangKy','XacMinhEmail','DatLaiMatKhau','DoiEmail')),
+  MucDich varchar(30) NOT NULL CHECK (MucDich IN ('DangKy','DangKyCoVan','XacMinhEmail','DatLaiMatKhau','DoiEmail')),
   OTPHash varchar(255) NOT NULL,
   NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
   HetHan datetime2(3) NOT NULL, DaDungLuc datetime2(3) NULL,

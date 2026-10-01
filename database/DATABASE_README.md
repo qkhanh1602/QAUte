@@ -19,6 +19,8 @@
 | `QAUTE_AZURE_SCHEMA.sql` | Chỉ schema/seed cho database Azure SQL mới, rỗng; không tạo server/database |
 | `QAUTE_VERIFY.sql` | 17 kiểm thử ràng buộc bằng transaction có rollback, kèm DBCC |
 | `V2__security_hardening.sql` | Migration thêm OTP email và nhật ký bảo mật cho database đã tạo trước đó |
+| `V4__profile_avatar.sql` | Migration thêm cột URL và public ID ảnh đại diện Cloudinary |
+| `V5__advisor_registration_approval.sql` | Migration thêm trạng thái chờ duyệt và OTP cho đăng ký cố vấn |
 | `QAUTE_VERIFY_RESULT.txt` | Kết quả kiểm thử thực tế |
 | `QAUTE_BACKUP_RESULT.txt` | Kết quả backup và kiểm tra backup thực tế |
 | `QAUTE_DATABASE_STATUS.txt` | Số bảng/ràng buộc/dữ liệu seed và đường dẫn file database đang chạy |

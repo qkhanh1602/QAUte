@@ -27,7 +27,7 @@ public class YeuCauXacMinhOTP {
     private String kenhXacMinh; // EMAIL hoặc SMS
 
     @Column(name = "MucDich", nullable = false, length = 30)
-    private String mucDich; // DangKy, XacMinhEmail, DatLaiMatKhau, DoiEmail
+    private String mucDich; // DangKy, DangKyCoVan, XacMinhEmail, DatLaiMatKhau, DoiEmail
 
     @Column(name = "OTPHash", nullable = false, length = 255)
     private String otpHash;

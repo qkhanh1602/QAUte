@@ -1,6 +1,7 @@
 package com.example.TuVanSinhVien.config;
 
 import com.cloudinary.Cloudinary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,8 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class CloudinaryConfig {
 
     @Bean
-    public Cloudinary cloudinary() {
-        String cloudinaryUrl = System.getenv("CLOUDINARY_URL");
+    public Cloudinary cloudinary(@Value("${cloudinary.url:${CLOUDINARY_URL:}}") String cloudinaryUrl) {
         if (cloudinaryUrl == null || cloudinaryUrl.isBlank()) {
             return new Cloudinary();
         }

@@ -29,7 +29,7 @@ public class TaiKhoan {
     @Column(name = "VaiTro", nullable = false, length = 20)
     private String vaiTro; // SinhVien, CoVan, Admin
     @Column(name = "TrangThai", nullable = false, length = 20)
-    private String trangThai; // HoatDong, Khoa
+    private String trangThai; // ChoDuyet, HoatDong, Khoa
     @Column(name = "BatBuocDoiMatKhau", nullable = false)
     private Boolean batBuocDoiMatKhau;
     @Column(name = "TokenVersion", nullable = false)

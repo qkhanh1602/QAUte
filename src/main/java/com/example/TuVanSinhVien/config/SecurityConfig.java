@@ -97,6 +97,7 @@ public class SecurityConfig {
                     "/advisors/**",
                     "/login",
                     "/register",
+                    "/advisor-register",
                     "/verify-otp",
                     "/resend-otp",
                     "/captcha",
