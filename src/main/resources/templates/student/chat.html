@@ -69,7 +69,7 @@
                             <div class="fw-bold text-dark" th:text="${currentSession.donVi.tenDonVi}">Phòng Đào tạo</div>
                             <small th:if="${currentSession.nguoiTuVan != null}" class="text-success fw-semibold">
                                 <i class="bi bi-person-check-fill me-1"></i>Cố vấn: <span th:text="${currentSession.nguoiTuVan.taiKhoan.hoTen}">Thầy Khoa</span>
-                                · <span id="advisorPresence" th:attr="data-username=${currentSession.nguoiTuVan.taiKhoan.tenDangNhap}" th:text="${advisorPresence}">Ngoại tuyến</span>
+                                · <span id="advisorPresence" th:attr="data-username=${currentSession.nguoiTuVan.taiKhoan.tenDangNhap},data-busy=${currentSession.trangThai == 'DangHoatDong'}" th:text="${advisorPresence}">Ngoại tuyến</span>
                             </small>
                             <small th:unless="${currentSession.nguoiTuVan != null}" class="text-warning fw-semibold">
                                 <i class="bi bi-hourglass-split me-1"></i>Đang chờ Cố vấn tiếp nhận...
@@ -151,7 +151,7 @@ if (presenceElement && window.SockJS && window.StompJs) {
     client.onConnect = () => {
         client.subscribe('/queue/presence', frame => {
             const event = JSON.parse(frame.body);
-            if (event.username === presenceElement.dataset.username) presenceElement.textContent = event.status;
+            if (event.username === presenceElement.dataset.username) presenceElement.textContent = event.status === 'Trực tuyến' && presenceElement.dataset.busy === 'true' ? 'Đang bận' : event.status;
         });
         client.subscribe('/user/queue/chat', frame => appendLiveMessage(JSON.parse(frame.body)));
     };
