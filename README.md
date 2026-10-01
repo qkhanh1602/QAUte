@@ -3,7 +3,8 @@
 Project sử dụng các công nghệ trong đề bài theo kiến trúc sau:
 
 - Spring Boot 4 và Spring MVC xử lý ứng dụng web.
-- JSP/JSTL render decorator chung tại `src/main/webapp/WEB-INF/decorators/qaute-layout.jsp`.
+- JSP/JSTL render toàn bộ màn hình MVC trong `src/main/webapp/WEB-INF/jsp`; không dùng Thymeleaf.
+- JSP/JSTL decorator chung nằm tại `src/main/webapp/WEB-INF/decorators/qaute-layout.jsp`.
 - SiteMesh 3 lấy `title`, `head`, `body` của mọi MVC view và ghép vào JSP/JSTL decorator.
 - Bootstrap 5 xây dựng giao diện responsive.
 - Spring Data JPA ánh xạ entity và truy cập SQL Server.
@@ -32,4 +33,4 @@ Các biến môi trường cần cấu hình được liệt kê trong `.env.exa
 .\mvnw.cmd test
 ```
 
-Integration test khởi động Tomcat thật và xác nhận `/login` đã đi qua cả JSP/JSTL lẫn SiteMesh. Response hoàn chỉnh có `data-view-engine="jsp-jstl"` và `data-layout-engine="sitemesh"`; không còn directive/tag phía server chưa xử lý.
+Integration test khởi động Tomcat thật, render các trang công khai và toàn bộ khu vực Sinh viên/Cố vấn/Admin, rồi xác nhận nội dung JSP/JSTL đã đi qua SiteMesh. Response hoàn chỉnh có `data-view-engine="jsp-jstl"` và `data-layout-engine="sitemesh"`; không còn directive/tag phía server chưa xử lý.

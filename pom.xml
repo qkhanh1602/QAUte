@@ -43,10 +43,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
 		<!-- SiteMesh 3.3 provides the Jakarta EE 11 / Spring Boot 4 integration. -->
 		<dependency>
 			<groupId>org.sitemesh</groupId>
@@ -85,6 +81,10 @@
 			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
@@ -109,10 +109,6 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.13.0</version>
 			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>

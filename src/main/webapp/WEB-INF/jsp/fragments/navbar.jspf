@@ -1,0 +1,117 @@
+<sec:authentication property="principal" var="currentUser" />
+<div class="sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-qaute">
+        <div class="container">
+            <!-- Brand Logo (Pure Inline SVG - 100% Never Missing or Broken) -->
+            <a class="navbar-brand navbar-brand-qaute" href="${pageContext.request.contextPath}/">
+                <svg width="34" height="34" viewbox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                    <rect width="40" height="40" rx="10" fill="url(#qauteLogoNavGrad)"></rect>
+                    <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"></path>
+                    <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"></path>
+                    <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"></path>
+                    <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"></circle>
+                    <defs>
+                        <lineargradient id="qauteLogoNavGrad" x1="0" y1="0" x2="40" y2="40" gradientunits="userSpaceOnUse">
+                            <stop stop-color="#2563EB"></stop>
+                            <stop offset="1" stop-color="#14B8A6"></stop>
+                        </lineargradient>
+                    </defs>
+                </svg>
+                <span class="fw-extrabold text-white">QAUTE</span>
+            </a>
+
+            <button class="navbar-toggler text-white border-white border-opacity-50" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-label="Menu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-qaute" href="${pageContext.request.contextPath}/">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-qaute" href="${pageContext.request.contextPath}/faq">
+                            <i class="bi bi-question-circle me-1"></i>Hỏi đáp
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-qaute" href="${pageContext.request.contextPath}/articles">
+                            <i class="bi bi-journal-text me-1"></i>Bài viết
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-qaute" href="${pageContext.request.contextPath}/advisors">
+                            <i class="bi bi-people me-1"></i>Cố vấn
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- When NOT Authenticated -->
+                    <sec:authorize access="!isAuthenticated()"><div class="d-flex gap-2">
+                        <a class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold" href="${pageContext.request.contextPath}/login">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                        </a>
+                        <a class="btn btn-qaute-accent btn-sm px-3 rounded-pill fw-bold" href="${pageContext.request.contextPath}/register">
+                            <i class="bi bi-person-plus me-1"></i>Đăng ký SV
+                        </a>
+                    </div>
+
+                    </sec:authorize><!-- When Authenticated -->
+                    <sec:authorize access="isAuthenticated()"><div class="d-flex align-items-center gap-2">
+                        <!-- Quick Role Dashboard Link -->
+                        <sec:authorize access="hasRole('SinhVien')"><div>
+                            <a class="btn btn-outline-light btn-sm rounded-pill fw-semibold" href="${pageContext.request.contextPath}/student/dashboard">
+                                <i class="bi bi-speedometer2 me-1"></i>Cổng Sinh viên
+                            </a>
+                        </div>
+                        </sec:authorize><sec:authorize access="hasRole('CoVan')"><div>
+                            <a class="btn btn-warning text-dark btn-sm rounded-pill fw-bold" href="${pageContext.request.contextPath}/advisor/dashboard">
+                                <i class="bi bi-briefcase me-1"></i>Bàn Cố vấn
+                            </a>
+                        </div>
+                        </sec:authorize><sec:authorize access="hasRole('Admin')"><div>
+                            <a class="btn btn-danger btn-sm rounded-pill fw-bold" href="${pageContext.request.contextPath}/admin/dashboard">
+                                <i class="bi bi-shield-lock me-1"></i>Quản trị viên
+                            </a>
+                        </div>
+
+                        </sec:authorize><!-- User Profile Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center gap-2 p-1 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1);">
+                                <div class="user-avatar user-avatar-sm">
+                                    <c:if test="${currentUser.avatarUrl != null and not empty currentUser.avatarUrl}"><img alt="Ảnh đại diện" src="${currentUser.avatarUrl}">
+                                    </c:if><c:if test="${not (currentUser.avatarUrl != null and not empty currentUser.avatarUrl)}"><span><c:out value="${currentUser.avatarInitial}" /></span>
+                                </c:if></div>
+                                <span class="d-none d-md-inline fw-semibold text-white pe-2"><c:out value="${currentUser.hoTen}" /></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2 p-2" style="min-width: 220px;">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="fw-bold text-dark"><sec:authentication property="name" /></div>
+                                    <sec:authorize access="hasRole('SinhVien')"><small class="badge bg-primary-subtle text-primary mt-1">Sinh viên</small>
+                                    </sec:authorize><sec:authorize access="hasRole('CoVan')"><small class="badge bg-warning-subtle text-warning mt-1">Cán bộ / Cố vấn</small>
+                                    </sec:authorize><sec:authorize access="hasRole('Admin')"><small class="badge bg-danger-subtle text-danger mt-1">Quản trị viên</small>
+                                </sec:authorize></li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" href="${pageContext.request.contextPath}/profile">
+                                        <i class="bi bi-person-circle me-2 text-primary"></i>Hồ sơ cá nhân
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <form method="post" class="m-0" action="${pageContext.request.contextPath}/logout">
+                                        <button type="submit" class="dropdown-item rounded-2 py-2 text-danger fw-semibold d-flex align-items-center">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </sec:authorize></div>
+            </div>
+        </div>
+    </nav>
+</div>

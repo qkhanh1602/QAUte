@@ -1,0 +1,372 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="q" uri="/WEB-INF/qaute-functions.tld" %>
+<!DOCTYPE html>
+<html>
+<head>
+<c:set var="pageTitle" value="Đăng ký tài khoản Sinh viên" />
+<%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
+</head>
+<body class="auth-page py-5">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="text-center mb-4">
+                <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-2" href="${pageContext.request.contextPath}/">
+                    <svg width="40" height="40" viewbox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="auth-brand-mark flex-shrink-0">
+                        <rect width="40" height="40" rx="10" fill="url(#qauteLogoRegGrad)"></rect>
+                        <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"></path>
+                        <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"></path>
+                        <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"></path>
+                        <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"></circle>
+                        <defs>
+                            <lineargradient id="qauteLogoRegGrad" x1="0" y1="0" x2="40" y2="40" gradientunits="userSpaceOnUse">
+                                <stop stop-color="#2563EB"></stop>
+                                <stop offset="1" stop-color="#14B8A6"></stop>
+                            </lineargradient>
+                        </defs>
+                    </svg>
+                    <span class="fs-2 fw-extrabold text-dark tracking-tight">QAUTE</span>
+                </a>
+                <p class="text-muted small">Tạo tài khoản để sử dụng dịch vụ tư vấn sinh viên</p>
+            </div>
+
+            <div class="qaute-card p-4 p-md-5 shadow-lg border-0">
+                <h4 class="fw-bold text-dark mb-3 text-center">Đăng ký thành viên mới</h4>
+
+                <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <span><c:out value="${errorMessage}" /></span>
+                </div>
+
+                </c:if><form method="post" action="${pageContext.request.contextPath}/register">
+                    <sec:csrfInput /><h6 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Thông tin đăng nhập</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Tên đăng nhập *</label>
+                            <input type="text" name="tenDangNhap" class="form-control form-control-sm" placeholder="VD: sinhvien_k21" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Mật khẩu *</label>
+                            <input type="password" name="matKhau" class="form-control form-control-sm" placeholder="Tối thiểu 6 ký tự" required>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3 pt-2">2. Thông tin cá nhân sinh viên</h6>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Họ và tên *</label>
+                        <input type="text" name="hoTen" class="form-control form-control-sm" placeholder="Nguyễn Văn A" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email trường / cá nhân *</label>
+                            <input type="email" name="email" class="form-control form-control-sm" placeholder="email@example.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Số điện thoại</label>
+                            <input type="text" name="soDienThoai" class="form-control form-control-sm" placeholder="09xxxxxxxx">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope-check-fill flex-shrink-0 text-primary fs-5"></i>
+                        <span>Sau khi gửi thông tin, hệ thống sẽ gửi một <strong>mã xác thực OTP 6 chữ số</strong> tới hộp thư Email của bạn để kích hoạt tài khoản.</span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Mã số sinh viên (MSSV) *</label>
+                            <input type="text" name="mssv" class="form-control form-control-sm" placeholder="21110xxx" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Lớp sinh hoạt *</label>
+                            <input type="text" name="lop" class="form-control form-control-sm" placeholder="VD: 21110CLC1" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="khoaSelect" class="form-label small fw-semibold">
+                                <i class="bi bi-building me-1 text-primary"></i>Khoa quản lý *
+                            </label>
+                            <select id="khoaSelect" name="khoa" class="form-select form-select-sm" required onchange="handleKhoaChange()">
+                                <option value="" disabled>-- Chọn Khoa / Viện --</option>
+                                <option value="Khoa Công nghệ Thông tin" selected>Khoa Công nghệ Thông tin</option>
+                                <option value="Khoa Cơ khí Chế tạo máy">Khoa Cơ khí Chế tạo máy</option>
+                                <option value="Khoa Giao thông và năng lượng">Khoa Giao thông và năng lượng</option>
+                                <option value="Khoa Công nghệ Hóa học và Thực phẩm">Khoa Công nghệ Hóa học và Thực phẩm</option>
+                                <option value="Khoa Điện - Điện tử">Khoa Điện - Điện tử</option>
+                                <option value="Khoa In và Truyền thông">Khoa In và Truyền thông</option>
+                                <option value="Khoa Khoa học Ứng dụng">Khoa Khoa học Ứng dụng</option>
+                                <option value="Khoa Kinh tế">Khoa Kinh tế</option>
+                                <option value="Khoa Ngoại ngữ">Khoa Ngoại ngữ</option>
+                                <option value="Khoa Thời trang và Du lịch">Khoa Thời trang và Du lịch</option>
+                                <option value="Khoa Xây dựng">Khoa Xây dựng</option>
+                                <option value="Khoa Chính trị và Luật">Khoa Chính trị và Luật</option>
+                                <option value="Viện Sư phạm Kỹ thuật">Viện Sư phạm Kỹ thuật</option>
+                                <option value="Khoa Đào tạo Tiên tiến">Khoa Đào tạo Tiên tiến</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nganhSelect" class="form-label small fw-semibold">
+                                <i class="bi bi-journal-bookmark-fill me-1 text-primary"></i>Ngành học *
+                            </label>
+                            <select id="nganhSelect" name="nganh" class="form-select form-select-sm" required onchange="handleNganhChange()">
+                                <!-- Dynamically populated by JavaScript -->
+                            </select>
+                            <input type="text" id="nganhCustomInput" class="form-control form-control-sm mt-2 d-none" placeholder="Nhập tên ngành học của bạn...">
+                            <div id="ctdtLinkContainer" class="mt-1 d-none">
+                                <a id="ctdtLink" href="#" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary small d-inline-flex align-items-center gap-1" style="font-size: 11.5px;">
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                                    <span>Xem quyết định &amp; chương trình đào tạo</span>
+                                    <i class="bi bi-box-arrow-up-right ms-1 text-muted" style="font-size: 10px;"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Khóa học *</label>
+                            <input type="text" name="khoaHoc" class="form-control form-control-sm" placeholder="VD: K21, K22, K23..." value="K21" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Hệ đào tạo</label>
+                            <input type="text" id="heDaoTaoDisplay" class="form-control form-control-sm bg-light" readonly value="Tiếng Việt (Đại trà)">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-qaute-primary w-100 py-2 fw-bold rounded-3 mb-3">
+                        <i class="bi bi-person-check-fill me-1"></i>Hoàn tất đăng ký
+                    </button>
+
+                    <div class="text-center small text-muted">
+                        Đã có tài khoản? <a class="text-primary fw-semibold text-decoration-none" href="${pageContext.request.contextPath}/login">Đăng nhập</a>
+                    </div>
+                    <div class="text-center small mt-2">
+                        Bạn là giảng viên hoặc cán bộ? <a class="text-primary fw-semibold text-decoration-none" href="${pageContext.request.contextPath}/advisor-register">Đăng ký làm cố vấn</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const FACULTY_MAJORS_DATA = {
+    "Khoa Cơ khí Chế tạo máy": [
+        { name: "Công nghệ chế tạo máy", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1VkenmDN8emsKhn717RuIw_A2-_nd6NG4/view?usp=sharing" },
+        { name: "Công nghệ chế tạo máy (Việt - Nhật)", he: "Việt - Nhật", link: "" },
+        { name: "Công nghệ kỹ thuật cơ điện tử", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1LZt2xBkcZWsOMz9UFpnDtWgTSdQq8ZgH/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật cơ khí", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1cus47wjUUn7a-j9_Et6l8k-xc7ThCqmO/view?usp=sharing" },
+        { name: "Kỹ nghệ gỗ và nội thất", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1ePYmtFIaqb5EOdx9BKLXlFUPZ73PUYwq/view?usp=sharing" },
+        { name: "Kỹ thuật công nghiệp", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1UwvVROqWJ-gpSzkSIuOrQZghHcaS5Bxz/view?usp=sharing" },
+        { name: "Robot và trí tuệ nhân tạo", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1dbgwLqKs3RfZBHT8uA-sV51bkH76C_Q4/view?usp=sharing" }
+    ],
+    "Khoa Giao thông và năng lượng": [
+        { name: "Công nghệ kỹ thuật nhiệt", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1KuVUJTukVdz21Qh0A5L-XnoOOOQCskrB/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật ô tô", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1IwHtTbdnt7ijF34wFGwZ9c0e69LOcGpn/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật ô tô (Việt - Nhật)", he: "Việt - Nhật", link: "" },
+        { name: "Năng lượng tái tạo", he: "Tiếng Việt", link: "https://drive.google.com/file/d/15h3a3tkK-4ownMBC7AXrSoSB1dddYeBm/view?usp=sharing" }
+    ],
+    "Khoa Công nghệ Hóa học và Thực phẩm": [
+        { name: "Công nghệ kỹ thuật hóa học", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1VBjgLOH68aMG9JCMhVgvFCpkx32BwA2c/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật môi trường", he: "Tiếng Việt", link: "https://drive.google.com/file/d/13uYnqILhauEtSCG9incX7fvySDP1vcYd/view?usp=sharing" },
+        { name: "Công nghệ thực phẩm", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1dXlLVWoPpU2icpN6oZm-F1fZjbY8U-AG/view?usp=sharing" },
+        { name: "Khoa học thực phẩm và Dinh dưỡng", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/1507_Q%C4%90%20ban%20h%C3%A0nh%20CT%C4%90T%20Khoa%20h%E1%BB%8Dc%20th%E1%BB%B1c%20ph%E1%BA%A9m%20v%C3%A0%20Dinh%20d%C6%B0%E1%BB%A1ng%20thu%E1%BB%99c%20ng%C3%A0nh%20C%C3%B4ng%20ngh%E1%BB%87%20th%E1%BB%B1c%20ph%E1%BA%A9m%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc.pdf" },
+        { name: "Quản lý tài nguyên và môi trường", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/2910_Quy%E1%BA%BFt%20%C4%91%E1%BB%8Bnh%20ban%20h%C3%A0nh%20ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc%20ng%C3%A0nh%20Qu%E1%BA%A3n%20l%C3%BD%20t%C3%A0i%20nguy%C3%AAn%20v%C3%A0%20m%C3%B4i%20tr%C6%B0%E1%BB%9Dng.pdf" }
+    ],
+    "Khoa Công nghệ Thông tin": [
+        { name: "Công nghệ thông tin", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1cDaJhfClLjID7k5qi6L2xi8d2v12Uymw/view?usp=sharing" },
+        { name: "Kỹ thuật phần mềm", he: "Tiếng Việt", link: "" },
+        { name: "An toàn thông tin", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1OxI0FLJu0uZRqI_nQPOqfsWNvHdbE-gJ/view?usp=sharing" },
+        { name: "Kỹ thuật dữ liệu", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1zqDRxXsz68eVqag9_L7ke_mPqTLXIPX9/view?usp=sharing" },
+        { name: "Công nghệ thông tin (Việt - Nhật)", he: "Việt - Nhật", link: "" }
+    ],
+    "Khoa Điện - Điện tử": [
+        { name: "Công nghệ kỹ thuật điện tử - viễn thông", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1pPdD4uurQXUbK0a2mE2AcDoYLioQDSzs/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật điện tử - viễn thông (Việt - Nhật)", he: "Việt - Nhật", link: "" },
+        { name: "Công nghệ kỹ thuật điện, điện tử", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1WpMwod41ewfs7EGdP7LPZSSBGUksxEbg/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật điều khiển và tự động hoá", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1cSZl--kfHMCUBrI11uNSpBidv1cy2pee/view?usp=sharing" },
+        { name: "Công nghệ kỹ thuật máy tính", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1UpP0JJ2gH2o0xDKEpBTpYZ-5PvmFBJN8/view?usp=sharing" },
+        { name: "Hệ thống nhúng và IoT", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1orZbWAg-u0TUBRbvZtwAHG_GSlTi9uR9/view?usp=sharing" },
+        { name: "Kỹ thuật y sinh", he: "Tiếng Việt", link: "https://drive.google.com/file/d/170vH4CzVWV3SLmI7mmNZxDJgHnSfqcOe/view?usp=sharing" },
+        { name: "Kỹ thuật Thiết kế Vi mạch", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/QD1212.17.5.2024.BanHanhCT%C4%90T.KyThuatThietKeViMach.pdf" }
+    ],
+    "Khoa In và Truyền thông": [
+        { name: "Công nghệ kỹ thuật In", he: "Tiếng Việt", link: "https://drive.google.com/file/d/13hWTPA0tdQzmUr8TdOQLgh1hyrCaJLER/view?usp=sharing" },
+        { name: "Thiết kế đồ họa", he: "Tiếng Việt", link: "https://drive.google.com/file/d/15qBeFphMQ0hzBapLY3JkOoDE50a4qXdT/view?usp=sharing" },
+        { name: "Công nghệ truyền thông", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/2907_Q~1.PDF" }
+    ],
+    "Khoa Khoa học Ứng dụng": [
+        { name: "Công nghệ vật liệu", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1dz-IdXEg3-YTz4JzRbCCQwtFxv6wadS7/view?usp=sharing" },
+        { name: "Vật lý kỹ thuật", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/2911_Quy%E1%BA%BFt%20%C4%91%E1%BB%8Bnh%20ban%20h%C3%A0nh%20ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc%20ng%C3%A0nh%20V%E1%BA%ADt%20l%C3%BD%20k%E1%BB%B9%20thu%E1%BA%ADt.pdf" }
+    ],
+    "Khoa Kinh tế": [
+        { name: "Kế toán", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1bwEJ2buDHo7MeVFQAMIjNMfH1jb52a7u/view?usp=sharing" },
+        { name: "Kinh doanh quốc tế", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1R6f7ZUhZAe3jaFs-Smhpl-8qszvBhmJW/view?usp=sharing" },
+        { name: "Logistics và quản lý chuỗi cung ứng", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1rYyEcBtzfXoVD7JMKTUDu1QQ0ZQbRncd/view?usp=sharing" },
+        { name: "Quản lý công nghiệp", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1E6w1HH7c9i-OC8_IXLQHkgjfmg5sOkPR/view?usp=sharing" },
+        { name: "Thương mại điện tử", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1x5JP6Fi41tkLDq9sdz7avQHDCeTYTpH8/view?usp=sharing" },
+        { name: "Quản trị kinh doanh", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/2909_Quy%E1%BA%BFt%20%C4%91%E1%BB%8Bnh%20ban%20h%C3%A0nh%20ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc%20ng%C3%A0nh%20Qu%E1%BA%A3n%20tr%E1%BB%8B%20kinh%20doanh.pdf" },
+        { name: "Công nghệ tài chính", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/2908_Quy%E1%BA%BFt%20%C4%91%E1%BB%8Bnh%20ban%20h%C3%A0nh%20ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o%20ng%C3%A0nh%20C%C3%B4ng%20ngh%E1%BB%87%20t%C3%A0i%20ch%C3%ADnh.pdf" }
+    ],
+    "Khoa Ngoại ngữ": [
+        { name: "Ngôn ngữ Anh", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1DbsamtVLEVpeXv_5DTL6nC4_yrtAZgak/view?usp=sharing" },
+        { name: "Sư phạm Tiếng Anh", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1nZ-1fxynBPNDj--IlEq4s4lRmJ5tOx8s/view?usp=sharing" }
+    ],
+    "Khoa Thời trang và Du lịch": [
+        { name: "Công nghệ may", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1Q5OMuFWJnlmHytBDxry8mkByzIWOnnbm/view?usp=sharing" },
+        { name: "Quản trị nhà hàng và Dịch vụ ăn uống", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1EtG5SgX3QlDmiduODS2zKz6oPBHRMbdD/view?usp=sharing" },
+        { name: "Thiết kế thời trang", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1MPs-g8ru10D9F5ccGCpTlW4YVtVE20WM/view?usp=sharing" }
+    ],
+    "Khoa Xây dựng": [
+        { name: "Công nghệ kỹ thuật công trình xây dựng", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1YMZ_Gx48c2zN0jjpFYo7OZ16rOlEyKZV/view?usp=sharing" },
+        { name: "Hệ thống kỹ thuật công trình xây dựng", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1ZZI8gdm5hQ3x19neBWR-0A_seFj2F-3N/view?usp=sharing" },
+        { name: "Kiến trúc", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1FZ4xfCkF7VRJcsZhuHesLA69ZbFVL-dh/view?usp=sharing" },
+        { name: "Kiến trúc nội thất", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1iqvBZDlEZYR7lPCm9l1lbVr6D9Fzk9B8/view?usp=sharing" },
+        { name: "Kỹ thuật xây dựng công trình giao thông", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1xFgKftgr0qmgk3YynFiCXt7uat1ZVp7z/view?usp=sharing" },
+        { name: "Quản lý và vận hành hạ tầng", he: "Tiếng Việt", link: "https://drive.google.com/file/d/165VpW4FfqXo_XOuqGABq___L4ydendtN/view?usp=sharing" },
+        { name: "Quản lý xây dựng", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1Xsnw1ZKBbBINHuaHLXP66mRvV3UaosTT/view?usp=sharing" }
+    ],
+    "Khoa Chính trị và Luật": [
+        { name: "Luật", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1EiAX_UeWfy5QkGKwXWCL76aEmYiHQgHo/view?usp=sharing" }
+    ],
+    "Viện Sư phạm Kỹ thuật": [
+        { name: "Sư phạm Công nghệ", he: "Tiếng Việt", link: "https://drive.google.com/file/d/1CQ7LdCumnoiBVu2uYS-qhe-4rg_oL4Mn/view?usp=sharing" },
+        { name: "Tâm lý học giáo dục", he: "Tiếng Việt", link: "https://hcmute.edu.vn/Resources/Docs/SubDomain/HomePage/Ch%C6%B0%C6%A1ng%20tr%C3%ACnh%20%C4%91%C3%A0o%20t%E1%BA%A1o/N%C4%83m%202026/14%20qd%20ban%20hanh%20chuong%20trinh%20dao%20tao%20trinh%20do%20dai%20hoc%20tam%20ly%20hoc%20giao%20duc.pdf" }
+    ],
+    "Khoa Đào tạo Tiên tiến": [
+        { name: "Công nghệ thông tin", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật máy tính", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật điện, điện tử", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật điện tử, viễn thông", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật điều khiển và tự động hóa", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật cơ khí", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ chế tạo máy", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật cơ điện tử", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật ô tô", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật nhiệt", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ kỹ thuật công trình xây dựng", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ thực phẩm", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ Kỹ thuật hóa học", he: "Tiếng Anh", link: "" },
+        { name: "Công nghệ vật liệu", he: "Tiếng Anh", link: "" },
+        { name: "Kỹ thuật y sinh", he: "Tiếng Anh", link: "" },
+        { name: "Quản lý công nghiệp", he: "Tiếng Anh", link: "" },
+        { name: "Kế toán", he: "Tiếng Anh", link: "" }
+    ]
+};
+
+function handleKhoaChange() {
+    const khoaSelect = document.getElementById('khoaSelect');
+    const nganhSelect = document.getElementById('nganhSelect');
+    const customInput = document.getElementById('nganhCustomInput');
+    const ctdtContainer = document.getElementById('ctdtLinkContainer');
+    const heDisplay = document.getElementById('heDaoTaoDisplay');
+
+    const selectedKhoa = khoaSelect.value;
+    nganhSelect.innerHTML = '';
+    customInput.classList.add('d-none');
+    customInput.value = '';
+    ctdtContainer.classList.add('d-none');
+
+    if (!selectedKhoa || !FACULTY_MAJORS_DATA[selectedKhoa]) {
+        nganhSelect.setAttribute('disabled', 'disabled');
+        nganhSelect.innerHTML = '<option value="" disabled selected>-- Vui lòng chọn Khoa trước --</option>';
+        if (heDisplay) heDisplay.value = 'Chưa xác định';
+        return;
+    }
+
+    nganhSelect.removeAttribute('disabled');
+    const majors = FACULTY_MAJORS_DATA[selectedKhoa];
+
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = '-- Chọn Ngành học --';
+    defaultOpt.disabled = true;
+    defaultOpt.selected = true;
+    nganhSelect.appendChild(defaultOpt);
+
+    majors.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.name;
+        opt.textContent = m.name + (m.he && m.he !== 'Tiếng Việt' ? ' (' + m.he + ')' : '');
+        opt.dataset.link = m.link || '';
+        opt.dataset.he = m.he || 'Tiếng Việt';
+        nganhSelect.appendChild(opt);
+    });
+
+    const otherOpt = document.createElement('option');
+    otherOpt.value = '__OTHER__';
+    otherOpt.textContent = '-- Ngành khác (Nhập thủ công) --';
+    nganhSelect.appendChild(otherOpt);
+
+    if (majors.length > 0) {
+        nganhSelect.selectedIndex = 1;
+        handleNganhChange();
+    }
+}
+
+function handleNganhChange() {
+    const nganhSelect = document.getElementById('nganhSelect');
+    const customInput = document.getElementById('nganhCustomInput');
+    const ctdtContainer = document.getElementById('ctdtLinkContainer');
+    const ctdtLink = document.getElementById('ctdtLink');
+    const heDisplay = document.getElementById('heDaoTaoDisplay');
+
+    const selectedVal = nganhSelect.value;
+    if (selectedVal === '__OTHER__') {
+        customInput.classList.remove('d-none');
+        customInput.setAttribute('required', 'required');
+        customInput.focus();
+        ctdtContainer.classList.add('d-none');
+        if (heDisplay) heDisplay.value = 'Tự xác định';
+    } else {
+        customInput.classList.add('d-none');
+        customInput.removeAttribute('required');
+        customInput.value = '';
+
+        const selectedOpt = nganhSelect.options[nganhSelect.selectedIndex];
+        if (selectedOpt) {
+            const link = selectedOpt.dataset.link;
+            const he = selectedOpt.dataset.he;
+            if (heDisplay) {
+                if (he === 'Việt - Nhật') {
+                    heDisplay.value = 'Chương trình Việt - Nhật';
+                } else if (he === 'Tiếng Anh') {
+                    heDisplay.value = 'Chương trình Tiên tiến (Tiếng Anh)';
+                } else {
+                    heDisplay.value = 'Đại trà (Tiếng Việt)';
+                }
+            }
+            if (link && link.trim() !== '') {
+                ctdtLink.href = link;
+                ctdtContainer.classList.remove('d-none');
+            } else {
+                ctdtContainer.classList.add('d-none');
+            }
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const nganhSelect = document.getElementById('nganhSelect');
+            const customInput = document.getElementById('nganhCustomInput');
+            if (nganhSelect.value === '__OTHER__' && customInput.value.trim() !== '') {
+                nganhSelect.options[nganhSelect.selectedIndex].value = customInput.value.trim();
+            }
+        });
+    }
+    handleKhoaChange();
+});
+</script>
+
+</body>
+</html>
