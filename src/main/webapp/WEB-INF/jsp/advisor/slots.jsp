@@ -31,23 +31,7 @@
     </div>
 
     <!-- Advisor Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan bàn làm việc
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/tickets">
-            <i class="bi bi-inbox me-1"></i>Phiếu xử lý &amp; Hàng đợi
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/slots">
-            <i class="bi bi-calendar3-week me-1"></i>Quản lý khung giờ (Slots)
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/appointments">
-            <i class="bi bi-calendar2-check me-1"></i>Phê duyệt lịch hẹn
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/chat">
-            <i class="bi bi-chat-dots me-1"></i>Tư vấn trực tuyến 1-1
-        </a>
-    </div>
+
 
     <!-- Alerts -->
     <c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3">
@@ -89,7 +73,7 @@
                         <th>Khung thời gian</th>
                         <th>Hình thức</th>
                         <th>Địa điểm / Link họp</th>
-                        <th>Trạng thái slot</th>
+                        <th>Trạng thái slot</th><th>Chỉnh sửa</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -114,6 +98,14 @@
                             <c:if test="${s.trangThai == 'Mo'}"><span class="badge bg-success-subtle text-success">Đang mở</span>
                             </c:if><c:if test="${s.trangThai == 'Khoa'}"><span class="badge bg-secondary-subtle text-secondary">Đã khóa</span>
                         </c:if></td>
+                        <td><details><summary class="text-primary">Sửa / Ngưng</summary>
+                        <form method="post" class="d-grid gap-2 mt-2" action="${pageContext.request.contextPath}/advisor/slots/${s.maKhungGio}/update">
+                        <sec:csrfInput /><input type="datetime-local" name="start" class="form-control" value="${fn:substring(s.batDau, 0, 16)}">
+                        <select name="minutes" class="form-select"><option value="45">45 phút</option><option value="60" ${s.ketThuc.minusMinutes(60).equals(s.batDau) ? 'selected' : ''}>60 phút</option></select>
+                        <select name="type" class="form-select"><option value="TrucTiep">Trực tiếp</option><option value="TrucTuyen" ${s.hinhThuc == 'TrucTuyen' ? 'selected' : ''}>Trực tuyến</option></select>
+                        <input name="location" class="form-control" value="<c:out value='${s.diaDiemLink}'/>">
+                        <button class="btn btn-sm btn-primary">Lưu</button><button name="close" value="true" class="btn btn-sm btn-outline-danger">Ngưng khung giờ</button>
+                        </form></details></td>
                     </tr>
                 </c:forEach></tbody>
             </table>

@@ -1,76 +1,37 @@
 package com.example.TuVanSinhVien.service;
-
 import org.springframework.stereotype.Service;
-
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
+import org.springframework.beans.factory.annotation.*;
+import java.time.*;
+import java.util.*;
 @Service
 public class SlaService {
-
-    private static final LocalTime MORNING_START = LocalTime.of(8, 0);
-    private static final LocalTime MORNING_END = LocalTime.of(12, 0);
-    private static final LocalTime AFTERNOON_START = LocalTime.of(13, 0);
-    private static final LocalTime AFTERNOON_END = LocalTime.of(17, 0);
-
-    /**
-     * Tính toán thời hạn theo giờ làm việc (Thứ 2 - Thứ 6: 08:00 - 12:00 và 13:00 - 17:00, 8 giờ/ngày)
-     */
+    private final Set<LocalDate> holidays;
+    public SlaService() { this(""); }
+    @Autowired
+    public SlaService(@Value("${app.sla.holidays:}") String dates) {
+        holidays=new HashSet<>();
+        for(String value: dates.split(",")) if(!value.isBlank()) holidays.add(LocalDate.parse(value.trim()));
+    }
+    // Business hours: Mon–Fri 08:00–12:00, 13:00–17:00; configured holidays excluded.
     public LocalDateTime calculateBusinessDeadline(LocalDateTime from, int businessHours) {
-        LocalDateTime current = from;
-        int remainingMinutes = businessHours * 60;
-
-        while (remainingMinutes > 0) {
-            // Nếu là cuối tuần (Thứ 7, Chủ nhật) -> chuyển sang sáng Thứ 2 08:00
-            if (current.getDayOfWeek() == DayOfWeek.SATURDAY) {
-                current = current.plusDays(2).with(MORNING_START);
-                continue;
-            } else if (current.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                current = current.plusDays(1).with(MORNING_START);
-                continue;
+        if(from==null || businessHours<0) throw new IllegalArgumentException("Thời gian/giờ SLA không hợp lệ.");
+        LocalDateTime current=from;
+        long remaining=Math.multiplyExact((long)businessHours,3600L);
+        while(remaining>0) {
+            LocalDate date=current.toLocalDate();
+            if(current.getDayOfWeek()==DayOfWeek.SATURDAY || current.getDayOfWeek()==DayOfWeek.SUNDAY || holidays.contains(date)) {
+                current=date.plusDays(1).atTime(8,0); continue;
             }
-
-            LocalTime time = current.toLocalTime();
-
-            // Trước giờ làm việc sáng
-            if (time.isBefore(MORNING_START)) {
-                current = current.with(MORNING_START);
-                continue;
-            }
-
-            // Trong ca sáng (08:00 - 12:00)
-            if (time.isBefore(MORNING_END)) {
-                int minutesToEndOfMorning = (MORNING_END.getHour() - time.getHour()) * 60 - time.getMinute();
-                if (remainingMinutes <= minutesToEndOfMorning) {
-                    return current.plusMinutes(remainingMinutes);
-                }
-                remainingMinutes -= minutesToEndOfMorning;
-                current = current.with(AFTERNOON_START);
-                continue;
-            }
-
-            // Trong giờ nghỉ trưa (12:00 - 13:00)
-            if (time.isBefore(AFTERNOON_START)) {
-                current = current.with(AFTERNOON_START);
-                continue;
-            }
-
-            // Trong ca chiều (13:00 - 17:00)
-            if (time.isBefore(AFTERNOON_END)) {
-                int minutesToEndOfAfternoon = (AFTERNOON_END.getHour() - time.getHour()) * 60 - time.getMinute();
-                if (remainingMinutes <= minutesToEndOfAfternoon) {
-                    return current.plusMinutes(remainingMinutes);
-                }
-                remainingMinutes -= minutesToEndOfAfternoon;
-                current = current.plusDays(1).with(MORNING_START);
-                continue;
-            }
-
-            // Sau giờ làm việc chiều (sau 17:00)
-            current = current.plusDays(1).with(MORNING_START);
+            LocalDateTime morning=date.atTime(8,0), noon=date.atTime(12,0), afternoon=date.atTime(13,0), end=date.atTime(17,0);
+            if(current.isBefore(morning)) current=morning;
+            if(!current.isBefore(noon) && current.isBefore(afternoon)) current=afternoon;
+            if(!current.isBefore(end)) { current=date.plusDays(1).atTime(8,0); continue; }
+            LocalDateTime boundary=current.isBefore(noon)?noon:end;
+            long available=Duration.between(current,boundary).getSeconds();
+            if(remaining<=available) return current.plusSeconds(remaining);
+            remaining-=available;
+            current=boundary.equals(noon)?afternoon:date.plusDays(1).atTime(8,0);
         }
-
         return current;
     }
 }

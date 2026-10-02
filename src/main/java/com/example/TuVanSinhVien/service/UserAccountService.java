@@ -26,14 +26,16 @@ public class UserAccountService {
     private final PasswordEncoder passwordEncoder;
     private final NguoiTuVanRepository advisorRepo;
     private final DonViRepository unitRepo;
+    private final com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo;
+    private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo;
 
     public UserAccountService(TaiKhoanRepository accountRepo, SinhVienRepository studentRepo, PasswordEncoder passwordEncoder,
-                              NguoiTuVanRepository advisorRepo, DonViRepository unitRepo) {
+                              NguoiTuVanRepository advisorRepo, DonViRepository unitRepo, com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo, com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo) {
         this.accountRepo = accountRepo;
         this.studentRepo = studentRepo;
         this.passwordEncoder = passwordEncoder;
         this.advisorRepo = advisorRepo;
-        this.unitRepo = unitRepo;
+        this.unitRepo = unitRepo; this.ticketRepo=ticketRepo; this.appointmentRepo=appointmentRepo;
     }
 
     @Transactional
@@ -150,4 +152,39 @@ public class UserAccountService {
     }
 
     private String blankToNull(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    @Transactional
+    public void editAccount(Integer id, Integer actorId, String name, String email, String phone, String role, Integer unitId) {
+        TaiKhoan account=accountRepo.findLockedById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if (!java.util.Set.of("Admin","CoVan","SinhVien").contains(role)) throw new IllegalArgumentException("Vai trò không hợp lệ.");
+        String cleanEmail=required(email,"Email").toLowerCase();
+        if (cleanEmail.length()>254 || !cleanEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new IllegalArgumentException("Email không hợp lệ.");
+        accountRepo.findByEmail(cleanEmail).filter(a -> !a.getMaTK().equals(id)).ifPresent(a -> { throw new IllegalArgumentException("Email đã tồn tại."); });
+        String fullName=required(name,"Họ tên");
+        if(fullName.length()<2 || fullName.length()>100) throw new IllegalArgumentException("Họ tên phải từ 2–100 ký tự.");
+        if(id.equals(actorId) && !role.equals(account.getVaiTro())) throw new IllegalArgumentException("Không được tự đổi vai trò quản trị của mình.");
+        if("Admin".equals(account.getVaiTro()) && !"Admin".equals(role) && accountRepo.findByVaiTro("Admin").stream().filter(a -> "HoatDong".equals(a.getTrangThai())).count()<=1)
+            throw new IllegalStateException("Phải giữ ít nhất một quản trị viên hoạt động.");
+        if("SinhVien".equals(role) && studentRepo.findByTaiKhoan_MaTK(id).isEmpty()) throw new IllegalArgumentException("Cần hồ sơ sinh viên trước khi phân vai trò Sinh viên.");
+        NguoiTuVan advisor=advisorRepo.findByTaiKhoan_MaTK(id).orElse(null);
+        if("CoVan".equals(role)) {
+            if(advisor==null) throw new IllegalArgumentException("Cần tạo/duyệt hồ sơ cố vấn trước khi phân vai trò Cố vấn.");
+            if(unitId==null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
+            DonVi unit=unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại."));
+            if(!Boolean.TRUE.equals(unit.getHoatDong())) throw new IllegalArgumentException("Đơn vị đã ngưng hoạt động.");
+            // Reassignment of an advisor with active work must be handled through ticket/appointment workflows first.
+            if(!unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
+            advisor.setDonVi(unit); advisorRepo.save(advisor);
+        }
+        if(advisor!=null && !"CoVan".equals(role)) { requireNoActiveWork(advisor); advisor.setNhanTuVan(false); advisorRepo.save(advisor); }
+        if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
+        account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
+        account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now());
+        accountRepo.save(account);
+    }
+
+    private void requireNoActiveWork(NguoiTuVan advisor) {
+        if(ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(t -> java.util.Set.of("DangXuLy","DaPhanHoi").contains(t.getTrangThai()))
+            || appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(a -> java.util.Set.of("ChoDuyet","DaXacNhan").contains(a.getTrangThai())))
+            throw new IllegalStateException("Cố vấn còn phiếu/lịch hẹn đang xử lý; hãy điều phối xong trước khi đổi vai trò/đơn vị.");
+    }
 }

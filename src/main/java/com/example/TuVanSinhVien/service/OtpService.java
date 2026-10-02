@@ -136,7 +136,11 @@ public class OtpService {
         otpRepo.save(otpEntity);
 
         // 7. Gửi OTP qua Email (sử dụng tài khoản Gmail SMTP qaute.edu@gmail.com)
-        emailService.sendOtpEmail(cleanEmail, rawOtp, OTP_EXPIRY_MINUTES);
+        if (!emailService.sendOtpEmail(cleanEmail, rawOtp, OTP_EXPIRY_MINUTES)) {
+            otpEntity.setDaDungLuc(now);
+            otpRepo.save(otpEntity);
+            return new OtpSendResult(false, "Không gửi được email xác minh. Vui lòng thử lại sau hoặc liên hệ quản trị viên.", RESEND_COOLDOWN_SECONDS);
+        }
         String returnMessage = "Mã OTP đã được gửi đến email " + cleanEmail + ". Mã có hiệu lực trong " + OTP_EXPIRY_MINUTES + " phút.";
 
         // 8. Ghi log bảo mật

@@ -7,6 +7,11 @@
     <short-name>qaute</short-name>
     <uri>/WEB-INF/qaute-functions.tld</uri>
     <function>
+        <name>chatStatusLabel</name>
+        <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
+        <function-signature>java.lang.String chatStatusLabel(java.lang.String)</function-signature>
+    </function>
+    <function>
         <name>formatTemporal</name>
         <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
         <function-signature>java.lang.String formatTemporal(java.lang.Object, java.lang.String)</function-signature>

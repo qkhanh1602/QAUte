@@ -92,3 +92,12 @@ Các kiểm tra trên xác minh schema, không thay thế integration test của
 Tạo database free rỗng trên Azure Portal trước, kết nối trực tiếp vào database đó và chạy `QAUTE_AZURE_SCHEMA.sql` bằng SQLCMD Mode với dừng khi lỗi. Bản script có cùng bảng/seed với local, chưa được thực thi trên tài khoản Azure thật. Collation Azure nên chọn tương đương `Latin1_General_100_CI_AI_SC` nếu có; nếu khác phải kiểm tra tìm kiếm tiếng Việt và tính duy nhất username/email.
 
 Không có mật khẩu tài khoản cloud hoặc credentials ứng dụng trong các file. Dùng secret môi trường khi code. Tài khoản admin đầu tiên sẽ do cơ chế bootstrap có BCrypt tạo ra ở giai đoạn P1; hiện chưa có user mặc định để đăng nhập web.
+
+
+## Cài đặt từ repo hiện tại (03/10/2026)
+
+Đọc README ở thư mục gốc để cấu hình SQL login, JWT và chạy app. Repo chỉ chứa script tạo schema/danh mục, không chứa backup giao dịch hoặc dữ liệu người dùng đã nhập. Một số mô tả backup/kết quả kiểm tra phía trên là lịch sử thao tác trên máy phát triển; các file `.bak`/kết quả `.txt`/PLAN không được đưa vào repo này.
+
+Cài mới: chạy `QAUTE.sql`, sau đó `V3__add_faculties.sql`; V2/V4/V5 đã được tích hợp trong schema mới. Database cũ: đọc và chạy migration phù hợp V2→V7, không chạy lại script tạo DB. Không có Flyway tự chạy các script: người cài đặt phải chạy SQL thủ công. Chạy profile `dev` sẽ seed tài khoản/dữ liệu demo qua JPA, trong đó bổ sung cố vấn cho các khoa đang hoạt động.
+
+Database cũ cần chạy `database/V7__otp_contact_columns.sql` trong QAUTE để bổ sung hai cột OTP khớp entity. Schema tạo mới đã gồm hai cột này; migration không thay đổi dữ liệu cũ.

@@ -26,20 +26,7 @@
     </div>
 
     <!-- Admin Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/admin/users">
-            <i class="bi bi-people me-1"></i>Quản lý tài khoản
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/content">
-            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/catalogs">
-            <i class="bi bi-diagram-3 me-1"></i>Đơn vị &amp; Lĩnh vực
-        </a>
-    </div>
+
 
     <!-- Alerts -->
     <c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3">
@@ -123,12 +110,21 @@
 
                                 <!-- Reset Password Button -->
                                 <form method="post" class="m-0" onsubmit="return confirm('Tạo mật khẩu tạm thời mới cho tài khoản này?');" action="${pageContext.request.contextPath}/admin/users/${u.maTK}/reset-password">
-                                    <sec:csrfInput /><button type="submit" class="btn btn-light btn-sm rounded-pill text-secondary border" title="Reset mật khẩu về 123456">
+                                    <sec:csrfInput /><button type="submit" class="btn btn-light btn-sm rounded-pill text-secondary border" title="Tạo mật khẩu tạm thời">
                                         <i class="bi bi-key me-1"></i>Reset MK
                                     </button>
                                 </form>
                             </div>
-                        </c:if></td>
+                        </c:if>
+                        <details class="mt-2"><summary class="text-primary">Sửa tài khoản / Phân vai trò</summary>
+                        <form method="post" class="d-grid gap-2 mt-2" action="${pageContext.request.contextPath}/admin/users/${u.maTK}/edit">
+                        <sec:csrfInput /><input name="fullName" class="form-control" value="<c:out value='${u.hoTen}'/>" maxlength="100" required>
+                        <input type="email" name="email" class="form-control" value="<c:out value='${u.email}'/>" maxlength="254" required>
+                        <input name="phone" class="form-control" value="<c:out value='${u.soDienThoai}'/>">
+                        <select name="role" class="form-select"><option value="${u.vaiTro}"><c:out value="${u.vaiTro}" /></option><option value="SinhVien">Sinh viên</option><option value="CoVan">Cố vấn</option><option value="Admin">Admin</option></select>
+                        <select name="unitId" class="form-select"><option value="">Đơn vị cố vấn</option><c:forEach var="unit" items="${units}"><option value="${unit.maDonVi}" ${advisorProfiles[u.maTK].donVi.maDonVi == unit.maDonVi ? 'selected' : ''}><c:out value="${unit.tenDonVi}" /></option></c:forEach></select>
+                        <button class="btn btn-sm btn-primary">Lưu thay đổi</button></form></details>
+                        </td>
                     </tr>
                 </c:forEach></tbody>
             </table>

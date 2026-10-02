@@ -1,0 +1,6 @@
+.git
+target
+.env
+src/main/resources/application-local.properties
+.settings
+*.bak

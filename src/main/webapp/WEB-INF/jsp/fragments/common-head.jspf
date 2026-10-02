@@ -1,3 +1,4 @@
+<%@ page pageEncoding="UTF-8" %>
 <meta name="qaute-content-view" content="jsp-jstl">
 <title><c:out value="${pageTitle}" /> - Hệ thống Tư vấn Sinh viên QAUTE</title>
 <meta charset="UTF-8">
@@ -25,16 +26,16 @@
 <style>
         :root {
             /* === BẢNG MÀU CHUẨN MỚI QAUTE === */
-            --qaute-navbar: #1E3A5F;           /* Navbar chính: Xanh navy (30, 58, 95) */
+            --qaute-navbar: #0b2b59;           /* Navbar chính: Xanh navy (30, 58, 95) */
             --qaute-navbar-rgb: 30, 58, 95;
-            --qaute-navbar-hover: #294E78;     /* Navbar hover: Navy sáng (41, 78, 120) */
-            --qaute-primary: #2563EB;          /* Màu chủ đạo / nút chính: Xanh dương (37, 99, 235) */
-            --qaute-primary-rgb: 37, 99, 235;
-            --qaute-primary-hover: #1D4ED8;    /* Hover nút chính: Xanh đậm (29, 78, 216) */
-            --qaute-secondary: #0F766E;        /* Màu phụ: Xanh teal (15, 118, 110) */
-            --qaute-secondary-rgb: 15, 118, 110;
-            --qaute-teal-light: #14B8A6;       /* Teal sáng: (20, 184, 166) */
-            --qaute-teal-light-rgb: 20, 184, 166;
+            --qaute-navbar-hover: #123b76;     /* Navbar hover: Navy sáng (41, 78, 120) */
+            --qaute-primary: #123b76;          /* Màu chủ đạo / nút chính: Xanh dương (18, 59, 118) */
+            --qaute-primary-rgb: 18, 59, 118;
+            --qaute-primary-hover: #0c2d5b;    /* Hover nút chính: Xanh đậm (29, 78, 216) */
+            --qaute-secondary: #123b76;        /* Màu phụ: Xanh teal (18, 59, 118) */
+            --qaute-secondary-rgb: 18, 59, 118;
+            --qaute-teal-light: #dc2626;       /* Teal sáng: (220, 38, 38) */
+            --qaute-teal-light-rgb: 220, 38, 38;
             --qaute-bg: #F8FAFC;               /* Background toàn trang: Xám trắng (248, 250, 252) */
             --qaute-bg-section: #F1F5F9;       /* Background section: (241, 245, 249) */
             --qaute-card-bg: #FFFFFF;          /* Card: Trắng (255, 255, 255) */
@@ -42,10 +43,10 @@
             --qaute-heading: #0F172A;          /* Chữ tiêu đề: (15, 23, 42) */
             --qaute-text: #334155;             /* Chữ thường: (51, 65, 85) */
             --qaute-muted: #64748B;            /* Chữ phụ: (100, 116, 139) */
-            --qaute-success: #16A34A;          /* Thành công: (22, 163, 74) */
-            --qaute-success-rgb: 22, 163, 74;
-            --qaute-warning: #D97706;          /* Cảnh báo: (217, 119, 6) */
-            --qaute-warning-rgb: 217, 119, 6;
+            --qaute-success: #194984;          /* Thành công: (25, 73, 132) */
+            --qaute-success-rgb: 25, 73, 132;
+            --qaute-warning: #b91c1c;          /* Cảnh báo: (185, 28, 28) */
+            --qaute-warning-rgb: 185, 28, 28;
             --qaute-danger: #DC2626;           /* Lỗi: (220, 38, 38) */
             --qaute-danger-rgb: 220, 38, 38;
 
@@ -53,16 +54,16 @@
             --qaute-sidebar: var(--qaute-navbar);
 
             /* Bootstrap 5.3 Overrides */
-            --bs-primary: #2563EB;
-            --bs-primary-rgb: 37, 99, 235;
-            --bs-secondary: #0F766E;
-            --bs-secondary-rgb: 15, 118, 110;
-            --bs-info: #14B8A6;
-            --bs-info-rgb: 20, 184, 166;
-            --bs-success: #16A34A;
-            --bs-success-rgb: 22, 163, 74;
-            --bs-warning: #D97706;
-            --bs-warning-rgb: 217, 119, 6;
+            --bs-primary: #123b76;
+            --bs-primary-rgb: 18, 59, 118;
+            --bs-secondary: #123b76;
+            --bs-secondary-rgb: 18, 59, 118;
+            --bs-info: #dc2626;
+            --bs-info-rgb: 220, 38, 38;
+            --bs-success: #194984;
+            --bs-success-rgb: 25, 73, 132;
+            --bs-warning: #b91c1c;
+            --bs-warning-rgb: 185, 28, 28;
             --bs-danger: #DC2626;
             --bs-danger-rgb: 220, 38, 38;
             --bs-light: #F1F5F9;
@@ -143,7 +144,7 @@
         }
 
         .brand-badge {
-            background-color: var(--qaute-teal-light); /* #14B8A6 */
+            background-color: var(--qaute-teal-light); /* #dc2626 */
             color: #FFFFFF;
             font-size: 0.72rem;
             padding: 3px 8px;
@@ -167,12 +168,12 @@
 
         .nav-link-qaute:hover {
             color: #FFFFFF !important;
-            background-color: var(--qaute-navbar-hover) !important; /* #294E78 Navbar hover */
+            background-color: var(--qaute-navbar-hover) !important; /* #123b76 Navbar hover */
         }
 
         .nav-link-qaute.active {
             color: #FFFFFF !important;
-            background-color: var(--qaute-primary) !important; /* #2563EB */
+            background-color: var(--qaute-primary) !important; /* #123b76 */
             font-weight: 600;
         }
 
@@ -210,24 +211,24 @@
         /* === BUTTONS === */
         .btn-qaute-primary, .btn-primary {
             background: linear-gradient(135deg, var(--qaute-primary) 0%, #3b82f6 100%) !important;
-            background-color: var(--qaute-primary) !important; /* #2563EB */
+            background-color: var(--qaute-primary) !important; /* #123b76 */
             border-color: var(--qaute-primary) !important;
             color: #FFFFFF !important;
             font-weight: 600;
             padding: 0.6rem 1.3rem;
             border-radius: 0.6rem;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 2px 8px rgba(18, 59, 118, 0.25);
         }
 
         .btn-qaute-primary:hover, .btn-qaute-primary:focus,
         .btn-primary:hover, .btn-primary:focus {
             background: linear-gradient(135deg, var(--qaute-primary-hover) 0%, var(--qaute-primary) 100%) !important;
-            background-color: var(--qaute-primary-hover) !important; /* #1D4ED8 */
+            background-color: var(--qaute-primary-hover) !important; /* #0c2d5b */
             border-color: var(--qaute-primary-hover) !important;
             color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 4px 14px rgba(18, 59, 118, 0.35);
         }
 
         .btn-qaute-outline, .btn-outline-primary {
@@ -244,35 +245,35 @@
             background-color: var(--qaute-primary) !important;
             border-color: var(--qaute-primary) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 12px rgba(18, 59, 118, 0.25);
         }
 
         .btn-qaute-accent {
-            background-color: var(--qaute-teal-light) !important; /* #14B8A6 */
+            background-color: var(--qaute-teal-light) !important; /* #dc2626 */
             border: none !important;
             color: #FFFFFF !important;
             font-weight: 700;
             padding: 0.55rem 1.2rem;
             border-radius: 50rem;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
         }
 
         .btn-qaute-accent:hover {
-            background-color: var(--qaute-secondary) !important; /* #0F766E */
+            background-color: var(--qaute-secondary) !important; /* #123b76 */
             color: #FFFFFF !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+            box-shadow: 0 4px 12px rgba(18, 59, 118, 0.35);
         }
 
         .btn-success {
-            background-color: var(--qaute-success) !important; /* #16A34A */
+            background-color: var(--qaute-success) !important; /* #194984 */
             border-color: var(--qaute-success) !important;
             color: #FFFFFF !important;
         }
         .btn-success:hover {
-            background-color: #15803d !important;
-            border-color: #15803d !important;
+            background-color: #194984 !important;
+            border-color: #194984 !important;
             color: #FFFFFF !important;
         }
 
@@ -286,13 +287,13 @@
         }
 
         .btn-warning {
-            background-color: var(--qaute-warning) !important; /* #D97706 */
+            background-color: var(--qaute-warning) !important; /* #b91c1c */
             border-color: var(--qaute-warning) !important;
             color: #FFFFFF !important;
         }
         .btn-warning:hover {
-            background-color: #b45309 !important;
-            border-color: #b45309 !important;
+            background-color: #991b1b !important;
+            border-color: #991b1b !important;
             color: #FFFFFF !important;
         }
 
@@ -326,23 +327,23 @@
         }
 
         .btn-secondary {
-            background-color: var(--qaute-secondary) !important; /* #0F766E */
+            background-color: var(--qaute-secondary) !important; /* #123b76 */
             border-color: var(--qaute-secondary) !important;
             color: #FFFFFF !important;
         }
         .btn-secondary:hover {
-            background-color: #115e59 !important;
-            border-color: #115e59 !important;
+            background-color: #0c2d5b !important;
+            border-color: #0c2d5b !important;
             color: #FFFFFF !important;
         }
 
         .btn-info {
-            background-color: var(--qaute-teal-light) !important; /* #14B8A6 */
+            background-color: var(--qaute-teal-light) !important; /* #dc2626 */
             border-color: var(--qaute-teal-light) !important;
             color: #FFFFFF !important;
         }
         .btn-info:hover {
-            background-color: var(--qaute-secondary) !important; /* #0F766E */
+            background-color: var(--qaute-secondary) !important; /* #123b76 */
             border-color: var(--qaute-secondary) !important;
             color: #FFFFFF !important;
         }
@@ -395,21 +396,21 @@
         }
 
         .status-ChoTiepNhan, .status-ChoDuyet {
-            background-color: #FEF3C7;
-            color: var(--qaute-warning); /* #D97706 */
-            border: 1px solid #FDE68A;
+            background-color: #fee2e2;
+            color: var(--qaute-warning); /* #b91c1c */
+            border: 1px solid #fecaca;
         }
 
         .status-DangXuLy {
-            background-color: #CCFBF1;
-            color: var(--qaute-secondary); /* #0F766E */
-            border: 1px solid #99F6E4;
+            background-color: #edf2fa;
+            color: var(--qaute-secondary); /* #123b76 */
+            border: 1px solid #c7d4e7;
         }
 
         .status-DaPhanHoi, .status-DaXacNhan, .status-HoanThanh {
-            background-color: #DCFCE7;
-            color: var(--qaute-success); /* #16A34A */
-            border: 1px solid #86EFAC;
+            background-color: #edf2fa;
+            color: var(--qaute-success); /* #194984 */
+            border: 1px solid #bfcee5;
         }
 
         .status-TuChoi, .status-Huy {
@@ -426,14 +427,14 @@
 
         /* === ALERTS === */
         .alert-success {
-            background-color: #F0FDF4 !important;
-            color: #166534 !important;
-            border-color: #BBF7D0 !important;
+            background-color: #edf2fa !important;
+            color: #123b76 !important;
+            border-color: #c7d4e7 !important;
         }
         .alert-warning {
-            background-color: #FFFBEB !important;
-            color: #92400E !important;
-            border-color: #FDE68A !important;
+            background-color: #fff1f2 !important;
+            color: #991b1b !important;
+            border-color: #fecaca !important;
         }
         .alert-danger {
             background-color: #FEF2F2 !important;
@@ -441,9 +442,9 @@
             border-color: #FECACA !important;
         }
         .alert-info {
-            background-color: #F0FDFA !important;
-            color: #115E59 !important;
-            border-color: #99F6E4 !important;
+            background-color: #edf2fa !important;
+            color: #0c2d5b !important;
+            border-color: #c7d4e7 !important;
         }
 
         /* === BOOTSTRAP SUBTLE BADGES & BACKGROUNDS === */
@@ -452,15 +453,15 @@
             color: var(--qaute-primary) !important;
         }
         .bg-secondary-subtle {
-            background-color: #F0FDFA !important;
+            background-color: #edf2fa !important;
             color: var(--qaute-secondary) !important;
         }
         .bg-success-subtle {
-            background-color: #F0FDF4 !important;
+            background-color: #edf2fa !important;
             color: var(--qaute-success) !important;
         }
         .bg-warning-subtle {
-            background-color: #FFFBEB !important;
+            background-color: #fff1f2 !important;
             color: var(--qaute-warning) !important;
         }
         .bg-danger-subtle {
@@ -468,13 +469,13 @@
             color: var(--qaute-danger) !important;
         }
         .bg-info-subtle {
-            background-color: #F0FDFA !important;
+            background-color: #edf2fa !important;
             color: var(--qaute-teal-light) !important;
         }
 
         /* === HERO BANNER === */
         .hero-banner {
-            background: linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 55%, #2563EB 100%);
+            background: linear-gradient(135deg, #0b2b59 0%, #0c2d5b 55%, #123b76 100%);
             color: #FFFFFF;
             padding: 4.5rem 0 3.5rem 0;
             border-radius: 0 0 2.5rem 2.5rem;
@@ -490,7 +491,7 @@
             padding: 0.8rem 1.1rem;
             max-width: 75%;
             margin-left: auto;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 2px 6px rgba(18, 59, 118, 0.2);
         }
 
         .chat-bubble-receiver {
@@ -504,7 +505,7 @@
         }
 
         .rating-stars {
-            color: var(--qaute-warning); /* #D97706 */
+            color: var(--qaute-warning); /* #b91c1c */
             font-size: 1.2rem;
         }
 
@@ -517,9 +518,9 @@
 
         .form-control:focus, .form-select:focus {
             border-color: var(--qaute-primary);
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 0 0.2rem rgba(18, 59, 118, 0.15);
             color: var(--qaute-heading);
         }
     </style>
 
-<link href="${pageContext.request.contextPath}/css/qaute-theme.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/css/qaute-theme.css?v=20261003-blue-red-2" rel="stylesheet">

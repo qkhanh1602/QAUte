@@ -12,7 +12,7 @@
 <body>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
-<div class="container py-4">
+<div class="container py-4"><a class="btn btn-outline-primary mb-3" href="${pageContext.request.contextPath}/admin/search">Tra cứu phiếu, lịch hẹn, nhật ký</a>
     <!-- Thông báo nếu vừa bị chặn khi vào link sinh viên -->
     <c:if test="${param.denied}"><div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mb-4 rounded-3 shadow-sm border-warning" role="alert">
         <i class="bi bi-info-circle-fill text-warning fs-5 flex-shrink-0"></i>
@@ -65,23 +65,7 @@
     </div>
 
     <!-- Admin Sub-nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/admin/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/users">
-            <i class="bi bi-people me-1"></i>Quản lý tài khoản
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/content">
-            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/catalogs">
-            <i class="bi bi-diagram-3 me-1"></i>Đơn vị &amp; Lĩnh vực
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/tickets">
-            <i class="bi bi-diagram-2 me-1"></i>Điều phối phiếu
-        </a>
-    </div>
+
 
     <!-- KPI Metric Cards -->
     <div class="row g-3 mb-4">
@@ -180,7 +164,7 @@ new Chart(ctxStatus, {
         labels: ['Chờ tiếp nhận', 'Đang xử lý', 'Đã phản hồi', 'Đã đóng'],
         datasets: [{
             data: [choTiepNhan, dangXuLy, daPhanHoi, dong],
-            backgroundColor: ['#D97706', '#0F766E', '#16A34A', '#64748B']
+            backgroundColor: ['#b91c1c', '#123b76', '#194984', '#64748B']
         }]
     },
     options: {
@@ -205,7 +189,7 @@ new Chart(ctxDept, {
         datasets: [{
             label: 'Số lượng phiếu tư vấn',
             data: deptValues.length > 0 ? deptValues : [1, 1, 0, 0],
-            backgroundColor: '#166534',
+            backgroundColor: '#123b76',
             borderRadius: 6
         }]
     },

@@ -27,7 +27,7 @@
             z-index: 10000;
             padding: 0.65rem 1rem;
             border-radius: 0.5rem;
-            background: #166534;
+            background: #123b76;
             color: #fff;
             font-weight: 600;
             text-decoration: none;

@@ -25,23 +25,7 @@
     </div>
 
     <!-- Student Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/student/tickets">
-            <i class="bi bi-ticket-detailed me-1"></i>Phiếu tư vấn của tôi
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/appointments">
-            <i class="bi bi-calendar-check me-1"></i>Lịch hẹn gặp cố vấn
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/chat">
-            <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/history">
-            <i class="bi bi-clock-history me-1"></i>Lịch sử tư vấn
-        </a>
-    </div>
+
 
     <!-- Tickets Table -->
     <div class="qaute-card p-4 border-0 shadow-sm">

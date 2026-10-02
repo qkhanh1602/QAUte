@@ -31,7 +31,7 @@ public class CatalogService {
     }
 
     public List<NguoiTuVan> getAllActiveAdvisors() {
-        return nguoiTuVanRepo.findByNhanTuVanTrue();
+        return nguoiTuVanRepo.findAvailableAdvisors();
     }
 
     public List<DonVi> getAllDonVi() {

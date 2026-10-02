@@ -16,14 +16,16 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
+    private final java.time.Clock clock;
     private final KhungGioTuVanRepository slotRepo;
     private final LichHenTuVanRepository appointmentRepo;
     private final DanhGiaBuoiTuVanRepository ratingRepo;
     private final NotificationService notificationService;
+    private final TaiKhoanRepository accountRepo;
 
     @Transactional
     public KhungGioTuVan createSlot(NguoiTuVan cv, LocalDateTime start, LocalDateTime end, String hinhThuc, String diaDiemLink) {
-        if (start == null || end == null || start.isBefore(LocalDateTime.now().plusMinutes(15))) {
+        if (start == null || end == null || start.isBefore(LocalDateTime.now(clock).plusMinutes(15))) {
             throw new IllegalArgumentException("Khung giờ phải bắt đầu trong tương lai và cách hiện tại ít nhất 15 phút.");
         }
         if (end.isBefore(start) || end.isEqual(start)) {
@@ -39,6 +41,7 @@ public class AppointmentService {
         if (diaDiemLink == null || diaDiemLink.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập liên kết hoặc địa điểm tư vấn.");
         }
+        accountRepo.findLockedById(cv.getTaiKhoan().getMaTK()).orElseThrow();
         if (slotRepo.existsOverlappingSlot(cv.getMaCV(), start, end)) {
             throw new IllegalArgumentException("Khung giờ bị trùng hoặc giao nhau với khung giờ khác của bạn.");
         }
@@ -47,7 +50,7 @@ public class AppointmentService {
     }
 
     public List<KhungGioTuVan> getAvailableSlots(Integer maCV) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime endWindow = now.plusDays(7);
         List<KhungGioTuVan> slots;
         if (maCV != null && maCV > 0) {
@@ -74,15 +77,16 @@ public class AppointmentService {
             throw new IllegalArgumentException("Nội dung chi tiết buổi hẹn không được để trống.");
         }
         // Quy tắc: tối đa 2 lịch chờ duyệt trên mỗi sinh viên
+        accountRepo.findLockedById(sv.getTaiKhoan().getMaTK()).orElseThrow();
         long pendingCount = appointmentRepo.countPendingByStudent(sv.getMaSV());
         if (pendingCount >= 2) {
             throw new IllegalStateException("Bạn đã có 2 lịch hẹn đang chờ duyệt. Vui lòng đợi cố vấn xử lý trước khi đặt thêm.");
         }
-        KhungGioTuVan slot = slotRepo.findById(maKhungGio).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ tư vấn."));
+        KhungGioTuVan slot = slotRepo.findLockedById(maKhungGio).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ tư vấn."));
         if (!"Mo".equals(slot.getTrangThai())) {
             throw new IllegalStateException("Khung giờ tư vấn này hiện đang bị khóa.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if (slot.getBatDau().isBefore(now)) {
             throw new IllegalStateException("Không thể đặt khung giờ trong quá khứ.");
         }
@@ -109,12 +113,14 @@ public class AppointmentService {
         if (linkHopPhong == null || linkHopPhong.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng cung cấp link họp trực tuyến hoặc địa điểm phòng tư vấn.");
         }
-        LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        LichHenTuVan app = appointmentRepo.findLockedById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
         requireAppointmentAdvisor(app, maCV);
         if (!"ChoDuyet".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể phê duyệt lịch hẹn đang chờ duyệt.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (!app.getHanDuyet().isAfter(now) || !app.getKhungGio().getBatDau().isAfter(now))
+            throw new IllegalStateException("Lịch hẹn đã quá hạn duyệt hoặc đã bắt đầu.");
         app.setTrangThai("DaXacNhan");
         app.setLinkHopPhong(linkHopPhong.trim());
         app.setNgayDuyet(now);
@@ -128,12 +134,12 @@ public class AppointmentService {
         if (lyDo == null || lyDo.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập lý do từ chối lịch hẹn.");
         }
-        LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        LichHenTuVan app = appointmentRepo.findLockedById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
         requireAppointmentAdvisor(app, maCV);
         if (!"ChoDuyet".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể từ chối lịch hẹn đang chờ duyệt.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         app.setTrangThai("TuChoi");
         app.setLyDo(lyDo.trim());
         app.setNgayDuyet(now);
@@ -147,15 +153,15 @@ public class AppointmentService {
         if (ketLuan == null || ketLuan.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng ghi nhận kết luận buổi tư vấn.");
         }
-        LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        LichHenTuVan app = appointmentRepo.findLockedById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
         requireAppointmentAdvisor(app, maCV);
         if (!"DaXacNhan".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể hoàn thành buổi hẹn đã được xác nhận.");
         }
-        if (LocalDateTime.now().isBefore(app.getKhungGio().getKetThuc())) {
+        if (LocalDateTime.now(clock).isBefore(app.getKhungGio().getKetThuc())) {
             throw new IllegalStateException("Chỉ được hoàn thành lịch hẹn sau khi khung giờ tư vấn kết thúc.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         app.setTrangThai("HoanThanh");
         app.setKetLuan(ketLuan.trim());
         app.setNgayHoanThanh(now);
@@ -169,7 +175,7 @@ public class AppointmentService {
         if (lyDo == null || lyDo.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng cung cấp lý do hủy hẹn.");
         }
-        LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        LichHenTuVan app = appointmentRepo.findLockedById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
         if (!app.getSinhVien().getMaSV().equals(maSV)) {
             throw new IllegalArgumentException("Bạn chỉ có thể hủy lịch hẹn của chính mình.");
         }
@@ -177,7 +183,7 @@ public class AppointmentService {
             throw new IllegalStateException("Không thể hủy lịch hẹn ở trạng thái này.");
         }
         // Kiểm tra hủy trước ít nhất 12 giờ
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if (app.getKhungGio().getBatDau().isBefore(now.plusHours(12))) {
             throw new IllegalStateException("Theo quy chế, bạn chỉ có thể hủy lịch hẹn trước ít nhất 12 giờ so với thời điểm diễn ra.");
         }
@@ -193,7 +199,7 @@ public class AppointmentService {
         if (soSao == null || soSao < 1 || soSao > 5) {
             throw new IllegalArgumentException("Điểm đánh giá phải từ 1 đến 5 sao.");
         }
-        LichHenTuVan app = appointmentRepo.findById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
+        LichHenTuVan app = appointmentRepo.findLockedById(maLichHen).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn."));
         if (!app.getSinhVien().getMaSV().equals(maSV)) {
             throw new IllegalArgumentException("Bạn chỉ có thể đánh giá lịch hẹn của chính mình.");
         }
@@ -203,7 +209,7 @@ public class AppointmentService {
         if (ratingRepo.existsByLichHen_MaLichHen(maLichHen)) {
             throw new IllegalStateException("Buổi tư vấn này đã được đánh giá rồi (không thể sửa đổi).");
         }
-        DanhGiaBuoiTuVan dg = DanhGiaBuoiTuVan.builder().lichHen(app).maSV(maSV).soSao(soSao).nhanXet(nhanXet != null ? nhanXet.trim() : "").ngayDanhGia(LocalDateTime.now()).build();
+        DanhGiaBuoiTuVan dg = DanhGiaBuoiTuVan.builder().lichHen(app).maSV(maSV).soSao(soSao).nhanXet(nhanXet != null ? nhanXet.trim() : "").ngayDanhGia(LocalDateTime.now(clock)).build();
         ratingRepo.save(dg);
     }
 
@@ -227,14 +233,15 @@ public class AppointmentService {
 
     @Transactional
     public int copyPreviousWeekSlots(NguoiTuVan advisor) {
-        LocalDate monday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate monday = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDateTime previousStart = monday.minusWeeks(1).atStartOfDay();
         LocalDateTime previousEnd = monday.atStartOfDay();
+        accountRepo.findLockedById(advisor.getTaiKhoan().getMaTK()).orElseThrow();
         int copied = 0;
         for (KhungGioTuVan source : slotRepo.findAdvisorSlotsInRange(advisor.getMaCV(), previousStart, previousEnd)) {
             LocalDateTime newStart = source.getBatDau().plusWeeks(1);
             LocalDateTime newEnd = source.getKetThuc().plusWeeks(1);
-            if (newStart.isAfter(LocalDateTime.now()) && !slotRepo.existsOverlappingSlot(advisor.getMaCV(), newStart, newEnd)) {
+            if ("Mo".equals(source.getTrangThai()) && newStart.isAfter(LocalDateTime.now(clock)) && !slotRepo.existsOverlappingSlot(advisor.getMaCV(), newStart, newEnd)) {
                 slotRepo.save(KhungGioTuVan.builder()
                         .nguoiTuVan(advisor).batDau(newStart).ketThuc(newEnd)
                         .hinhThuc(source.getHinhThuc()).diaDiemLink(source.getDiaDiemLink()).trangThai("Mo")
@@ -246,16 +253,47 @@ public class AppointmentService {
     }
 
     public long countNextWeekOpenSlots(Integer advisorId) {
-        LocalDate nextMonday = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        LocalDate nextMonday = LocalDate.now(clock).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
         return slotRepo.countOpenSlotsInRange(advisorId, nextMonday.atStartOfDay(), nextMonday.plusWeeks(1).atTime(LocalTime.MIDNIGHT));
     }
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public AppointmentService(final KhungGioTuVanRepository slotRepo, final LichHenTuVanRepository appointmentRepo, final DanhGiaBuoiTuVanRepository ratingRepo, final NotificationService notificationService) {
+    public AppointmentService(final KhungGioTuVanRepository slotRepo, final LichHenTuVanRepository appointmentRepo, final DanhGiaBuoiTuVanRepository ratingRepo, final NotificationService notificationService, final TaiKhoanRepository accountRepo, java.time.Clock clock) {
         this.slotRepo = slotRepo;
         this.appointmentRepo = appointmentRepo;
         this.ratingRepo = ratingRepo;
         this.notificationService = notificationService;
+        this.accountRepo = accountRepo; this.clock=clock;
+    }
+    @Transactional
+    public void updateSlot(Integer id, NguoiTuVan advisor, LocalDateTime start, Integer minutes, String type, String location, boolean close) {
+        accountRepo.findLockedById(advisor.getTaiKhoan().getMaTK()).orElseThrow();
+        KhungGioTuVan slot = slotRepo.findLockedById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ."));
+        if (!slot.getNguoiTuVan().getMaCV().equals(advisor.getMaCV())) throw new SecurityException("Không được sửa khung giờ của cố vấn khác.");
+        if (!slot.getBatDau().isAfter(LocalDateTime.now(clock))) throw new IllegalStateException("Không được sửa khung giờ đã bắt đầu.");
+        if (appointmentRepo.isSlotOccupied(id)) throw new IllegalStateException("Khung giờ đã có lịch hẹn; cần xử lý lịch hẹn trước khi sửa/ngưng.");
+        if (close) { slot.setTrangThai("Khoa"); slotRepo.save(slot); return; }
+        if (start == null || start.isBefore(LocalDateTime.now(clock).plusMinutes(15)) || minutes == null || (minutes != 45 && minutes != 60))
+            throw new IllegalArgumentException("Chọn thời điểm cách hiện tại ít nhất 15 phút và thời lượng 45/60 phút.");
+        if (!java.util.Set.of("TrucTiep", "TrucTuyen").contains(type) || location == null || location.isBlank() || location.length()>1000)
+            throw new IllegalArgumentException("Hình thức hoặc địa điểm không hợp lệ.");
+        LocalDateTime end = start.plusMinutes(minutes);
+        if (slotRepo.overlapsOther(advisor.getMaCV(), id, start, end)) throw new IllegalStateException("Khung giờ trùng với lịch khác.");
+        slot.setBatDau(start); slot.setKetThuc(end); slot.setHinhThuc(type); slot.setDiaDiemLink(location.trim()); slot.setTrangThai("Mo");
+        slotRepo.save(slot);
+    }
+
+    @Transactional
+    public int expirePendingAppointments(LocalDateTime now) {
+        int expired = 0;
+        for (LichHenTuVan candidate : appointmentRepo.findByTrangThaiAndHanDuyetLessThanEqual("ChoDuyet", now)) {
+            LichHenTuVan app = appointmentRepo.findLockedById(candidate.getMaLichHen()).orElseThrow();
+            if (!"ChoDuyet".equals(app.getTrangThai()) || app.getHanDuyet().isAfter(now)) continue;
+            app.setTrangThai("TuChoi"); app.setLyDo("Tự động từ chối do quá hạn duyệt 24 giờ."); app.setNgayDuyet(now);
+            appointmentRepo.save(app); expired++;
+            notificationService.sendNotification(app.getSinhVien().getTaiKhoan(), "Lịch hẹn quá hạn duyệt", app.getLyDo(), "LichHen", "/student/appointments");
+        }
+        return expired;
     }
 }

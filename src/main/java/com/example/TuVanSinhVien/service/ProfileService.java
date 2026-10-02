@@ -37,7 +37,9 @@ public class ProfileService {
         if (!cleanPhone.isEmpty() && !PHONE.matcher(cleanPhone).matches()) {
             throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam.");
         }
-        account.setHoTen(cleanName);
+        if (!cleanName.equals(account.getHoTen())) {
+            throw new IllegalArgumentException("Không được tự thay đổi họ tên. Vui lòng liên hệ quản trị viên.");
+        }
         account.setSoDienThoai(cleanPhone.isEmpty() ? null : cleanPhone);
         return accountRepository.save(account);
     }
@@ -72,5 +74,23 @@ public class ProfileService {
     private TaiKhoan getAccount(Integer accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+    }
+    public void validateEmailChange(Integer accountId, String email, String password) {
+        TaiKhoan account = getAccount(accountId);
+        if (!passwordEncoder.matches(password == null ? "" : password, account.getMatKhau()))
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
+        if (email == null || email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+            throw new IllegalArgumentException("Email không hợp lệ.");
+        if (accountRepository.existsByEmail(email.trim().toLowerCase()))
+            throw new IllegalArgumentException("Email đã được sử dụng.");
+    }
+
+    @Transactional
+    public TaiKhoan changeVerifiedEmail(Integer accountId, String email) {
+        if (accountRepository.existsByEmail(email)) throw new IllegalArgumentException("Email đã được sử dụng.");
+        TaiKhoan account = getAccount(accountId);
+        account.setEmail(email);
+        account.setNgayCapNhat(java.time.LocalDateTime.now());
+        return accountRepository.save(account);
     }
 }

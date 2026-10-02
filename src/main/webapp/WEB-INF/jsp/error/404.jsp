@@ -16,7 +16,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="qaute-card p-5 text-center shadow-lg border-0">
-                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; background-color: #FEF3C7; color: #D97706;">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; background-color: #fee2e2; color: #b91c1c;">
                     <i class="bi bi-exclamation-octagon fs-1"></i>
                 </div>
 

@@ -14,23 +14,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4">
     <!-- Advisor Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan bàn làm việc
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/tickets">
-            <i class="bi bi-inbox me-1"></i>Phiếu xử lý &amp; Hàng đợi
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/slots">
-            <i class="bi bi-calendar3-week me-1"></i>Quản lý khung giờ (Slots)
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/appointments">
-            <i class="bi bi-calendar2-check me-1"></i>Phê duyệt lịch hẹn
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/chat">
-            <i class="bi bi-chat-dots me-1"></i>Tư vấn trực tuyến 1-1
-        </a>
-    </div>
+
 
     <!-- Alerts -->
     <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3">
@@ -82,7 +66,7 @@
                     <c:forEach var="s" items="${mySessions}"><a href="${pageContext.request.contextPath}/advisor/chat?sessionId=${s.maPhienChat}" class="${currentSession != null and currentSession.maPhienChat == s.maPhienChat ? 'list-group-item list-group-item-action active rounded-3 mb-1' : 'list-group-item list-group-item-action rounded-3 mb-1'}">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong class="small"><c:out value="${s.sinhVien.taiKhoan.hoTen}" /></strong>
-                            <span style="font-size: 0.7rem;" class="${'status-badge status-' += s.trangThai}"><c:out value="${s.trangThai}" /></span>
+                            <span style="font-size: 0.7rem;" class="${'status-badge status-' += s.trangThai}"><c:out value="${q:chatStatusLabel(s.trangThai)}" /></span>
                         </div>
                         <small class="d-block text-muted"><c:out value="${q:formatTemporal(s.thoiGianBatDau, 'dd/MM HH:mm')}" /></small>
                     </a>
@@ -111,7 +95,7 @@
                             <small class="text-muted"><c:out value="${currentSession.sinhVien.mssv += ' - ' += currentSession.sinhVien.lop}" /></small>
                         </div>
                     </div>
-                    <span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${currentSession.trangThai}" /></span>
+                    <span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${q:chatStatusLabel(currentSession.trangThai)}" /></span>
                 </div>
 
                 <!-- Messages Stream -->
@@ -121,7 +105,7 @@
                     </div>
 
                     </c:if><c:forEach var="m" items="${messages}"><div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #f0fdf4; border-left: 4px solid #166534;' : ''}">
+                        <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
                                 <span><c:out value="${m.taiKhoanGui.hoTen}" /></span>
                                 <c:if test="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}"><span class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">

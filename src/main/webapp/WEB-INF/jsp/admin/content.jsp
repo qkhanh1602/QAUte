@@ -25,20 +25,7 @@
     </div>
 
     <!-- Admin Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan thống kê
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/users">
-            <i class="bi bi-people me-1"></i>Quản lý tài khoản
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/admin/content">
-            <i class="bi bi-journal-check me-1"></i>Phê duyệt nội dung
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/admin/catalogs">
-            <i class="bi bi-diagram-3 me-1"></i>Đơn vị &amp; Lĩnh vực
-        </a>
-    </div>
+
 
     <!-- Alerts -->
     <c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3">

@@ -1,20 +1,26 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <sec:authentication property="principal" var="currentUser" />
-<div class="sticky-top">
+<div class="sticky-top qaute-header">
+    <div class="qaute-contact-bar"><div class="container"><span><i class="bi bi-envelope-fill me-2" aria-hidden="true"></i>qaute.edu@gmail.com</span><span class="d-none d-sm-inline">Cổng hỗ trợ và tư vấn sinh viên QAUTE</span></div></div>
     <nav class="navbar navbar-expand-lg navbar-qaute">
         <div class="container">
+            <button class="btn qaute-menu-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#qauteSidebar" aria-controls="qauteSidebar" aria-label="Mở menu chức năng"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i></button>
             <!-- Brand Logo (Pure Inline SVG - 100% Never Missing or Broken) -->
             <a class="navbar-brand navbar-brand-qaute" href="${pageContext.request.contextPath}/">
-                <svg width="34" height="34" viewbox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
                     <rect width="40" height="40" rx="10" fill="url(#qauteLogoNavGrad)"></rect>
                     <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"></path>
                     <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"></path>
-                    <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"></path>
-                    <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"></circle>
+                    <path d="M34 17.5V26.5" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"></path>
+                    <circle cx="34" cy="27.5" r="1.8" fill="#dc2626"></circle>
                     <defs>
-                        <lineargradient id="qauteLogoNavGrad" x1="0" y1="0" x2="40" y2="40" gradientunits="userSpaceOnUse">
-                            <stop stop-color="#2563EB"></stop>
-                            <stop offset="1" stop-color="#14B8A6"></stop>
-                        </lineargradient>
+                        <linearGradient id="qauteLogoNavGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#123b76"></stop>
+                            <stop offset="1" stop-color="#dc2626"></stop>
+                        </linearGradient>
                     </defs>
                 </svg>
                 <span class="fw-extrabold text-white">QAUTE</span>
@@ -51,11 +57,11 @@
                 <div class="d-flex align-items-center gap-2">
                     <!-- When NOT Authenticated -->
                     <sec:authorize access="!isAuthenticated()"><div class="d-flex gap-2">
-                        <a class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold" href="${pageContext.request.contextPath}/login">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                        <a class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold qaute-auth-button" href="${pageContext.request.contextPath}/login">
+                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Đăng nhập</span>
                         </a>
-                        <a class="btn btn-qaute-accent btn-sm px-3 rounded-pill fw-bold" href="${pageContext.request.contextPath}/register">
-                            <i class="bi bi-person-plus me-1"></i>Đăng ký SV
+                        <a class="btn btn-qaute-accent btn-sm px-3 rounded-pill fw-bold qaute-auth-button" href="${pageContext.request.contextPath}/register">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i><span>Đăng ký SV</span>
                         </a>
                     </div>
 
@@ -102,6 +108,7 @@
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form method="post" class="m-0" action="${pageContext.request.contextPath}/logout">
+                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                         <button type="submit" class="dropdown-item rounded-2 py-2 text-danger fw-semibold d-flex align-items-center">
                                             <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
                                         </button>
@@ -115,3 +122,5 @@
         </div>
     </nav>
 </div>
+
+<%@ include file="/WEB-INF/jsp/fragments/sidebar.jspf" %>

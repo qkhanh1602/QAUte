@@ -19,6 +19,7 @@ import java.util.List;
 
 @Service
 public class WorkflowScheduler {
+    private final java.time.Clock clock;
     private static final Logger log = LoggerFactory.getLogger(WorkflowScheduler.class);
     private final TicketService ticketService;
     private final YeuCauTuVanRepository ticketRepo;
@@ -27,26 +28,29 @@ public class WorkflowScheduler {
     private final AppointmentService appointmentService;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final SlaService slaService;
 
     public WorkflowScheduler(TicketService ticketService, YeuCauTuVanRepository ticketRepo,
                              TaiKhoanRepository accountRepo, NguoiTuVanRepository advisorRepo,
                              AppointmentService appointmentService, NotificationService notificationService,
-                             EmailService emailService) {
+                             EmailService emailService, SlaService slaService, java.time.Clock clock) {
         this.ticketService = ticketService;
         this.ticketRepo = ticketRepo;
         this.accountRepo = accountRepo;
         this.advisorRepo = advisorRepo;
         this.appointmentService = appointmentService;
         this.notificationService = notificationService;
-        this.emailService = emailService;
+        this.emailService = emailService; this.slaService=slaService; this.clock=clock;
     }
 
     @Scheduled(cron = "0 */15 * * * *", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void processTicketDeadlines() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         int autoClosed = ticketService.autoCloseExpiredTickets(now);
-        notifyOverdue(ticketRepo.findOverdueAcceptance(now), false);
+        notifyOverdue(ticketRepo.findByTrangThaiOrderByNgayTaoDesc("ChoTiepNhan").stream()
+                .filter(t -> !slaService.calculateBusinessDeadline(t.getNgayTao(), 24).isAfter(now)).toList(), false);
+        appointmentService.expirePendingAppointments(now);
         notifyOverdue(ticketRepo.findOverdueSla(now), true);
         if (autoClosed > 0) {
             log.info("[WORKFLOW] Đã tự động đóng {} phiếu hết hạn.", autoClosed);
@@ -67,23 +71,23 @@ public class WorkflowScheduler {
                         keyPrefix + ticket.getMaYeuCau(), title, content, "SLA", "/admin/tickets");
                 if (created && redAlert) {
                     emailService.sendNotificationEmail(recipient.getEmail(), "[QAUTE] " + title,
-                            "<p>" + content + "</p><p>Vui lòng điều phối xử lý trên hệ thống QAUTE.</p>");
+                            "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(content) + "</p><p>Vui lòng điều phối xử lý trên hệ thống QAUTE.</p>");
                 }
             }
         }
     }
 
-    @Scheduled(cron = "0 0 8 * * SUN", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "0 0 8 * * FRI,SAT", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void remindAdvisorWeeklySlots() {
-        int week = LocalDate.now().get(WeekFields.ISO.weekOfWeekBasedYear());
+        int week = LocalDate.now(clock).get(WeekFields.ISO.weekOfWeekBasedYear());
         for (NguoiTuVan advisor : advisorRepo.findByNhanTuVanTrue()) {
             long count = appointmentService.countNextWeekOpenSlots(advisor.getMaCV());
             if (count < 2) {
                 notificationService.sendNotificationOnce(advisor.getTaiKhoan(),
-                        "SLOT_REMINDER_" + LocalDate.now().getYear() + "_" + week + "_" + advisor.getMaCV(),
+                        "SLOT_REMINDER_" + LocalDate.now(clock).getYear() + "_" + week + "_" + advisor.getMaCV(),
                         "Nhắc đăng ký lịch tư vấn tuần tới",
-                        "Bạn mới có " + count + "/2 khung giờ. Vui lòng bổ sung trước khi Chủ nhật kết thúc.",
+                        "Bạn mới có " + count + "/2 khung giờ. Vui lòng bổ sung trước Chủ nhật.",
                         "HeThong", "/advisor/slots");
             }
         }

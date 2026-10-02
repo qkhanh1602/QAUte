@@ -273,4 +273,15 @@ public class AdvisorController {
         this.attachmentService = attachmentService;
         this.recordPdfService = recordPdfService;
     }
+    @PostMapping("/slots/{id}/update")
+    public String updateSlot(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails user,
+                             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+                             @RequestParam(required=false) Integer minutes, @RequestParam(required=false) String type,
+                             @RequestParam(required=false) String location, @RequestParam(defaultValue="false") boolean close,
+                             RedirectAttributes flash) {
+        try { appointmentService.updateSlot(id, getAdvisorOrThrow(user), start, minutes, type, location, close);
+            flash.addFlashAttribute("successMessage", close ? "Đã ngưng khung giờ." : "Đã cập nhật khung giờ.");
+        } catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
+        return "redirect:/advisor/slots";
+    }
 }

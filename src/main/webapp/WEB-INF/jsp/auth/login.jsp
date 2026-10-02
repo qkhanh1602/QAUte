@@ -16,17 +16,17 @@
         <div class="col-md-8 col-lg-5">
             <div class="text-center mb-4">
                 <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-2" href="${pageContext.request.contextPath}/">
-                    <svg width="40" height="40" viewbox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="auth-brand-mark flex-shrink-0">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="auth-brand-mark flex-shrink-0">
                         <rect width="40" height="40" rx="10" fill="url(#qauteLogoLoginGrad)"></rect>
                         <path d="M20 9L34 16.5L20 24L6 16.5L20 9Z" fill="#FFFFFF"></path>
                         <path d="M11.5 20V26C11.5 29.2 15.2 31.5 20 31.5C24.8 31.5 28.5 29.2 28.5 26V20L20 24.5L11.5 20Z" fill="#FFFFFF" fill-opacity="0.88"></path>
-                        <path d="M34 17.5V26.5" stroke="#14B8A6" stroke-width="2.2" stroke-linecap="round"></path>
-                        <circle cx="34" cy="27.5" r="1.8" fill="#14B8A6"></circle>
+                        <path d="M34 17.5V26.5" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round"></path>
+                        <circle cx="34" cy="27.5" r="1.8" fill="#dc2626"></circle>
                         <defs>
-                            <lineargradient id="qauteLogoLoginGrad" x1="0" y1="0" x2="40" y2="40" gradientunits="userSpaceOnUse">
-                                <stop stop-color="#2563EB"></stop>
-                                <stop offset="1" stop-color="#14B8A6"></stop>
-                            </lineargradient>
+                            <linearGradient id="qauteLogoLoginGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#123b76"></stop>
+                                <stop offset="1" stop-color="#dc2626"></stop>
+                            </linearGradient>
                         </defs>
                     </svg>
                     <span class="fs-2 fw-extrabold text-dark tracking-tight">QAUTE</span>

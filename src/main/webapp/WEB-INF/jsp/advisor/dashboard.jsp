@@ -62,23 +62,7 @@
     </div>
 
     <!-- Advisor Sub-nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan bàn làm việc
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/tickets">
-            <i class="bi bi-inbox me-1"></i>Phiếu xử lý &amp; Hàng đợi
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/slots">
-            <i class="bi bi-calendar3-week me-1"></i>Quản lý khung giờ (Slots)
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/appointments">
-            <i class="bi bi-calendar2-check me-1"></i>Phê duyệt lịch hẹn
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/advisor/chat">
-            <i class="bi bi-chat-dots me-1"></i>Tư vấn trực tuyến 1-1
-        </a>
-    </div>
+
 
     <div class="row g-4">
         <!-- Assigned Tickets -->

@@ -28,6 +28,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        var existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing != null && existing.getPrincipal() instanceof CustomUserDetails principal) {
+            TaiKhoan current = accountRepository.findById(principal.getMaTK()).orElse(null);
+            if (current == null || !"HoatDong".equals(current.getTrangThai())
+                    || !java.util.Objects.equals(current.getVaiTro(), principal.getVaiTro())
+                    || !java.util.Objects.equals(current.getTokenVersion(), principal.getTaiKhoan().getTokenVersion())) {
+                SecurityContextHolder.clearContext();
+                var session = request.getSession(false);
+                if (session != null) session.invalidate();
+            }
+        }
         String authorization = request.getHeader("Authorization");
         if (authorization != null && authorization.startsWith("Bearer ")
                 && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -308,6 +308,39 @@ MaToken bigint IDENTITY PRIMARY KEY,
  CHECK (HetHan > NgayTao)
 );
 
+-- OTP is for a registration/verification flow. Never store the one-time code itself.
+CREATE TABLE dbo.YeuCauXacMinhOTP (
+ MaOTP uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
+ MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
+ Email varchar(254) NOT NULL,
+ SoDienThoai varchar(15) NULL,
+ KenhXacMinh varchar(10) NULL,
+ MucDich varchar(30) NOT NULL CHECK (MucDich IN ('DangKy','DangKyCoVan','XacMinhEmail','DatLaiMatKhau','DoiEmail')),
+ OTPHash varchar(255) NOT NULL,
+ NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ HetHan datetime2(3) NOT NULL,
+ DaDungLuc datetime2(3) NULL,
+ SoLanNhapSai tinyint NOT NULL DEFAULT 0 CHECK (SoLanNhapSai BETWEEN 0 AND 5),
+ SoLanGui tinyint NOT NULL DEFAULT 1 CHECK (SoLanGui BETWEEN 1 AND 3),
+ GuiLaiSau datetime2(3) NOT NULL,
+ IPHash binary(32) NULL,
+ CHECK (HetHan > NgayTao),
+ CHECK (GuiLaiSau >= NgayTao),
+ CHECK (DaDungLuc IS NULL OR DaDungLuc BETWEEN NgayTao AND HetHan)
+);
+
+-- Security events are audit evidence. IP and user-agent are pseudonymised/minimised.
+CREATE TABLE dbo.NhatKyBaoMat (
+ MaSuKien bigint IDENTITY PRIMARY KEY,
+ MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
+ LoaiSuKien varchar(50) NOT NULL,
+ ThanhCong bit NOT NULL,
+ IPHash binary(32) NULL,
+ UserAgentHash binary(32) NULL,
+ ChiTiet nvarchar(500) NULL,
+ NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
 CREATE TABLE dbo.DanhTinhSSO (
 MaDanhTinh int IDENTITY PRIMARY KEY,
  MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
@@ -369,6 +402,10 @@ CREATE INDEX IX_Chat_HangDoi ON dbo.PhienChat(MaDonVi, TrangThai, ThoiGianBatDau
 CREATE INDEX IX_TinNhan_LichSu ON dbo.TinNhanChat(MaPhienChat, MaTinNhan);
 CREATE INDEX IX_ThongBao_ChuaDoc ON dbo.ThongBao(MaTK_Nhan, NgayTao DESC) WHERE DaDoc = 0;
 CREATE INDEX IX_Phien_TaiKhoan ON dbo.PhienDangNhap(MaTK, ThuHoiLuc, HetHan);
+CREATE INDEX IX_OTP_TraCuu ON dbo.YeuCauXacMinhOTP(Email, MucDich, NgayTao DESC)
+ INCLUDE(HetHan, DaDungLuc, SoLanNhapSai, GuiLaiSau);
+CREATE INDEX IX_NhatKyBaoMat_TaiKhoan ON dbo.NhatKyBaoMat(MaTK, NgayTao DESC);
+CREATE INDEX IX_NhatKyBaoMat_IP ON dbo.NhatKyBaoMat(IPHash, NgayTao DESC) WHERE IPHash IS NOT NULL;
 CREATE INDEX IX_Outbox_ChoXuLy ON dbo.HangDoiSuKien(TrangThai, XuLySau);
 CREATE INDEX IX_FAQ_CongKhai ON dbo.CauHoiFAQ(TrangThai, MaLinhVuc);
 CREATE INDEX IX_BaiViet_CongKhai ON dbo.BaiVietHuongDan(TrangThai, MaLinhVuc, NgayDang DESC);
@@ -405,10 +442,16 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),
  ('ticket.auto_close_days',N'7',N'Đóng sau 7 ngày không có hỏi thêm kể từ phản hồi cuối'),
- ('sla.accept_hours',N'24',N'Cảnh báo chưa tiếp nhận'),
+ ('sla.accept_hours',N'48',N'Hạn tiếp nhận theo QĐ11; cảnh báo vàng sau 24 giờ làm việc'),
  ('sla.reply_hours',N'48',N'Cảnh báo chưa phản hồi lần đầu'),
  ('sla.clock',N'BUSINESS',N'Giả định dùng giờ làm việc; cần chốt với giảng viên'),
  ('session.idle_minutes',N'30',N'Hết phiên sau 30 phút không hoạt động'),
+ ('security.otp.expiry_minutes',N'10',N'OTP có hiệu lực 10 phút'),
+ ('security.otp.max_verify_attempts',N'5',N'Số lần nhập OTP sai tối đa'),
+ ('security.otp.resend_cooldown_seconds',N'60',N'Chờ tối thiểu trước khi gửi lại OTP'),
+ ('security.otp.max_sends_per_hour',N'3',N'Số OTP gửi tối đa cho mỗi email/IP mỗi giờ'),
+ ('security.login.max_failures',N'5',N'Đăng nhập sai tối đa trước khi khóa tạm'),
+ ('security.login.lock_minutes',N'15',N'Thời gian khóa tạm sau nhiều lần đăng nhập sai'),
  ('security.access_token_minutes',N'10',N'JWT ngắn hạn; vẫn kiểm tra phiên bị thu hồi'),
  ('upload.max_bytes_exclusive',N'10485760',N'Tệp phải nhỏ hơn 10 MiB'),
  ('upload.allowed_mime',N'image/jpeg,image/png,application/pdf',N'Kiểm tra chữ ký tệp tại service'),

@@ -99,7 +99,7 @@ public class SecurityConfig {
             )
             // 5. Phân quyền Request
             .authorizeHttpRequests(auth -> auth
-                .dispatcherTypeMatchers(DispatcherType.INCLUDE).permitAll()
+                .dispatcherTypeMatchers(DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
                 .requestMatchers("/WEB-INF/**").denyAll()
                 .requestMatchers(
                     "/",

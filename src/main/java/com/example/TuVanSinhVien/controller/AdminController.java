@@ -45,6 +45,7 @@ public class AdminController {
     private final UserAccountService userAccountService;
     private final ReportExportService reportExportService;
     private final AttachmentService attachmentService;
+    private final com.example.TuVanSinhVien.service.AdminSearchService searchService;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
@@ -374,7 +375,7 @@ public class AdminController {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder, final NguoiTuVanRepository nguoiTuVanRepo, final TicketService ticketService, final UserAccountService userAccountService, final ReportExportService reportExportService, final AttachmentService attachmentService) {
+    public AdminController(final ReportService reportService, final TaiKhoanRepository taiKhoanRepo, final CatalogService catalogService, final ContentService contentService, final PasswordEncoder passwordEncoder, final NguoiTuVanRepository nguoiTuVanRepo, final TicketService ticketService, final UserAccountService userAccountService, final ReportExportService reportExportService, final AttachmentService attachmentService, final com.example.TuVanSinhVien.service.AdminSearchService searchService) {
         this.reportService = reportService;
         this.taiKhoanRepo = taiKhoanRepo;
         this.catalogService = catalogService;
@@ -385,5 +386,29 @@ public class AdminController {
         this.userAccountService = userAccountService;
         this.reportExportService = reportExportService;
         this.attachmentService = attachmentService;
+        this.searchService = searchService;
+    }
+    @GetMapping("/search")
+    public String search(@RequestParam(defaultValue="tickets") String type,
+                         @RequestParam(required=false) String keyword, @RequestParam(required=false) String status,
+                         @RequestParam(required=false) Integer unitId, @RequestParam(required=false) Integer accountId,
+                         @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
+                         @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
+                         @RequestParam(defaultValue="0") int page, Model model) {
+        model.addAttribute("type",type); model.addAttribute("units",catalogService.getAllDonVi());
+        try { model.addAttribute("results",searchService.search(type,keyword,status,unitId,accountId,from,to,page)); }
+        catch(IllegalArgumentException ex) { model.addAttribute("errorMessage",ex.getMessage()); }
+        return "admin/search";
+    }
+
+    @PostMapping("/users/{id}/edit")
+    public String editUser(@PathVariable Integer id, @RequestParam String fullName, @RequestParam String email,
+                           @RequestParam(required=false) String phone, @RequestParam String role,
+                           @RequestParam(required=false) Integer unitId,
+                           @AuthenticationPrincipal CustomUserDetails actor, RedirectAttributes flash) {
+        try { userAccountService.editAccount(id, actor.getMaTK(), fullName, email, phone, role, unitId);
+            flash.addFlashAttribute("successMessage","Đã cập nhật tài khoản và thu hồi token cũ.");
+        } catch(RuntimeException ex) { flash.addFlashAttribute("errorMessage",ex.getMessage()); }
+        return "redirect:/admin/users";
     }
 }

@@ -44,6 +44,11 @@ import java.time.LocalDateTime;
 @Controller
 public class AuthController {
 
+    @GetMapping("/logout")
+    public String logoutConfirmation() {
+        return "auth/logout";
+    }
+
     public static final String SESSION_PENDING_REG = "PENDING_REGISTRATION";
     public static final String SESSION_PENDING_ADVISOR_REG = "PENDING_ADVISOR_REGISTRATION";
 
@@ -479,8 +484,8 @@ public class AuthController {
                                 RedirectAttributes redirectAttributes) {
         if (userDetails == null) return "redirect:/login";
         try {
-            TaiKhoan updatedAccount = profileService.updateProfile(userDetails.getMaTK(), hoTen, soDienThoai);
-            userDetails.getTaiKhoan().setHoTen(updatedAccount.getHoTen());
+            TaiKhoan updatedAccount = profileService.updateProfile(userDetails.getMaTK(), taiKhoanRepo.findById(userDetails.getMaTK()).orElseThrow().getHoTen(), soDienThoai);
+
             userDetails.getTaiKhoan().setSoDienThoai(updatedAccount.getSoDienThoai());
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin liên hệ thành công!");
         } catch (IllegalArgumentException e) {
@@ -526,6 +531,43 @@ public class AuthController {
                 redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             }
         }
+        return "redirect:/profile";
+    }
+    @PostMapping("/profile/email/request")
+    public String requestEmailChange(@AuthenticationPrincipal CustomUserDetails user,
+                                    @RequestParam String email, @RequestParam String currentPassword,
+                                    HttpServletRequest request, RedirectAttributes flash) {
+        if (user == null) return "redirect:/login";
+        try {
+            String cleanEmail = email.trim().toLowerCase();
+            profileService.validateEmailChange(user.getMaTK(), cleanEmail, currentPassword);
+            OtpService.OtpSendResult result = otpService.generateAndSendOtp(cleanEmail, "DoiEmail",
+                    CustomAuthenticationFailureHandler.getClientIp(request), request.getHeader("User-Agent"));
+            if (!result.isSuccess()) throw new IllegalArgumentException(result.getMessage());
+            request.getSession().setAttribute("pendingProfileEmail", cleanEmail);
+            request.getSession().setAttribute("pendingProfileAccount", user.getMaTK());
+            flash.addFlashAttribute("successMessage", result.getMessage());
+        } catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/profile/email/verify")
+    public String verifyEmailChange(@AuthenticationPrincipal CustomUserDetails user, @RequestParam String otp,
+                                   HttpServletRequest request, RedirectAttributes flash) {
+        if (user == null) return "redirect:/login";
+        try {
+            Object pending = request.getSession().getAttribute("pendingProfileEmail");
+            if (!(pending instanceof String email) || !user.getMaTK().equals(request.getSession().getAttribute("pendingProfileAccount")))
+                throw new IllegalArgumentException("Vui lòng yêu cầu mã xác minh email trước.");
+            OtpService.OtpVerificationResult result = otpService.verifyOtp(email, "DoiEmail", otp,
+                    CustomAuthenticationFailureHandler.getClientIp(request), request.getHeader("User-Agent"));
+            if (!result.isSuccess()) throw new IllegalArgumentException(result.getMessage());
+            TaiKhoan updated = profileService.changeVerifiedEmail(user.getMaTK(), email);
+            user.getTaiKhoan().setEmail(updated.getEmail());
+            request.getSession().removeAttribute("pendingProfileEmail");
+            request.getSession().removeAttribute("pendingProfileAccount");
+            flash.addFlashAttribute("successMessage", "Đã xác minh và cập nhật email.");
+        } catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
         return "redirect:/profile";
     }
 }

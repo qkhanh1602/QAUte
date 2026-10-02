@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface LichHenTuVanRepository extends JpaRepository<LichHenTuVan, Integer> {
+public interface LichHenTuVanRepository extends org.springframework.data.jpa.repository.JpaSpecificationExecutor<LichHenTuVan>, JpaRepository<LichHenTuVan, Integer> {
 
     List<LichHenTuVan> findBySinhVien_MaSVOrderByNgayTaoDesc(Integer maSV);
 
@@ -28,4 +28,9 @@ public interface LichHenTuVanRepository extends JpaRepository<LichHenTuVan, Inte
     boolean existsOverlappingStudentAppointment(@Param("maSV") Integer maSV, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     long countByTrangThai(String trangThai);
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select e from LichHenTuVan e where e."+"maLichHen = :id")
+    java.util.Optional<LichHenTuVan> findLockedById(@Param("id") Integer id);
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    List<LichHenTuVan> findByTrangThaiAndHanDuyetLessThanEqual(String status, LocalDateTime time);
 }

@@ -16,6 +16,7 @@ import java.util.List;
 
 @Component
 @Profile("dev")
+@org.springframework.core.annotation.Order(0)
 public class DataInitializer implements CommandLineRunner {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
@@ -45,7 +46,7 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Bắt đầu khởi tạo dữ liệu mẫu cho hệ thống QAUTE...");
         LocalDateTime now = LocalDateTime.now();
         // 1. Tạo tài khoản Admin
-        TaiKhoan admin = TaiKhoan.builder().tenDangNhap("admin").matKhau(passwordEncoder.encode("Admin@123")).hoTen("Ban Quản trị QAUTE").email("admin@ute.edu.vn").soDienThoai("0901234567").vaiTro("Admin").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
+        TaiKhoan admin = TaiKhoan.builder().tenDangNhap("admin").matKhau(passwordEncoder.encode("Admin@123")).hoTen("Ban Quản trị QAUTE").email("qaute.edu@gmail.com").soDienThoai("0901234567").vaiTro("Admin").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
         admin = taiKhoanRepo.save(admin);
         // 2. Lấy đơn vị và lĩnh vực đã có trong DB
         DonVi donViCntt = donViRepo.findByMaDonViCode("CNTT").orElse(null);
@@ -122,7 +123,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         // 12. Tạo 1 Ticket mẫu hoàn chỉnh (đã phản hồi)
         if (donViDaoTao != null && lvHocVu != null) {
-            YeuCauTuVan ticket1 = YeuCauTuVan.builder().sinhVien(sv1).donVi(donViDaoTao).linhVuc(lvHocVu).coVanPhuTrach(cvDaoTao).tieuDe("Em muốn hỏi về điều kiện rút học phần trong học kỳ này").noiDung("Dạ thưa Thầy/Cô, do lịch thi giữa kỳ bị trùng với đợt thực tập của doanh nghiệp, em muốn rút học phần Nhập môn Trí tuệ Nhân tạo thì hạn chót là khi nào và có được hoàn học phí không ạ? Em xin cảm ơn.").baoMatDanhTinh(false).trangThai("DaPhanHoi").ngayTao(now.minusDays(1)).ngayCapNhat(now).hanTiepNhan(slaService.calculateBusinessDeadline(now.minusDays(1), 24)).hanSLA(slaService.calculateBusinessDeadline(now.minusDays(1), 48)).ngayTiepNhan(now.minusHours(20)).ngayPhanHoiDau(now.minusHours(5)).ngayPhanHoiCuoi(now.minusHours(5)).hanTuDongDong(now.plusDays(7)).build();
+            YeuCauTuVan ticket1 = YeuCauTuVan.builder().sinhVien(sv1).donVi(donViDaoTao).linhVuc(lvHocVu).coVanPhuTrach(cvDaoTao).tieuDe("Em muốn hỏi về điều kiện rút học phần trong học kỳ này").noiDung("Dạ thưa Thầy/Cô, do lịch thi giữa kỳ bị trùng với đợt thực tập của doanh nghiệp, em muốn rút học phần Nhập môn Trí tuệ Nhân tạo thì hạn chót là khi nào và có được hoàn học phí không ạ? Em xin cảm ơn.").baoMatDanhTinh(false).trangThai("DaPhanHoi").ngayTao(now.minusDays(1)).ngayCapNhat(now).hanTiepNhan(slaService.calculateBusinessDeadline(now.minusDays(1), 48)).hanSLA(slaService.calculateBusinessDeadline(now.minusDays(1), 48)).ngayTiepNhan(now.minusHours(20)).ngayPhanHoiDau(now.minusHours(5)).ngayPhanHoiCuoi(now.minusHours(5)).hanTuDongDong(now.plusDays(7)).build();
             ticket1 = ticketRepo.save(ticket1);
             PhanHoiTuVan ph1 = PhanHoiTuVan.builder().yeuCauTuVan(ticket1).taiKhoanGui(tkCvDaoTao).loaiPhanHoi("TraLoi").noiDungTraLoi("Chào em, theo Quy chế đào tạo của Nhà trường:\n1. Hạn chót nộp đơn xin rút học phần là trước tuần thứ 8 của học kỳ chính.\n2. Rút học phần trong thời hạn này sẽ nhận điểm \'W\' (không tính vào điểm trung bình tích lũy).\n3. Học phí của học phần đã rút sẽ không được hoàn trả, trừ trường hợp lớp bị hủy do Nhà trường sắp xếp.\nEm có thể tải biểu mẫu đơn rút học phần tại mục \'Biểu mẫu\' và nộp về Phòng Đào tạo nhé.").ngayTraLoi(now.minusHours(5)).deXuatFAQ(false).build();
             phanHoiRepo.save(ph1);
@@ -131,7 +132,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         // 13. Tạo 1 Ticket đang chờ tiếp nhận (để cố vấn thử claim)
         if (donViCntt != null && lvNgheNghiep != null) {
-            YeuCauTuVan ticket2 = YeuCauTuVan.builder().sinhVien(sv2).donVi(donViCntt).linhVuc(lvNgheNghiep).tieuDe("Tư vấn định hướng theo mảng Data Engineering hay Data Science").noiDung("Em hiện là sinh viên năm 3 ngành Khoa học Dữ liệu. Em đang phân vân giữa việc theo hướng xây dựng pipeline dữ liệu (Data Engineer) hay đi sâu vào mô hình Machine Learning/AI. Mong Thầy/Cô Khoa CNTT định hướng giúp em về cơ hội việc làm thực tế tại các công ty hiện nay ạ.").baoMatDanhTinh(false).trangThai("ChoTiepNhan").ngayTao(now.minusHours(2)).ngayCapNhat(now.minusHours(2)).hanTiepNhan(slaService.calculateBusinessDeadline(now.minusHours(2), 24)).hanSLA(slaService.calculateBusinessDeadline(now.minusHours(2), 48)).build();
+            YeuCauTuVan ticket2 = YeuCauTuVan.builder().sinhVien(sv2).donVi(donViCntt).linhVuc(lvNgheNghiep).tieuDe("Tư vấn định hướng theo mảng Data Engineering hay Data Science").noiDung("Em hiện là sinh viên năm 3 ngành Khoa học Dữ liệu. Em đang phân vân giữa việc theo hướng xây dựng pipeline dữ liệu (Data Engineer) hay đi sâu vào mô hình Machine Learning/AI. Mong Thầy/Cô Khoa CNTT định hướng giúp em về cơ hội việc làm thực tế tại các công ty hiện nay ạ.").baoMatDanhTinh(false).trangThai("ChoTiepNhan").ngayTao(now.minusHours(2)).ngayCapNhat(now.minusHours(2)).hanTiepNhan(slaService.calculateBusinessDeadline(now.minusHours(2), 48)).hanSLA(slaService.calculateBusinessDeadline(now.minusHours(2), 48)).build();
             ticketRepo.save(ticket2);
         }
         log.info("Khởi tạo dữ liệu mẫu hoàn tất thành công!");

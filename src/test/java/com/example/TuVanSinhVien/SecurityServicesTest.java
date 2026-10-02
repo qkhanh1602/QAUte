@@ -118,6 +118,7 @@ public class SecurityServicesTest {
 
         com.example.TuVanSinhVien.service.OtpService otpService = new com.example.TuVanSinhVien.service.OtpService(otpRepo, emailService, passwordEncoder, auditService);
 
+        org.mockito.Mockito.when(emailService.sendOtpEmail(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
         // 1. Giả lập tạo OTP
         org.mockito.Mockito.when(otpRepo.countByEmailAndNgayTaoAfter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(0L);
         org.mockito.Mockito.when(otpRepo.findTopByEmailAndMucDichOrderByNgayTaoDesc(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(java.util.Optional.empty());

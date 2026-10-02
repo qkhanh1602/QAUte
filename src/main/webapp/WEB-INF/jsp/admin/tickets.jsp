@@ -11,7 +11,7 @@
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
-<div class="container py-4">
+<div class="container py-4"><a class="btn btn-outline-primary mb-3" href="${pageContext.request.contextPath}/admin/search">Tra cứu phiếu, lịch hẹn, nhật ký</a>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div><h2 class="fw-bold mb-1">Điều phối phiếu tư vấn</h2><p class="text-muted mb-0">Phân công phiếu mới cho cố vấn đúng đơn vị và còn hạn ngạch.</p></div>
         <a class="btn btn-outline-secondary rounded-pill" href="${pageContext.request.contextPath}/admin/dashboard">Quay lại tổng quan</a>

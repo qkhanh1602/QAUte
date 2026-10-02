@@ -35,3 +35,10 @@ build/
 # Local secrets
 .env
 src/main/resources/application-local.properties
+
+# Generated diagnostics and SQL backups
+.work/
+*.log
+*.bak
+*.mdf
+*.ldf

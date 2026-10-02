@@ -21,11 +21,11 @@ public class EmailService {
 
     public boolean sendOtpEmail(String toEmail, String otpCode, int expiryMinutes) {
         // Luôn ghi log console rõ ràng để test được ngay trong STS
-        printConsoleOtpBox(toEmail, otpCode, expiryMinutes);
+
 
         if (mailSender == null) {
-            log.info("[EMAIL-SERVICE] JavaMailSender chưa được cấu hình. Sử dụng mã OTP hiển thị ở console trên.");
-            return true;
+            log.info("[EMAIL-SERVICE] JavaMailSender chưa được cấu hình. Không thể gửi OTP.");
+            return false;
         }
 
         try {
@@ -34,7 +34,7 @@ public class EmailService {
 
             helper.setFrom("qaute.edu@gmail.com", "QAUTE - Ban Tư Vấn Sinh Viên");
             helper.setTo(toEmail);
-            helper.setSubject("[QAUTE] Mã xác thực OTP đăng ký tài khoản");
+            helper.setSubject("[QAUTE] Mã xác thực OTP");
 
             String htmlContent = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;\">"
                     + "<div style=\"text-align: center; margin-bottom: 20px;\">"
@@ -43,7 +43,7 @@ public class EmailService {
                     + "</div>"
                     + "<div style=\"padding: 20px; background-color: #f8fafc; border-radius: 6px;\">"
                     + "<p style=\"font-size: 15px; color: #334155;\">Xin chào bạn,</p>"
-                    + "<p style=\"font-size: 15px; color: #334155;\">Bạn đang thực hiện đăng ký tài khoản trên Cổng tư vấn trực tuyến QAUTE. Dưới đây là mã OTP xác thực email của bạn:</p>"
+                    + "<p style=\"font-size: 15px; color: #334155;\">Bạn đang thực hiện xác minh email trên Cổng tư vấn trực tuyến QAUTE. Dưới đây là mã OTP xác thực email của bạn:</p>"
                     + "<div style=\"text-align: center; margin: 25px 0;\">"
                     + "<span style=\"display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #1e3a8a; background: #e0e7ff; padding: 12px 28px; border-radius: 8px; border: 1px dashed #6366f1;\">"
                     + otpCode
@@ -62,8 +62,8 @@ public class EmailService {
             log.info("[EMAIL-SERVICE] Đã gửi email OTP thành công tới: {}", toEmail);
             return true;
         } catch (Exception e) {
-            log.warn("[EMAIL-SERVICE] Không thể gửi email qua SMTP: {}. Mã OTP vẫn có hiệu lực và đã in ra console.", e.getMessage());
-            return true; // Trả về true để không làm gián đoạn luồng test nếu SMTP chưa có internet/config
+            log.warn("[EMAIL-SERVICE] Không thể gửi email qua SMTP: {}. Vui lòng kiểm tra cấu hình SMTP.", e.getMessage());
+            return false;
         }
     }
 
@@ -86,9 +86,4 @@ public class EmailService {
         }
     }
 
-    private void printConsoleOtpBox(String toEmail, String otpCode, int expiryMinutes) {
-        String line = "================================================================================";
-        log.info("\n{}\n[QAUTE - MÃ XÁC THỰC EMAIL OTP]\nNgười nhận: {}\nMã OTP: [{}]\nHiệu lực: {} phút\n{}\n",
-                line, toEmail, otpCode, expiryMinutes, line);
-    }
 }

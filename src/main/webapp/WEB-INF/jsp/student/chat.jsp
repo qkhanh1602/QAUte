@@ -14,23 +14,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4">
     <!-- Student Nav -->
-    <div class="qaute-card p-2 mb-4 d-flex flex-wrap gap-1 bg-white border-0 shadow-sm rounded-4">
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/dashboard">
-            <i class="bi bi-speedometer2 me-1"></i>Tổng quan
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/tickets">
-            <i class="bi bi-ticket-detailed me-1"></i>Phiếu tư vấn của tôi
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/appointments">
-            <i class="bi bi-calendar-check me-1"></i>Lịch hẹn gặp cố vấn
-        </a>
-        <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/student/chat">
-            <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến
-        </a>
-        <a class="btn btn-light btn-sm rounded-pill px-3 fw-semibold text-secondary" href="${pageContext.request.contextPath}/student/history">
-            <i class="bi bi-clock-history me-1"></i>Lịch sử tư vấn
-        </a>
-    </div>
+
 
     <div class="row g-4">
         <!-- Department selector (Sidebar) -->
@@ -82,7 +66,7 @@
                             </small>
                         </c:if></div>
                     </div>
-                    <span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${currentSession.trangThai}" /></span>
+                    <span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${q:chatStatusLabel(currentSession.trangThai)}" /></span>
                 </div>
 
                 <!-- Messages Stream -->
@@ -93,7 +77,7 @@
                     </div>
 
                     </c:if><c:forEach var="m" items="${messages}"><div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #f0fdf4; border-left: 4px solid #166534;' : ''}">
+                        <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
                                 <span><c:out value="${m.taiKhoanGui.hoTen}" /></span>
                                 <c:if test="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}"><span class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">

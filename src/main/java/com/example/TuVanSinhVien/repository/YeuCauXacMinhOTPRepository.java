@@ -11,6 +11,7 @@ import java.util.UUID;
 @Repository
 public interface YeuCauXacMinhOTPRepository extends JpaRepository<YeuCauXacMinhOTP, UUID> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     Optional<YeuCauXacMinhOTP> findTopByEmailAndMucDichOrderByNgayTaoDesc(String email, String mucDich);
 
     long countByEmailAndNgayTaoAfter(String email, LocalDateTime after);

@@ -63,7 +63,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Họ và tên</label>
-                            <input type="text" name="hoTen" minlength="2" maxlength="100" class="form-control form-control-sm" required value="${user.hoTen}">
+                            <input type="text" name="hoTen" readonly maxlength="100" class="form-control form-control-sm" required value="${user.hoTen}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Số điện thoại</label>
@@ -77,6 +77,18 @@
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold rounded-pill">Lưu thông tin</button>
                 </form>
+                <hr>
+                <form method="post" action="${pageContext.request.contextPath}/profile/email/request" class="d-grid gap-2">
+                    <sec:csrfInput /><h6>Đổi email có xác minh OTP</h6>
+                    <input type="email" name="email" class="form-control" placeholder="Email mới" maxlength="254" required>
+                    <input type="password" name="currentPassword" class="form-control" placeholder="Mật khẩu hiện tại" autocomplete="current-password" required>
+                    <button class="btn btn-outline-primary">Gửi mã xác minh</button>
+                </form>
+                <c:if test="${not empty sessionScope.pendingProfileEmail}">
+                <form method="post" action="${pageContext.request.contextPath}/profile/email/verify" class="d-flex gap-2 mt-3">
+                    <sec:csrfInput /><input name="otp" class="form-control" placeholder="OTP 6 chữ số" pattern="[0-9]{6}" maxlength="6" required>
+                    <button class="btn btn-primary">Xác minh email</button>
+                </form></c:if>
             </div>
 
             <!-- Change Password Card -->

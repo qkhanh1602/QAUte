@@ -18,6 +18,11 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
+        if (accessDeniedException instanceof org.springframework.security.web.csrf.CsrfException) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Phiên xác thực không hợp lệ. Vui lòng tải lại trang.");
+            return;
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();

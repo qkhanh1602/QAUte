@@ -16,6 +16,17 @@ public final class JspFunctions {
     private JspFunctions() {
     }
 
+    public static String chatStatusLabel(String status) {
+        if (status == null) return "";
+        return switch (status) {
+            case "ChoTiepNhan" -> "Chờ cố vấn tiếp nhận";
+            case "DangHoatDong" -> "Phiên tư vấn đang mở";
+            case "KetThuc" -> "Đã kết thúc";
+            case "GianDoan" -> "Tạm gián đoạn";
+            default -> "Chưa xác định";
+        };
+    }
+
     public static String formatTemporal(Object value, String pattern) {
         if (value == null || pattern == null) {
             return "";

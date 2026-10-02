@@ -10,6 +10,7 @@ import java.util.List;
 
 @Service
 public class TicketService {
+    private final java.time.Clock clock;
     private final YeuCauTuVanRepository ticketRepo;
     private final PhanCongTuVanRepository phanCongRepo;
     private final PhanHoiTuVanRepository phanHoiRepo;
@@ -38,8 +39,8 @@ public class TicketService {
         if (!linhVuc.getDonVi().getMaDonVi().equals(donVi.getMaDonVi()) || !"HoatDong".equals(linhVuc.getTrangThai())) {
             throw new IllegalArgumentException("Lĩnh vực tư vấn không thuộc đơn vị đã chọn hoặc đang tạm ngừng.");
         }
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime hanTiepNhan = slaService.calculateBusinessDeadline(now, 24);
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime hanTiepNhan = slaService.calculateBusinessDeadline(now, 48);
         LocalDateTime hanSLA = slaService.calculateBusinessDeadline(now, 48);
         YeuCauTuVan ticket = YeuCauTuVan.builder().sinhVien(sv).donVi(donVi).linhVuc(linhVuc).tieuDe(tieuDe.trim()).noiDung(noiDung.trim()).baoMatDanhTinh(baoMatDanhTinh != null && baoMatDanhTinh).trangThai("ChoTiepNhan").ngayTao(now).ngayCapNhat(now).hanTiepNhan(hanTiepNhan).hanSLA(hanSLA).build();
         ticket = ticketRepo.save(ticket);
@@ -51,7 +52,11 @@ public class TicketService {
 
     @Transactional
     public void claimTicket(Integer maYeuCau, NguoiTuVan cv) {
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        cv = nguoiTuVanRepo.findLockedById(cv.getMaCV()).orElseThrow();
+        if (!"HoatDong".equals(cv.getTaiKhoan().getTrangThai())) throw new IllegalStateException("Tài khoản cố vấn chưa hoạt động.");
+        long activeCount = ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(cv.getMaCV()).stream().filter(t -> "DangXuLy".equals(t.getTrangThai())).count();
+        if (activeCount >= cv.getHanNgachTiepNhan()) throw new IllegalStateException("Cố vấn đã đạt hạn ngạch tiếp nhận.");
         if (!"ChoTiepNhan".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Phiếu này đã được tiếp nhận hoặc xử lý bởi cố vấn khác.");
         }
@@ -61,7 +66,7 @@ public class TicketService {
         if (!Boolean.TRUE.equals(cv.getNhanTuVan())) {
             throw new IllegalStateException("Tài khoản cố vấn hiện không ở trạng thái nhận tư vấn.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         ticket.setCoVanPhuTrach(cv);
         ticket.setTrangThai("DangXuLy");
         ticket.setNgayTiepNhan(now);
@@ -82,13 +87,13 @@ public class TicketService {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu trả lời không được để trống.");
         }
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         requireAssignedAdvisor(ticket, advisor);
         if (!"DangXuLy".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ được phản hồi phiếu đang xử lý.");
         }
         TaiKhoan sender = advisor.getTaiKhoan();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         // Thêm phản hồi
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("TraLoi").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(deXuatFaq != null && deXuatFaq).build();
         ph = phanHoiRepo.save(ph);
@@ -119,13 +124,13 @@ public class TicketService {
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung câu hỏi thêm không được để trống.");
         }
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         requireTicketOwner(ticket, student);
         if (!"DaPhanHoi".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ được hỏi thêm sau khi cố vấn đã phản hồi.");
         }
         TaiKhoan sender = student.getTaiKhoan();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         PhanHoiTuVan ph = PhanHoiTuVan.builder().yeuCauTuVan(ticket).taiKhoanGui(sender).loaiPhanHoi("HoiThem").noiDungTraLoi(noiDung.trim()).ngayTraLoi(now).deXuatFAQ(false).build();
         ph = phanHoiRepo.save(ph);
         // Đổi lại trạng thái sang DangXuLy và hủy hạn tự đóng
@@ -143,12 +148,12 @@ public class TicketService {
 
     @Transactional
     public void closeTicket(Integer maYeuCau, SinhVien student, String ketLuan) {
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         requireTicketOwner(ticket, student);
         if (!"DaPhanHoi".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể đóng phiếu đã có phản hồi.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         TaiKhoan sender = student.getTaiKhoan();
         ticket.setTrangThai("Dong");
         ticket.setNgayDong(now);
@@ -164,7 +169,7 @@ public class TicketService {
         if (soSao == null || soSao < 1 || soSao > 5) {
             throw new IllegalArgumentException("Điểm đánh giá phải từ 1 đến 5 sao.");
         }
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         if (!ticket.getSinhVien().getMaSV().equals(maSV)) {
             throw new IllegalArgumentException("Bạn chỉ có thể đánh giá phiếu tư vấn của chính mình.");
         }
@@ -174,13 +179,13 @@ public class TicketService {
         if (danhGiaRepo.existsByYeuCauTuVan_MaYeuCau(maYeuCau)) {
             throw new IllegalStateException("Phiếu tư vấn này đã được đánh giá rồi (không thể sửa lại).");
         }
-        DanhGiaYeuCau dg = DanhGiaYeuCau.builder().yeuCauTuVan(ticket).maSV(maSV).soSao(soSao).nhanXet(nhanXet != null ? nhanXet.trim() : "").ngayDanhGia(LocalDateTime.now()).build();
+        DanhGiaYeuCau dg = DanhGiaYeuCau.builder().yeuCauTuVan(ticket).maSV(maSV).soSao(soSao).nhanXet(nhanXet != null ? nhanXet.trim() : "").ngayDanhGia(LocalDateTime.now(clock)).build();
         danhGiaRepo.save(dg);
     }
 
     @Transactional
     public void transferTicket(Integer maYeuCau, Integer maDonViMoi, Integer maLinhVucMoi, String lyDo, NguoiTuVan advisor) {
-        YeuCauTuVan ticket = ticketRepo.findById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
+        YeuCauTuVan ticket = ticketRepo.findLockedById(maYeuCau).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
         requireAssignedAdvisor(ticket, advisor);
         if (!"DangXuLy".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ được chuyển tiếp phiếu đang xử lý.");
@@ -195,7 +200,7 @@ public class TicketService {
         }
         TaiKhoan sender = advisor.getTaiKhoan();
         DonVi donViCu = ticket.getDonVi();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         // Kết thúc phân công cũ nếu có
         phanCongRepo.findByYeuCauTuVan_MaYeuCauAndNgayKetThucIsNull(maYeuCau).ifPresent(pc -> {
             pc.setNgayKetThuc(now);
@@ -236,9 +241,9 @@ public class TicketService {
 
     @Transactional
     public void assignTicket(Integer ticketId, Integer advisorId, TaiKhoan admin, String note) {
-        YeuCauTuVan ticket = ticketRepo.findById(ticketId)
+        YeuCauTuVan ticket = ticketRepo.findLockedById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiếu tư vấn."));
-        NguoiTuVan advisor = nguoiTuVanRepo.findById(advisorId)
+        NguoiTuVan advisor = nguoiTuVanRepo.findLockedById(advisorId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy cố vấn."));
         if (!"ChoTiepNhan".equals(ticket.getTrangThai())) {
             throw new IllegalStateException("Chỉ được phân công phiếu đang chờ tiếp nhận.");
@@ -254,7 +259,7 @@ public class TicketService {
         if (activeAssignments >= advisor.getHanNgachTiepNhan()) {
             throw new IllegalStateException("Cố vấn đã đạt hạn ngạch tiếp nhận hiện tại.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         ticket.setCoVanPhuTrach(advisor);
         ticket.setTrangThai("DangXuLy");
         ticket.setNgayTiepNhan(now);
@@ -317,7 +322,7 @@ public class TicketService {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public TicketService(final YeuCauTuVanRepository ticketRepo, final PhanCongTuVanRepository phanCongRepo, final PhanHoiTuVanRepository phanHoiRepo, final LichSuYeuCauRepository lichSuRepo, final DanhGiaYeuCauRepository danhGiaRepo, final CauHoiFAQRepository faqRepo, final DonViRepository donViRepo, final LinhVucTuVanRepository linhVucRepo, final SlaService slaService, final NotificationService notificationService, final NguoiTuVanRepository nguoiTuVanRepo) {
+    public TicketService(final YeuCauTuVanRepository ticketRepo, final PhanCongTuVanRepository phanCongRepo, final PhanHoiTuVanRepository phanHoiRepo, final LichSuYeuCauRepository lichSuRepo, final DanhGiaYeuCauRepository danhGiaRepo, final CauHoiFAQRepository faqRepo, final DonViRepository donViRepo, final LinhVucTuVanRepository linhVucRepo, final SlaService slaService, final NotificationService notificationService, final NguoiTuVanRepository nguoiTuVanRepo, java.time.Clock clock) {
         this.ticketRepo = ticketRepo;
         this.phanCongRepo = phanCongRepo;
         this.phanHoiRepo = phanHoiRepo;
@@ -328,6 +333,6 @@ public class TicketService {
         this.linhVucRepo = linhVucRepo;
         this.slaService = slaService;
         this.notificationService = notificationService;
-        this.nguoiTuVanRepo = nguoiTuVanRepo;
+        this.nguoiTuVanRepo = nguoiTuVanRepo; this.clock=clock;
     }
 }

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface NhatKyBaoMatRepository extends JpaRepository<NhatKyBaoMat, Long> {
+public interface NhatKyBaoMatRepository extends org.springframework.data.jpa.repository.JpaSpecificationExecutor<NhatKyBaoMat>, JpaRepository<NhatKyBaoMat, Long> {
     List<NhatKyBaoMat> findTop50ByOrderByNgayTaoDesc();
 }
