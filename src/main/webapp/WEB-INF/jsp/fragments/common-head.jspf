@@ -523,4 +523,4 @@
         }
     </style>
 
-<link href="${pageContext.request.contextPath}/css/qaute-theme.css?v=20261003-blue-red-2" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/css/qaute-theme.css?v=20261003-chat-layout-2" rel="stylesheet">

@@ -100,7 +100,7 @@ public class SecurityConfig {
             // 5. Phân quyền Request
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
-                .requestMatchers("/WEB-INF/**").denyAll()
+                .requestMatchers("/WEB-INF/**", "/advisor-register", "/advisor-register/**").denyAll()
                 .requestMatchers(
                     "/",
                     "/faq/**",
@@ -111,7 +111,6 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/register",
-                    "/advisor-register",
                     "/verify-otp",
                     "/resend-otp",
                     "/captcha",
@@ -150,7 +149,23 @@ public class SecurityConfig {
             )
             // 9. Xử lý từ chối truy cập thông minh (Redirect theo role thay vì lỗi 403)
             .exceptionHandling(exceptions -> exceptions
-                .accessDeniedHandler(accessDeniedHandler)
+                .defaultAuthenticationEntryPointFor(
+                    new org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint("/login"),
+                    request -> !request.getServletPath().startsWith("/api/chat/"))
+                .defaultAuthenticationEntryPointFor((request, response, exception) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
+                }, request -> request.getServletPath().startsWith("/api/chat/"))
+                .accessDeniedHandler((request, response, exception) -> {
+                    if (request.getServletPath().startsWith("/api/chat/")) {
+                        response.setStatus(403);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"message\":\"Bạn không có quyền truy cập phiên chat này.\"}");
+                    } else {
+                        accessDeniedHandler.handle(request, response, exception);
+                    }
+                })
             );
 
         if (clientRegistrations.getIfAvailable() != null) {

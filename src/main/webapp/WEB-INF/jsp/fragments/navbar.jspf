@@ -61,7 +61,7 @@
                             <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Đăng nhập</span>
                         </a>
                         <a class="btn btn-qaute-accent btn-sm px-3 rounded-pill fw-bold qaute-auth-button" href="${pageContext.request.contextPath}/register">
-                            <i class="bi bi-person-plus" aria-hidden="true"></i><span>Đăng ký SV</span>
+                            <i class="bi bi-person-plus" aria-hidden="true"></i><span>Đăng ký</span>
                         </a>
                     </div>
 
@@ -75,7 +75,7 @@
                         </div>
                         </sec:authorize><sec:authorize access="hasRole('CoVan')"><div>
                             <a class="btn btn-warning text-dark btn-sm rounded-pill fw-bold" href="${pageContext.request.contextPath}/advisor/dashboard">
-                                <i class="bi bi-briefcase me-1"></i>Bàn Cố vấn
+                                <i class="bi bi-briefcase me-1"></i>Cố vấn
                             </a>
                         </div>
                         </sec:authorize><sec:authorize access="hasRole('Admin')"><div>

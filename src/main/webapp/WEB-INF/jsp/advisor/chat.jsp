@@ -12,18 +12,18 @@
 <body>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
-<div class="container py-4">
+<div class="container py-4 advisor-chat-page">
     <!-- Advisor Nav -->
 
 
     <!-- Alerts -->
-    <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3">
+    <c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3">
         <i class="bi bi-exclamation-triangle-fill me-1"></i><span><c:out value="${errorMessage}" /></span>
     </div>
 
-    </c:if><div class="row g-4">
+    </c:if><div class="advisor-chat-layout">
         <!-- Sessions and Queue Sidebar -->
-        <div class="col-lg-4">
+        <div class="advisor-chat-session-list">
             <!-- Waiting Queue -->
             <div class="qaute-card mb-4 border-0 shadow-sm overflow-hidden">
                 <div class="p-3 text-white fw-bold d-flex justify-content-between align-items-center" style="background-color: var(--qaute-sidebar);">
@@ -74,15 +74,17 @@
             </c:if></div>
         </div>
 
+        </div><!-- advisor-chat-session-list -->
+
         <!-- Chat Conversation Area -->
-        <div class="col-lg-8">
+        <div class="advisor-chat-conversation">
             <c:if test="${currentSession == null}"><div class="qaute-card p-5 text-center text-muted border-0 shadow-sm" style="min-height: 450px;">
                 <i class="bi bi-chat-heart fs-1 text-secondary mb-3"></i>
                 <h5>Chọn một phiên chat bên trái hoặc nhận sinh viên từ hàng đợi</h5>
                 <p class="small text-muted">Hệ thống hỗ trợ phản hồi giải đáp trực tiếp theo thời gian thực.</p>
             </div>
 
-            </c:if><c:if test="${currentSession != null}"><div class="qaute-card border-0 shadow-sm d-flex flex-column" style="height: 580px;">
+            </c:if><c:if test="${currentSession != null}"><div class="qaute-card border-0 shadow-sm d-flex flex-column" style="height: clamp(620px, 78vh, 900px);">
                 <!-- Header -->
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
                     <div class="d-flex align-items-center gap-2">
@@ -99,12 +101,12 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="advisorMessageStream" style="background: var(--qaute-bg);" data-session-id="${currentSession.maPhienChat}" data-user-id="${advisor.taiKhoan.maTK}">
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" data-context-path="${pageContext.request.contextPath}" id="advisorMessageStream" style="background: var(--qaute-bg);" data-session-id="${currentSession.maPhienChat}" data-user-id="${advisor.taiKhoan.maTK}">
                     <c:if test="${empty messages}"><div class="text-center my-auto text-muted small">
                         Chưa có tin nhắn trong phiên này. Hãy gửi lời chào đến sinh viên!
                     </div>
 
-                    </c:if><c:forEach var="m" items="${messages}"><div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
+                    </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
                         <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
                                 <span><c:out value="${m.taiKhoanGui.hoTen}" /></span>
@@ -144,32 +146,9 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
-<script>
-if (window.SockJS && window.StompJs) {
-    const presenceClient = new StompJs.Client({webSocketFactory: () => new SockJS('/ws'), reconnectDelay: 5000});
-    presenceClient.onConnect = () => presenceClient.subscribe('/user/queue/chat', frame => appendAdvisorLiveMessage(JSON.parse(frame.body)));
-    document.getElementById('advisorChatSendForm')?.addEventListener('submit', event => {
-        const form=event.currentTarget, file=form.querySelector('input[type=file]').files[0], input=form.querySelector('[name=noiDung]');
-        if (!file && input.value.trim() && presenceClient.connected) {
-            event.preventDefault();
-            presenceClient.publish({destination:'/app/chat.send', body:JSON.stringify({sessionId:Number(document.getElementById('advisorMessageStream').dataset.sessionId), content:input.value.trim()})});
-            input.value='';
-        }
-    });
-    presenceClient.activate();
-}
-function appendAdvisorLiveMessage(message) {
-    const stream=document.getElementById('advisorMessageStream');
-    if (!stream || Number(stream.dataset.sessionId)!==message.sessionId) return;
-    const wrap=document.createElement('div'); wrap.className=Number(stream.dataset.userId)===message.senderId?'d-flex justify-content-end':'d-flex justify-content-start';
-    const bubble=document.createElement('div'); bubble.className=Number(stream.dataset.userId)===message.senderId?'chat-bubble-sender':'chat-bubble-receiver';
-    const sender=document.createElement('div'); sender.className='small fw-bold mb-1 opacity-75'; sender.textContent=message.senderName;
-    const content=document.createElement('div'); content.style.whiteSpace='pre-line'; content.textContent=message.content;
-    bubble.append(sender,content); wrap.appendChild(bubble); stream.appendChild(wrap); stream.scrollTop=stream.scrollHeight;
-}
-</script>
+<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261003-json-fix" defer></script>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>
 
-</div></body>
+</body>
 </html>

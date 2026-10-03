@@ -34,7 +34,7 @@
                     </div>
                 </div>
 
-                <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-4">
+                <c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-4">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i><span><c:out value="${errorMessage}" /></span>
                 </div>
 

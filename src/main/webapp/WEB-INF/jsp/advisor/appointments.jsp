@@ -24,10 +24,10 @@
 
 
     <!-- Alerts -->
-    <c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3">
+    <c:if test="${not empty successMessage}"><div class="alert alert-success py-2 small mb-3">
         <i class="bi bi-check-circle-fill me-1"></i><span><c:out value="${successMessage}" /></span>
     </div>
-    </c:if><c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3">
+    </c:if><c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3">
         <i class="bi bi-exclamation-triangle-fill me-1"></i><span><c:out value="${errorMessage}" /></span>
     </div>
 

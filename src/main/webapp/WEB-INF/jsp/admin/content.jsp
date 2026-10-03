@@ -28,10 +28,10 @@
 
 
     <!-- Alerts -->
-    <c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3">
+    <c:if test="${not empty successMessage}"><div class="alert alert-success py-2 small mb-3">
         <i class="bi bi-check-circle-fill me-1"></i><span><c:out value="${successMessage}" /></span>
     </div>
-    </c:if><c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3"><c:out value="${errorMessage}" /></div>
+    </c:if><c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3"><c:out value="${errorMessage}" /></div>
 
     </c:if><!-- FAQs Section -->
     <div class="qaute-card p-4 border-0 shadow-sm mb-4">

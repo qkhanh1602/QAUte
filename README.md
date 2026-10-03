@@ -103,3 +103,94 @@ Tests cần SQL Server đã tạo schema, tài khoản mẫu và cấu hình k�
 Integration test khởi động Tomcat thật, render các trang công khai và toàn bộ khu vực Sinh viên/Cố vấn/Admin, rồi xác nhận nội dung JSP/JSTL đã đi qua SiteMesh. Response hoàn chỉnh có `data-view-engine="jsp-jstl"` và `data-layout-engine="sitemesh"`; không còn directive/tag phía server chưa xử lý.
 
 Database cũ cần chạy `database/V7__otp_contact_columns.sql` trong QAUTE để bổ sung hai cột OTP khớp entity. Schema tạo mới đã gồm hai cột này; migration không thay đổi dữ liệu cũ.
+
+### Cấp tài khoản cố vấn
+
+Sinh viên tự đăng ký và xác thực OTP. Cố vấn không tự đăng ký: Admin tạo tài khoản trong **Quản lý tài khoản → Tạo tài khoản cố vấn hoặc Admin**, dùng email và mã cán bộ do nhà trường cấp, chọn đúng đơn vị. Chức năng nhập Excel hiện chỉ dành cho sinh viên; chưa có nhập Excel cố vấn. Tài khoản cố vấn hiện có tiếp tục sử dụng bình thường.
+
+
+## Luồng hoạt động của hệ thống
+
+### Truy cập và đăng nhập
+
+Khách mở `/` sẽ thấy trang chủ, có thể tìm FAQ, đọc bài viết và xem danh sách cố vấn. Khi cần gửi yêu cầu, đặt lịch hoặc chat thì đăng nhập. Thanh bên trái hiển thị chức năng theo vai trò; trên điện thoại mở bằng nút menu.
+
+```mermaid
+flowchart TD
+    A[Trang chủ công khai] --> B[Đăng nhập]
+    A --> C[Đăng ký sinh viên]
+    C --> D[Xác thực OTP qua email]
+    D --> B
+    B --> E[Dashboard sinh viên]
+    B --> F[Dashboard cố vấn]
+    B --> G[Dashboard Admin]
+    G --> H[Cấp tài khoản cố vấn theo danh sách của trường]
+```
+
+Đăng nhập bằng form chuyển tới `/student/dashboard`, `/advisor/dashboard` hoặc `/admin/dashboard`. Google SSO là tùy chọn, chỉ hoạt động khi có OAuth client và cấu hình phù hợp; không bắt buộc để chạy tài khoản demo. Đăng xuất bằng nút trên giao diện để gửi POST có CSRF; mở trực tiếp `/logout` là trang xác nhận.
+
+### Phiếu yêu cầu tư vấn
+
+1. Sinh viên chọn đơn vị và lĩnh vực, nhập tiêu đề/nội dung, có thể đính kèm tệp và chọn bảo mật danh tính.
+2. Phiếu ở trạng thái **Chờ tiếp nhận** (`ChoTiepNhan`). Cố vấn đúng đơn vị nhận xử lý hoặc Admin phân công.
+3. Phiếu chuyển sang **Đang xử lý** (`DangXuLy`). Cố vấn trả lời và đính kèm minh chứng nếu cần.
+4. Sau trả lời, phiếu ở **Đã phản hồi** (`DaPhanHoi`). Sinh viên hỏi thêm thì quay về Đang xử lý; nếu đã được giải đáp thì đóng và đánh giá.
+5. Phiếu không được hỏi thêm trong 7 ngày kể từ phản hồi sẽ được tác vụ nền đóng. Chuyển tiếp sang đơn vị khác ghi lịch sử `ChuyenTiep` và đưa phiếu về Chờ tiếp nhận để đơn vị mới nhận.
+
+FAQ/bài viết là nội dung tra cứu công khai; phiếu tư vấn là hồ sơ xử lý theo quyền của sinh viên, cố vấn và Admin.
+
+### Lịch hẹn
+
+Cố vấn tạo khung giờ rảnh → sinh viên chọn khung giờ và gửi yêu cầu → cố vấn duyệt kèm phòng/link hoặc từ chối kèm lý do → thực hiện buổi tư vấn → cố vấn ghi kết luận sau khi khung giờ kết thúc → sinh viên đánh giá. Lịch chờ có hạn duyệt; sinh viên có thể hủy nếu đáp ứng điều kiện thời gian. Hệ thống kiểm tra trùng lịch, khung giờ đã được đặt và giới hạn lịch chờ.
+
+### Chat trực tuyến
+
+Sinh viên chọn đơn vị → tạo/mở phiên chat → cố vấn tiếp nhận → hai bên trao đổi văn bản/tệp. Tin được kiểm tra quyền và lưu vào SQL Server trước khi phát qua STOMP WebSocket tới cả người gửi và người nhận. Trình duyệt cập nhật ngay, khử trùng theo ID; lịch sử được đồng bộ qua API mỗi 5 giây khi tab đang hiển thị. Gửi tệp dùng HTTP có CSRF và vẫn cập nhật trên trang. Khi hết phiên đăng nhập, giao diện báo đăng nhập lại thay vì hiện lỗi phân tích JSON.
+
+## Hướng dẫn sử dụng theo vai trò
+
+| Vai trò | Màn hình chính | Cách sử dụng |
+| --- | --- | --- |
+| Khách | Trang chủ, Hỏi đáp, Bài viết, Cố vấn | Tìm nội dung đã có trước khi đăng ký/gửi yêu cầu. |
+| Sinh viên | Tổng quan, phiếu tư vấn | Tạo phiếu, chọn đúng đơn vị/lĩnh vực; mở chi tiết để đọc phản hồi, hỏi thêm, đóng, đánh giá hoặc tải hồ sơ PDF. |
+| Sinh viên | Lịch hẹn, Chat, Lịch sử | Đặt khung giờ còn trống; theo dõi kết quả duyệt; chọn đơn vị chat và gửi tin/tệp; xem lại lịch sử tư vấn. |
+| Cố vấn | Tổng quan, Phiếu cần xử lý | Nhận phiếu đúng đơn vị, trả lời, chuyển tiếp có lý do khi cần; chỉ xử lý hồ sơ thuộc quyền được giao. |
+| Cố vấn | Khung giờ, Lịch hẹn sinh viên | Tạo/sửa khung giờ, sao chép tuần trước; duyệt/từ chối lịch và ghi kết luận khi buổi tư vấn kết thúc. |
+| Cố vấn | Chat với sinh viên | Chọn phiên chờ tiếp nhận hoặc phiên đang phụ trách, tiếp nhận và trao đổi trong khung hội thoại. |
+| Admin | Tổng quan, Phiếu tư vấn | Lọc báo cáo theo thời gian, xem biểu đồ, xuất Excel/PDF; phân công phiếu chờ cho cố vấn phù hợp. |
+| Admin | Quản lý tài khoản | Tạo sinh viên/cố vấn/Admin, tìm kiếm, khóa/mở, đặt lại mật khẩu; tải mẫu Excel và nhập sinh viên. |
+| Admin | Danh mục, Nội dung | Thêm/sửa/ngưng đơn vị và lĩnh vực; quản lý bài viết/FAQ, bản nháp và phê duyệt nội dung. |
+
+Mọi tài khoản đăng nhập có thể mở **Hồ sơ** từ menu tài khoản để cập nhật thông tin liên hệ, đổi mật khẩu, xác minh đổi email và tải avatar. Họ tên/hồ sơ học vụ được quản lý theo quyền hiện có; form liên hệ không tự thay đổi tên chính thức. Nếu chưa có avatar, giao diện dùng chữ cái tên. Upload avatar/tệp cần Cloudinary; đăng ký/đổi email cần SMTP hoạt động.
+
+### Thử luồng với tài khoản demo
+
+1. Chạy app với profile `dev` và database đã được chuẩn bị; đăng nhập `sinhvien1`, tạo phiếu cho đơn vị CNTT.
+2. Dùng cửa sổ trình duyệt khác hoặc chế độ ẩn danh đăng nhập `covan.cntt`, nhận phiếu và trả lời. Quay lại sinh viên để hỏi thêm/đóng/đánh giá.
+3. Cố vấn tạo một khung giờ tương lai; sinh viên đặt; cố vấn duyệt. Khung giờ phải còn trống và hợp lệ.
+4. Sinh viên mở Chat chọn đơn vị CNTT; cố vấn mở Chat với sinh viên và tiếp nhận. Gửi tin từ cả hai cửa sổ để kiểm tra cập nhật trực tuyến.
+5. Đăng nhập `admin`, xem phiếu, tài khoản và biểu đồ. Dữ liệu giao dịch phát sinh từ các bước trên nằm trong database đang cấu hình.
+
+Không dùng hai tài khoản trong cùng cửa sổ trình duyệt để thử chat vì cookie đăng nhập có thể thay thế nhau. Nếu SMTP chưa cấu hình, dùng tài khoản demo để kiểm thử trước; không coi đăng ký OTP là đã chạy thành công.
+
+## Chuẩn bị deploy và chia sẻ dữ liệu
+
+- Build WAR hoặc dùng Dockerfile của repo; cấu hình JDK 25 tương thích. Chưa deploy tự động chỉ bằng việc push Git.
+- Nếu dùng Azure SQL: tạo database rỗng và chạy `database/QAUTE_AZURE_SCHEMA.sql`, sau đó V3 để bổ sung khoa. Database cũ chạy các migration cần thiết theo hướng dẫn; không chạy script tạo mới lên database đang có dữ liệu.
+- Cấu hình `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `MAIL_USERNAME`, `MAIL_PASSWORD`, Cloudinary và `APP_ALLOWED_ORIGINS` cho tên miền thực. Với Azure dùng TLS/certificate hợp lệ; không dùng `encrypt=false` từ cấu hình local. Xem `.env.example` và nhớ hosting phải thực sự khai báo biến môi trường.
+- Khi deploy không mang `application-local.properties` có profile dev/secret lên server. Admin/cố vấn thật phải được cấp có kiểm soát; không bật seed mật khẩu demo trên website công khai.
+- Nhóm dùng cùng database Azure thì thấy cùng dữ liệu sau khi tải lại/đồng bộ. Pull Git chỉ lấy source/script, không lấy tài khoản hay giao dịch mới trên database local.
+- Chat hiện dùng broker đơn giản trong bộ nhớ; hướng triển khai đã kiểm thử là một instance ứng dụng. Nhiều instance cần thiết kế thêm broker dùng chung, session/presence và điều phối scheduler; chưa xác nhận chạy nhiều node.
+
+## Các thay đổi mới và giới hạn hiện tại
+
+Bản cập nhật gồm sửa khai báo JSTL/điều kiện boolean, chat phát sau khi lưu thành công, đồng bộ lịch sử có kiểm tra quyền, thông báo lỗi tiếng Việt, khung chat cố vấn rộng và sửa cấu trúc DOM. Đã bỏ tự đăng ký cố vấn, giữ đăng ký sinh viên qua OTP; nút navbar dùng nhãn **Đăng ký** và **Cố vấn**.
+
+Các phần còn cần chốt/kiểm thử:
+
+- SLA trong code hiện vẫn tính **giờ hành chính** (thứ Hai–thứ Sáu, 08:00–12:00 và 13:00–17:00), chưa chuyển sang yêu cầu mới **48 giờ liên tục kể từ lúc gửi**. Chưa có cơ chế bắt buộc chặn chat ngoài giờ hành chính. Đây là phần cần chỉnh tiếp, không coi đã hoàn tất.
+- Google SSO cần cấu hình bên ngoài và thử tài khoản thật. Cloudairy chờ xác nhận mục đích từ giảng viên; không đồng nhất với Cloudinary.
+- Chưa UAT đầy đủ OTP/email/upload trên hosting thật; chưa kiểm thử Azure/deploy nhiều instance và chưa xác minh hình ảnh desktop/mobile bằng trình duyệt.
+- Kiểm thử tự động bao gồm render JSP/SiteMesh, quyền và nghiệp vụ, login/logout, WebSocket hai chiều, API chat khi hết phiên. Cần SQL Server/schema hợp lệ để chạy; SMTP thật được bỏ qua khi chưa bật cấu hình kiểm thử tương ứng.
+
+Sau khi pull bản sửa giao diện/chat, dừng instance cũ, build/chạy lại và nhấn **Ctrl+F5** để tải JS/CSS mới. Nếu STS còn marker cũ: Maven → Update Project, Project → Clean và kiểm tra JDK 25.

@@ -509,3 +509,21 @@ body { overflow-x: clip; }
     .qaute-workspace-content .table-responsive { max-width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; } }
+
+.advisor-chat-page #advisorMessageStream { min-height: 0; font-size: 1rem; }
+.advisor-chat-page .chat-bubble-sender, .advisor-chat-page .chat-bubble-receiver { max-width: 85%; line-height: 1.65; }
+.advisor-chat-page .row > .col-lg-3 { min-width: 0; }
+@media (max-width: 575.98px) {
+    .advisor-chat-page #advisorChatSendForm { flex-wrap: wrap; }
+    .advisor-chat-page #advisorChatSendForm .form-control { width: calc(100% - 115px); flex: 1; }
+}
+
+/* The queue and conversation must be sibling columns, never nested. */
+.qaute-workspace-content > .advisor-chat-page { max-width: none; }
+.advisor-chat-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.advisor-chat-session-list, .advisor-chat-conversation { width: 100%; min-width: 0; }
+.advisor-chat-conversation > .qaute-card { width: 100%; }
+.advisor-chat-conversation > .qaute-card > .border-bottom { flex-wrap: wrap; gap: .75rem; }
+.advisor-chat-conversation .form-control { min-width: 0; }
+@media (max-width: 1199.98px) { .advisor-chat-layout { grid-template-columns: 260px minmax(0, 1fr); gap: 1rem; } }
+@media (max-width: 991.98px) { .advisor-chat-layout { grid-template-columns: minmax(0, 1fr); } }

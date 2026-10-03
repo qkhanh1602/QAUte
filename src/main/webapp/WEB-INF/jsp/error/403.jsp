@@ -36,7 +36,7 @@
                     </div>
                     </sec:authorize><sec:authorize access="hasRole('CoVan')"><div>
                         <a class="btn btn-warning text-dark rounded-pill px-4 fw-bold" href="${pageContext.request.contextPath}/advisor/dashboard">
-                            <i class="bi bi-briefcase me-1"></i>Về Bàn Cố vấn
+                            <i class="bi bi-briefcase me-1"></i>Về trang Cố vấn
                         </a>
                     </div>
                     </sec:authorize><sec:authorize access="hasRole('SinhVien')"><div>

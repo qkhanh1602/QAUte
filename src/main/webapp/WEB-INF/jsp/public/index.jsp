@@ -11,7 +11,7 @@
 </head>
 <body class="home-shell">
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
-<c:if test="${logoutMessage}"><div class="container pt-3">
+<c:if test="${not empty logoutMessage}"><div class="container pt-3">
     <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm rounded-3 mb-0" role="alert">
         <i class="bi bi-check-circle-fill"></i><span><c:out value="${logoutMessage}" /></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>

@@ -16,17 +16,20 @@ public class ChatService {
     private final DonViRepository donViRepo;
     private final NguoiTuVanRepository nguoiTuVanRepo;
     private final CauHoiFAQRepository faqRepo;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     public ChatService(final PhienChatRepository phienChatRepo, 
                        final TinNhanChatRepository tinNhanRepo, 
                        final DonViRepository donViRepo,
                        final NguoiTuVanRepository nguoiTuVanRepo,
-                       final CauHoiFAQRepository faqRepo) {
+                       final CauHoiFAQRepository faqRepo,
+                       final org.springframework.context.ApplicationEventPublisher events) {
         this.phienChatRepo = phienChatRepo;
         this.tinNhanRepo = tinNhanRepo;
         this.donViRepo = donViRepo;
         this.nguoiTuVanRepo = nguoiTuVanRepo;
         this.faqRepo = faqRepo;
+        this.events = events;
     }
 
     @Transactional
@@ -95,6 +98,11 @@ public class ChatService {
             .thoiGianGui(LocalDateTime.now())
             .build();
         msg = tinNhanRepo.save(msg);
+        events.publishEvent(new ChatDeliveryEvent(
+                session.getSinhVien().getTaiKhoan().getTenDangNhap(),
+                session.getNguoiTuVan() == null ? null : session.getNguoiTuVan().getTaiKhoan().getTenDangNhap(),
+                new ChatDeliveryEvent.Message(msg.getMaTinNhan(), session.getMaPhienChat(),
+                        sender.getMaTK(), sender.getHoTen(), msg.getNoiDung(), msg.getThoiGianGui())));
 
         return msg;
     }

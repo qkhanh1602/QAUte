@@ -38,15 +38,15 @@
                 <h4 class="fw-bold text-dark mb-3 text-center">Đăng nhập tài khoản</h4>
 
                 <!-- Flash messages -->
-                <c:if test="${lockedMessage}"><div class="alert alert-warning py-2 small mb-3 d-flex align-items-center gap-2 border-warning">
+                <c:if test="${not empty lockedMessage}"><div class="alert alert-warning py-2 small mb-3 d-flex align-items-center gap-2 border-warning">
                     <i class="bi bi-shield-lock-fill text-danger fs-5 flex-shrink-0"></i>
                     <span class="text-danger fw-bold"><c:out value="${lockedMessage}" /></span>
                 </div>
-                </c:if><c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3 d-flex align-items-center gap-2">
+                </c:if><c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
                     <span><c:out value="${errorMessage}" /></span>
                 </div>
-                </c:if><c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3 d-flex align-items-center gap-2">
+                </c:if><c:if test="${not empty successMessage}"><div class="alert alert-success py-2 small mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-check-circle-fill flex-shrink-0"></i>
                     <span><c:out value="${successMessage}" /></span>
                 </div>

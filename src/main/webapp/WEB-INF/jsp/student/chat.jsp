@@ -70,13 +70,13 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" id="messageStream" style="background: var(--qaute-bg);" data-session-id="${currentSession.maPhienChat}" data-user-id="${student.taiKhoan.maTK}">
+                <div class="p-3 flex-grow-1 overflow-auto bg-slate-50 d-flex flex-column gap-3" data-context-path="${pageContext.request.contextPath}" id="messageStream" style="background: var(--qaute-bg);" data-session-id="${currentSession.maPhienChat}" data-user-id="${student.taiKhoan.maTK}">
                     <c:if test="${empty messages}"><div class="text-center my-auto text-muted small">
                         <i class="bi bi-chat-text fs-2 mb-2 d-block text-secondary"></i>
                         Chưa có tin nhắn nào trong phiên này. Hãy gửi tin nhắn đầu tiên!
                     </div>
 
-                    </c:if><c:forEach var="m" items="${messages}"><div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
+                    </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
                         <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
                                 <span><c:out value="${m.taiKhoanGui.hoTen}" /></span>
@@ -133,37 +133,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
-<script>
-const presenceElement = document.getElementById('advisorPresence');
-if (presenceElement && window.SockJS && window.StompJs) {
-    const client = new StompJs.Client({webSocketFactory: () => new SockJS('/ws'), reconnectDelay: 5000});
-    client.onConnect = () => {
-        client.subscribe('/queue/presence', frame => {
-            const event = JSON.parse(frame.body);
-            if (event.username === presenceElement.dataset.username) presenceElement.textContent = event.status === 'Trực tuyến' && presenceElement.dataset.busy === 'true' ? 'Đang bận' : event.status;
-        });
-        client.subscribe('/user/queue/chat', frame => appendLiveMessage(JSON.parse(frame.body)));
-    };
-    document.getElementById('chatSendForm')?.addEventListener('submit', event => {
-        const form = event.currentTarget, file = form.querySelector('input[type=file]').files[0], input = form.querySelector('[name=noiDung]');
-        if (!file && input.value.trim() && client.connected) {
-            event.preventDefault();
-            client.publish({destination:'/app/chat.send', body:JSON.stringify({sessionId:Number(document.getElementById('messageStream').dataset.sessionId), content:input.value.trim()})});
-            input.value='';
-        }
-    });
-    client.activate();
-}
-function appendLiveMessage(message) {
-    const stream=document.getElementById('messageStream');
-    if (!stream || Number(stream.dataset.sessionId)!==message.sessionId) return;
-    const wrap=document.createElement('div'); wrap.className=Number(stream.dataset.userId)===message.senderId?'d-flex justify-content-end':'d-flex justify-content-start';
-    const bubble=document.createElement('div'); bubble.className=Number(stream.dataset.userId)===message.senderId?'chat-bubble-sender':'chat-bubble-receiver';
-    const sender=document.createElement('div'); sender.className='small fw-bold mb-1 opacity-75'; sender.textContent=message.senderName;
-    const content=document.createElement('div'); content.style.whiteSpace='pre-line'; content.textContent=message.content;
-    bubble.append(sender,content); wrap.appendChild(bubble); stream.appendChild(wrap); stream.scrollTop=stream.scrollHeight;
-}
-</script>
+<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261003-json-fix" defer></script>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>
 

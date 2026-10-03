@@ -37,7 +37,7 @@
             <div class="qaute-card p-4 p-md-5 shadow-lg border-0">
                 <h4 class="fw-bold text-dark mb-3 text-center">Đăng ký thành viên mới</h4>
 
-                <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3">
+                <c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i>
                     <span><c:out value="${errorMessage}" /></span>
                 </div>
@@ -148,7 +148,7 @@
                         Đã có tài khoản? <a class="text-primary fw-semibold text-decoration-none" href="${pageContext.request.contextPath}/login">Đăng nhập</a>
                     </div>
                     <div class="text-center small mt-2">
-                        Bạn là giảng viên hoặc cán bộ? <a class="text-primary fw-semibold text-decoration-none" href="${pageContext.request.contextPath}/advisor-register">Đăng ký làm cố vấn</a>
+                        Tài khoản cố vấn do nhà trường cấp.
                     </div>
                 </form>
             </div>

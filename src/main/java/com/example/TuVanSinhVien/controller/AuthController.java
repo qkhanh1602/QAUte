@@ -2,14 +2,9 @@ package com.example.TuVanSinhVien.controller;
 
 import com.example.TuVanSinhVien.config.CustomAuthenticationFailureHandler;
 import com.example.TuVanSinhVien.config.CustomUserDetails;
-import com.example.TuVanSinhVien.dto.AdvisorRegistrationRequest;
 import com.example.TuVanSinhVien.dto.RegistrationRequest;
-import com.example.TuVanSinhVien.entity.DonVi;
-import com.example.TuVanSinhVien.entity.NguoiTuVan;
 import com.example.TuVanSinhVien.entity.SinhVien;
 import com.example.TuVanSinhVien.entity.TaiKhoan;
-import com.example.TuVanSinhVien.repository.DonViRepository;
-import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
 import com.example.TuVanSinhVien.repository.SinhVienRepository;
 import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.repository.YeuCauXacMinhOTPRepository;
@@ -50,12 +45,9 @@ public class AuthController {
     }
 
     public static final String SESSION_PENDING_REG = "PENDING_REGISTRATION";
-    public static final String SESSION_PENDING_ADVISOR_REG = "PENDING_ADVISOR_REGISTRATION";
 
     private final TaiKhoanRepository taiKhoanRepo;
     private final SinhVienRepository sinhVienRepo;
-    private final NguoiTuVanRepository nguoiTuVanRepo;
-    private final DonViRepository donViRepo;
     private final YeuCauXacMinhOTPRepository otpRepo;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
@@ -69,8 +61,6 @@ public class AuthController {
 
     public AuthController(TaiKhoanRepository taiKhoanRepo,
                           SinhVienRepository sinhVienRepo,
-                          NguoiTuVanRepository nguoiTuVanRepo,
-                          DonViRepository donViRepo,
                           YeuCauXacMinhOTPRepository otpRepo,
                           PasswordEncoder passwordEncoder,
                           OtpService otpService,
@@ -80,8 +70,6 @@ public class AuthController {
                           ProfileService profileService) {
         this.taiKhoanRepo = taiKhoanRepo;
         this.sinhVienRepo = sinhVienRepo;
-        this.nguoiTuVanRepo = nguoiTuVanRepo;
-        this.donViRepo = donViRepo;
         this.otpRepo = otpRepo;
         this.passwordEncoder = passwordEncoder;
         this.otpService = otpService;
@@ -95,7 +83,6 @@ public class AuthController {
     public String loginPage(@RequestParam(required = false) String error,
                             @RequestParam(required = false) String logout,
                             @RequestParam(required = false) String registered,
-                            @RequestParam(required = false) String advisorPending,
                             @RequestParam(required = false) String locked,
                             @RequestParam(required = false) String minutes,
                             @RequestParam(required = false) String captcha,
@@ -124,9 +111,6 @@ public class AuthController {
         }
         if (registered != null) {
             model.addAttribute("successMessage", "Xác thực email và kích hoạt tài khoản thành công! Mời bạn đăng nhập.");
-        }
-        if (advisorPending != null) {
-            model.addAttribute("successMessage", "Đăng ký cố vấn thành công. Tài khoản đang chờ Admin xác minh và phê duyệt.");
         }
 
         boolean requireCaptcha = (captcha != null) || loginAttemptService.isCaptchaRequired(clientIp, null);
@@ -202,7 +186,6 @@ public class AuthController {
                 lop.trim(),
                 khoaHoc.trim()
         );
-        session.removeAttribute(SESSION_PENDING_ADVISOR_REG);
         session.setAttribute(SESSION_PENDING_REG, regDto);
 
         // 3. Sinh mã OTP, băm BCrypt lưu DB và gửi qua Email
@@ -221,102 +204,15 @@ public class AuthController {
         return "redirect:/verify-otp?email=" + URLEncoder.encode(regDto.getEmail(), StandardCharsets.UTF_8);
     }
 
-    @GetMapping("/advisor-register")
-    public String advisorRegisterPage(Model model) {
-        model.addAttribute("donViList", donViRepo.findByHoatDongTrue());
-        return "auth/advisor-register";
-    }
-
-    @PostMapping("/advisor-register")
-    public String handleAdvisorRegister(@RequestParam String tenDangNhap,
-                                        @RequestParam String matKhau,
-                                        @RequestParam String hoTen,
-                                        @RequestParam String email,
-                                        @RequestParam(required = false) String soDienThoai,
-                                        @RequestParam String maCanBo,
-                                        @RequestParam(required = false) String hocHamHocVi,
-                                        @RequestParam String chucVu,
-                                        @RequestParam String chuyenMon,
-                                        @RequestParam Integer maDonVi,
-                                        HttpServletRequest request,
-                                        HttpSession session,
-                                        RedirectAttributes redirectAttributes) {
-        String cleanUsername = tenDangNhap.trim();
-        String cleanEmail = email.trim().toLowerCase();
-        String cleanStaffCode = maCanBo.trim().toUpperCase();
-        String cleanFullName = hoTen.trim();
-        String cleanPosition = chucVu.trim();
-        String cleanExpertise = chuyenMon.trim();
-        String cleanPhone = soDienThoai == null ? null : soDienThoai.trim();
-
-        if (!cleanUsername.matches("^[A-Za-z0-9._-]{4,50}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập phải có 4–50 ký tự và chỉ gồm chữ, số, dấu chấm, gạch dưới hoặc gạch ngang.");
-            return "redirect:/advisor-register";
-        }
-        if (cleanFullName.length() < 2 || cleanFullName.length() > 100
-                || cleanStaffCode.length() < 2 || cleanStaffCode.length() > 30
-                || cleanPosition.isBlank() || cleanPosition.length() > 100
-                || cleanExpertise.isBlank() || cleanExpertise.length() > 255) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin họ tên, mã cán bộ, chức vụ hoặc chuyên môn không hợp lệ.");
-            return "redirect:/advisor-register";
-        }
-        if (!cleanEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$") || cleanEmail.length() > 254) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Địa chỉ email không hợp lệ.");
-            return "redirect:/advisor-register";
-        }
-        if (cleanPhone != null && !cleanPhone.isBlank() && !cleanPhone.matches("^[0-9+() .-]{8,15}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Số điện thoại không hợp lệ.");
-            return "redirect:/advisor-register";
-        }
-
-        if (taiKhoanRepo.existsByTenDangNhap(cleanUsername) || taiKhoanRepo.existsByEmail(cleanEmail)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập hoặc email đã được sử dụng.");
-            return "redirect:/advisor-register";
-        }
-        if (nguoiTuVanRepo.existsByMaCanBo(cleanStaffCode)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Mã cán bộ đã tồn tại trong hệ thống.");
-            return "redirect:/advisor-register";
-        }
-        if (matKhau == null || !matKhau.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,72}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu phải dài 8–72 ký tự, có ít nhất một chữ và một số.");
-            return "redirect:/advisor-register";
-        }
-        DonVi donVi = donViRepo.findById(maDonVi).filter(dv -> Boolean.TRUE.equals(dv.getHoatDong())).orElse(null);
-        if (donVi == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Đơn vị đăng ký không hợp lệ hoặc đã ngừng hoạt động.");
-            return "redirect:/advisor-register";
-        }
-
-        AdvisorRegistrationRequest pending = new AdvisorRegistrationRequest(
-                cleanUsername, passwordEncoder.encode(matKhau), cleanFullName, cleanEmail,
-                cleanPhone, cleanStaffCode,
-                hocHamHocVi == null ? null : hocHamHocVi.trim(), cleanPosition, cleanExpertise, maDonVi);
-        session.removeAttribute(SESSION_PENDING_REG);
-        session.setAttribute(SESSION_PENDING_ADVISOR_REG, pending);
-
-        String clientIp = CustomAuthenticationFailureHandler.getClientIp(request);
-        OtpService.OtpSendResult sendResult = otpService.generateAndSendOtp(
-                cleanEmail, "DangKyCoVan", clientIp, request.getHeader("User-Agent"));
-        if (!sendResult.isSuccess()) {
-            redirectAttributes.addFlashAttribute("errorMessage", sendResult.getMessage());
-            return "redirect:/advisor-register";
-        }
-        redirectAttributes.addFlashAttribute("infoMessage", sendResult.getMessage());
-        return "redirect:/verify-otp?email=" + URLEncoder.encode(cleanEmail, StandardCharsets.UTF_8);
-    }
-
     @GetMapping("/verify-otp")
     public String verifyOtpPage(@RequestParam(required = false) String email,
                                 HttpSession session,
                                 Model model) {
         String targetEmail = email;
         RegistrationRequest regDto = (RegistrationRequest) session.getAttribute(SESSION_PENDING_REG);
-        AdvisorRegistrationRequest advisorReg = (AdvisorRegistrationRequest) session.getAttribute(SESSION_PENDING_ADVISOR_REG);
         if (targetEmail == null || targetEmail.isBlank()) {
             if (regDto != null) {
                 targetEmail = regDto.getEmail();
-            } else if (advisorReg != null) {
-                targetEmail = advisorReg.email();
             }
         }
 
@@ -325,7 +221,6 @@ public class AuthController {
         }
 
         model.addAttribute("email", targetEmail);
-        model.addAttribute("advisorRegistration", advisorReg != null);
         return "auth/verify-otp";
     }
 
@@ -341,8 +236,7 @@ public class AuthController {
         String userAgent = request.getHeader("User-Agent");
         String cleanEmail = email.trim().toLowerCase();
 
-        AdvisorRegistrationRequest advisorReg = (AdvisorRegistrationRequest) session.getAttribute(SESSION_PENDING_ADVISOR_REG);
-        String purpose = advisorReg == null ? "DangKy" : "DangKyCoVan";
+        String purpose = "DangKy";
 
         // 1. Xác thực OTP
         OtpService.OtpVerificationResult result = otpService.verifyOtp(cleanEmail, purpose, otp, clientIp, userAgent);
@@ -354,52 +248,10 @@ public class AuthController {
 
         // 2. Lấy thông tin đăng ký chờ từ session
         RegistrationRequest regDto = (RegistrationRequest) session.getAttribute(SESSION_PENDING_REG);
-        if (advisorReg == null && (regDto == null || !cleanEmail.equalsIgnoreCase(regDto.getEmail()))) {
+        if (regDto == null || !cleanEmail.equalsIgnoreCase(regDto.getEmail())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Phiên đăng ký đã hết hạn hoặc không tìm thấy dữ liệu. Vui lòng thực hiện đăng ký lại.");
             return "redirect:/register";
         }
-        if (advisorReg != null && !cleanEmail.equalsIgnoreCase(advisorReg.email())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Phiên đăng ký cố vấn đã hết hạn. Vui lòng đăng ký lại.");
-            return "redirect:/advisor-register";
-        }
-
-        if (advisorReg != null) {
-            if (taiKhoanRepo.existsByTenDangNhap(advisorReg.tenDangNhap())
-                    || taiKhoanRepo.existsByEmail(advisorReg.email())
-                    || nguoiTuVanRepo.existsByMaCanBo(advisorReg.maCanBo())) {
-                session.removeAttribute(SESSION_PENDING_ADVISOR_REG);
-                redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập, email hoặc mã cán bộ vừa được sử dụng. Vui lòng đăng ký lại.");
-                return "redirect:/advisor-register";
-            }
-            DonVi donVi = donViRepo.findById(advisorReg.maDonVi()).orElse(null);
-            if (donVi == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Đơn vị đăng ký không còn tồn tại.");
-                return "redirect:/advisor-register";
-            }
-            LocalDateTime now = LocalDateTime.now();
-            TaiKhoan advisorAccount = TaiKhoan.builder()
-                    .tenDangNhap(advisorReg.tenDangNhap()).matKhau(advisorReg.matKhau())
-                    .hoTen(advisorReg.hoTen()).email(advisorReg.email()).soDienThoai(advisorReg.soDienThoai())
-                    .vaiTro("CoVan").trangThai("ChoDuyet").batBuocDoiMatKhau(false)
-                    .ngayTao(now).ngayCapNhat(now).build();
-            advisorAccount = taiKhoanRepo.save(advisorAccount);
-            NguoiTuVan advisor = NguoiTuVan.builder()
-                    .maCanBo(advisorReg.maCanBo()).hocHamHocVi(advisorReg.hocHamHocVi())
-                    .chucVu(advisorReg.chucVu()).chuyenMon(advisorReg.chuyenMon())
-                    .donVi(donVi).taiKhoan(advisorAccount).nhanTuVan(false).hanNgachTiepNhan(20)
-                    .build();
-            nguoiTuVanRepo.save(advisor);
-            final Integer savedAdvisorAccountId = advisorAccount.getMaTK();
-            otpRepo.findTopByEmailAndMucDichOrderByNgayTaoDesc(cleanEmail, purpose).ifPresent(record -> {
-                record.setTaiKhoan(taiKhoanRepo.findById(savedAdvisorAccountId).orElse(null));
-                otpRepo.save(record);
-            });
-            session.removeAttribute(SESSION_PENDING_ADVISOR_REG);
-            auditService.logEvent(advisorAccount, "DANG_KY_CO_VAN_CHO_DUYET", true, clientIp, userAgent,
-                    "Cố vấn đã xác thực email và đang chờ Admin duyệt: " + advisorAccount.getTenDangNhap());
-            return "redirect:/login?advisorPending=true";
-        }
-
         // 3. Tạo tài khoản chính thức (Hoạt động)
         LocalDateTime now = LocalDateTime.now();
         TaiKhoan tk = TaiKhoan.builder()
@@ -452,8 +304,7 @@ public class AuthController {
         String userAgent = request.getHeader("User-Agent");
         String cleanEmail = email.trim().toLowerCase();
 
-        AdvisorRegistrationRequest advisorReg = (AdvisorRegistrationRequest) session.getAttribute(SESSION_PENDING_ADVISOR_REG);
-        String purpose = advisorReg == null ? "DangKy" : "DangKyCoVan";
+        String purpose = "DangKy";
         OtpService.OtpSendResult sendResult = otpService.generateAndSendOtp(cleanEmail, purpose, clientIp, userAgent);
         if (sendResult.isSuccess()) {
             redirectAttributes.addFlashAttribute("successMessage", sendResult.getMessage());

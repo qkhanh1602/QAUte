@@ -48,17 +48,17 @@
                 </div>
 
                 <!-- Flash Messages -->
-                <c:if test="${errorMessage}"><div class="alert alert-danger py-2 small mb-3 d-flex align-items-center gap-2">
+                <c:if test="${not empty errorMessage}"><div class="alert alert-danger py-2 small mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
                     <span><c:out value="${errorMessage}" /></span>
                 </div>
 
-                </c:if><c:if test="${successMessage}"><div class="alert alert-success py-2 small mb-3 d-flex align-items-center gap-2">
+                </c:if><c:if test="${not empty successMessage}"><div class="alert alert-success py-2 small mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-check-circle-fill flex-shrink-0"></i>
                     <span><c:out value="${successMessage}" /></span>
                 </div>
 
-                </c:if><c:if test="${infoMessage}"><div class="alert alert-info py-2 small mb-3 d-flex align-items-center gap-2">
+                </c:if><c:if test="${not empty infoMessage}"><div class="alert alert-info py-2 small mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-info-circle-fill flex-shrink-0"></i>
                     <span><c:out value="${infoMessage}" /></span>
                 </div>
@@ -101,7 +101,7 @@
                 </div>
 
                 <div class="text-center mt-3 small">
-                    <a class="text-decoration-none text-muted" href="${advisorRegistration%20?%20'/advisor-register'%20:%20'/register'}">
+                    <a class="text-decoration-none text-muted" href="${pageContext.request.contextPath}/register">
                         <i class="bi bi-arrow-left me-1"></i>Quay lại trang Đăng ký
                     </a>
                 </div>

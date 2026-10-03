@@ -16,8 +16,8 @@
         <div><h2 class="fw-bold mb-1">Điều phối phiếu tư vấn</h2><p class="text-muted mb-0">Phân công phiếu mới cho cố vấn đúng đơn vị và còn hạn ngạch.</p></div>
         <a class="btn btn-outline-secondary rounded-pill" href="${pageContext.request.contextPath}/admin/dashboard">Quay lại tổng quan</a>
     </div>
-    <c:if test="${successMessage}"><div class="alert alert-success"><c:out value="${successMessage}" /></div>
-    </c:if><c:if test="${errorMessage}"><div class="alert alert-danger"><c:out value="${errorMessage}" /></div>
+    <c:if test="${not empty successMessage}"><div class="alert alert-success"><c:out value="${successMessage}" /></div>
+    </c:if><c:if test="${not empty errorMessage}"><div class="alert alert-danger"><c:out value="${errorMessage}" /></div>
     </c:if><div class="qaute-card p-4 shadow-sm border-0">
         <div class="table-responsive">
             <table class="table align-middle">

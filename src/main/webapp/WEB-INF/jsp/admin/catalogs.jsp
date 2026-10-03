@@ -24,8 +24,8 @@
         </div>
     </div>
 
-    <c:if test="${successMessage}"><div class="alert alert-success"><c:out value="${successMessage}" /></div>
-    </c:if><c:if test="${errorMessage}"><div class="alert alert-danger"><c:out value="${errorMessage}" /></div>
+    <c:if test="${not empty successMessage}"><div class="alert alert-success"><c:out value="${successMessage}" /></div>
+    </c:if><c:if test="${not empty errorMessage}"><div class="alert alert-danger"><c:out value="${errorMessage}" /></div>
 
     </c:if><!-- Admin Nav -->
 
