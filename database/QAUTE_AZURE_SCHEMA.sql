@@ -1,4 +1,4 @@
-﻿:ON ERROR EXIT
+:ON ERROR EXIT
 -- SQLCMD mode. Run ONLY against a new, empty Azure SQL database.
 SET XACT_ABORT ON;
 SET ANSI_NULLS ON;
@@ -24,8 +24,8 @@ MaTK int IDENTITY PRIMARY KEY,
  TrangThai varchar(20) NOT NULL DEFAULT 'HoatDong' CHECK (TrangThai IN ('ChoDuyet','HoatDong','Khoa')),
  BatBuocDoiMatKhau bit NOT NULL DEFAULT 1,
  TokenVersion int NOT NULL DEFAULT 0 CHECK (TokenVersion >= 0),
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
- NgayCapNhat datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
+ NgayCapNhat datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  PhienBan bigint NOT NULL DEFAULT 0
 );
 
@@ -85,8 +85,8 @@ MaYeuCau int IDENTITY PRIMARY KEY,
  BaoMatDanhTinh bit NOT NULL DEFAULT 0,
  TrangThai varchar(20) NOT NULL DEFAULT 'ChoTiepNhan'
   CHECK (TrangThai IN ('ChoTiepNhan','DangXuLy','DaPhanHoi','Dong')),
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
- NgayCapNhat datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
+ NgayCapNhat datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  HanTiepNhan datetime2(3) NOT NULL, HanSLA datetime2(3) NOT NULL,
  NgayTiepNhan datetime2(3) NULL, NgayPhanHoiDau datetime2(3) NULL,
  NgayPhanHoiCuoi datetime2(3) NULL, HanTuDongDong datetime2(3) NULL,
@@ -103,7 +103,7 @@ MaPhanCong int IDENTITY PRIMARY KEY,
  MaYeuCau int NOT NULL REFERENCES dbo.YeuCauTuVan(MaYeuCau),
  MaTK_ThucHien int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  MaCV_PhuTrach int NOT NULL REFERENCES dbo.NguoiTuVan(MaCV),
- NgayPhanCong datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayPhanCong datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  NgayKetThuc datetime2(3) NULL, GhiChu nvarchar(500) NULL,
  CHECK (NgayKetThuc IS NULL OR NgayKetThuc >= NgayPhanCong)
 );
@@ -114,7 +114,7 @@ MaPhanHoi int IDENTITY PRIMARY KEY,
  MaTK_Gui int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  LoaiPhanHoi varchar(20) NOT NULL CHECK (LoaiPhanHoi IN ('TraLoi','HoiThem')),
  NoiDungTraLoi nvarchar(max) NOT NULL CHECK (LEN(LTRIM(RTRIM(NoiDungTraLoi))) > 0),
- NgayTraLoi datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTraLoi datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  DeXuatFAQ bit NOT NULL DEFAULT 0
 );
 
@@ -127,7 +127,7 @@ MaLichSu bigint IDENTITY PRIMARY KEY,
  MaDonViCu int NULL REFERENCES dbo.DonVi(MaDonVi),
  MaDonViMoi int NULL REFERENCES dbo.DonVi(MaDonVi),
  LyDo nvarchar(1000) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.CauHoiFAQ (
@@ -139,7 +139,7 @@ MaFAQ int IDENTITY PRIMARY KEY,
  TrangThai varchar(20) NOT NULL DEFAULT 'BanNhao' CHECK (TrangThai IN ('BanNhao','ChoDuyet','HienThi','An')),
  MaTK_DeXuat int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  MaTK_Duyet int NULL REFERENCES dbo.TaiKhoan(MaTK),
- NgayDuyet datetime2(3) NULL, NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayDuyet datetime2(3) NULL, NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  CHECK (TrangThai <> 'HienThi' OR (MaTK_Duyet IS NOT NULL AND NgayDuyet IS NOT NULL))
 );
 
@@ -150,7 +150,7 @@ MaBaiViet int IDENTITY PRIMARY KEY,
  MaLinhVuc int NOT NULL REFERENCES dbo.LinhVucTuVan(MaLinhVuc),
  MaTK_Admin int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  LuotXem int NOT NULL DEFAULT 0 CHECK (LuotXem >= 0),
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(), NgayDang datetime2(3) NULL,
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())), NgayDang datetime2(3) NULL,
  MaTK_Duyet int NULL REFERENCES dbo.TaiKhoan(MaTK),
  TrangThai varchar(20) NOT NULL DEFAULT 'BanNhao' CHECK (TrangThai IN ('XuatBan','BanNhao','An')),
  CHECK (TrangThai <> 'XuatBan' OR (NgayDang IS NOT NULL AND MaTK_Duyet IS NOT NULL))
@@ -186,7 +186,7 @@ MaLichHen int IDENTITY PRIMARY KEY,
   CHECK (TrangThai IN ('ChoDuyet','DaXacNhan','TuChoi','HoanThanh','Huy')),
  LyDo nvarchar(500) NULL, LinkHop_Phong nvarchar(1000) NULL,
  KetLuan nvarchar(2000) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  HanDuyet datetime2(3) NOT NULL, NgayDuyet datetime2(3) NULL,
  NgayHoanThanh datetime2(3) NULL,
  PhienBan bigint NOT NULL DEFAULT 0,
@@ -201,7 +201,7 @@ CREATE TABLE dbo.DanhGiaBuoiTuVan (
 MaDanhGia int IDENTITY PRIMARY KEY,
  MaLichHen int NOT NULL UNIQUE, MaSV int NOT NULL,
  SoSao tinyint NOT NULL CHECK (SoSao BETWEEN 1 AND 5), NhanXet nvarchar(500) NULL,
- NgayDanhGia datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayDanhGia datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  FOREIGN KEY (MaLichHen, MaSV) REFERENCES dbo.LichHenTuVan(MaLichHen, MaSV)
 );
 
@@ -209,7 +209,7 @@ CREATE TABLE dbo.DanhGiaYeuCau (
 MaDanhGia int IDENTITY PRIMARY KEY,
  MaYeuCau int NOT NULL UNIQUE, MaSV int NOT NULL,
  SoSao tinyint NOT NULL CHECK (SoSao BETWEEN 1 AND 5), NhanXet nvarchar(500) NULL,
- NgayDanhGia datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayDanhGia datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  FOREIGN KEY (MaYeuCau, MaSV) REFERENCES dbo.YeuCauTuVan(MaYeuCau, MaSV)
 );
 
@@ -218,7 +218,7 @@ MaPhienChat int IDENTITY PRIMARY KEY,
  MaSV int NOT NULL REFERENCES dbo.SinhVien(MaSV),
  MaDonVi int NOT NULL REFERENCES dbo.DonVi(MaDonVi),
  MaCV int NULL REFERENCES dbo.NguoiTuVan(MaCV),
- ThoiGianBatDau datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ ThoiGianBatDau datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  ThoiGianKetThuc datetime2(3) NULL,
  TrangThai varchar(20) NOT NULL DEFAULT 'ChoTiepNhan'
   CHECK (TrangThai IN ('ChoTiepNhan','DangHoatDong','KetThuc','GianDoan')),
@@ -235,7 +235,7 @@ MaTinNhan bigint IDENTITY PRIMARY KEY,
  ClientMessageId uniqueidentifier NOT NULL,
  LoaiTinNhan varchar(20) NOT NULL DEFAULT 'VanBan' CHECK (LoaiTinNhan IN ('VanBan','TepTin','HinhAnh')),
  NoiDung nvarchar(max) NULL,
- ThoiGianGui datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(), NgayXem datetime2(3) NULL,
+ ThoiGianGui datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())), NgayXem datetime2(3) NULL,
  UNIQUE (MaPhienChat, MaTK_Gui, ClientMessageId),
  CHECK (LoaiTinNhan <> 'VanBan' OR (NoiDung IS NOT NULL AND LEN(LTRIM(RTRIM(NoiDung))) > 0)),
  CHECK (NgayXem IS NULL OR NgayXem >= ThoiGianGui)
@@ -255,7 +255,7 @@ MaTep bigint IDENTITY PRIMARY KEY,
  CloudinaryPublicId varchar(500) NOT NULL,
  ResourceType varchar(10) NOT NULL CHECK (ResourceType IN ('image','raw')),
  DeliveryType varchar(20) NOT NULL CHECK (DeliveryType IN ('upload','private','authenticated')),
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  CHECK ((CASE WHEN MaYeuCau IS NULL THEN 0 ELSE 1 END) +
         (CASE WHEN MaPhanHoi IS NULL THEN 0 ELSE 1 END) +
         (CASE WHEN MaTinNhan IS NULL THEN 0 ELSE 1 END) +
@@ -270,7 +270,7 @@ MaThongBao bigint IDENTITY PRIMARY KEY,
  TieuDe nvarchar(200) NOT NULL, NoiDung nvarchar(500) NOT NULL,
  LoaiThongBao varchar(20) NOT NULL CHECK (LoaiThongBao IN ('LichHen','DienDan','Chatbox','HeThong','SLA')),
  LienKet varchar(500) NULL, DaDoc bit NOT NULL DEFAULT 0,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  KhoaChongLap varchar(150) NOT NULL,
  UNIQUE (MaTK_Nhan, KhoaChongLap)
 );
@@ -279,8 +279,8 @@ CREATE TABLE dbo.PhienDangNhap (
 MaPhien uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
  MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  RefreshTokenHash binary(32) NOT NULL UNIQUE,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
- LanHoatDongCuoi datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
+ LanHoatDongCuoi datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  HetHan datetime2(3) NOT NULL, ThuHoiLuc datetime2(3) NULL,
  UserAgent nvarchar(500) NULL,
  CHECK (HetHan > NgayTao)
@@ -291,7 +291,7 @@ MaToken bigint IDENTITY PRIMARY KEY,
  MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
  TokenHash binary(32) NOT NULL UNIQUE,
  HetHan datetime2(3) NOT NULL, DaDungLuc datetime2(3) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  CHECK (HetHan > NgayTao)
 );
 
@@ -304,7 +304,7 @@ CREATE TABLE dbo.YeuCauXacMinhOTP (
  KenhXacMinh varchar(10) NULL,
  MucDich varchar(30) NOT NULL CHECK (MucDich IN ('DangKy','DangKyCoVan','XacMinhEmail','DatLaiMatKhau','DoiEmail')),
  OTPHash varchar(255) NOT NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  HetHan datetime2(3) NOT NULL,
  DaDungLuc datetime2(3) NULL,
  SoLanNhapSai tinyint NOT NULL DEFAULT 0 CHECK (SoLanNhapSai BETWEEN 0 AND 5),
@@ -324,7 +324,7 @@ CREATE TABLE dbo.NhatKyBaoMat (
  IPHash binary(32) NULL,
  UserAgentHash binary(32) NULL,
  ChiTiet nvarchar(500) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.DanhTinhSSO (
@@ -338,7 +338,7 @@ CREATE TABLE dbo.CauHinhHeThong (
 Khoa varchar(80) NOT NULL PRIMARY KEY,
  GiaTri nvarchar(1000) NOT NULL, MoTa nvarchar(500) NOT NULL,
  MaTK_CapNhat int NULL REFERENCES dbo.TaiKhoan(MaTK),
- NgayCapNhat datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+ NgayCapNhat datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.LichLamViec (
@@ -357,7 +357,7 @@ MaNhatKy bigint IDENTITY PRIMARY KEY,
  MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
  HanhDong varchar(60) NOT NULL, LoaiDoiTuong varchar(60) NOT NULL,
  MaDoiTuong varchar(100) NULL, ChiTiet nvarchar(2000) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.HangDoiSuKien (
@@ -365,8 +365,8 @@ MaSuKien bigint IDENTITY PRIMARY KEY,
  LoaiSuKien varchar(60) NOT NULL,
  KhoaChongLap varchar(150) NOT NULL UNIQUE,
  Payload nvarchar(max) NOT NULL CHECK (ISJSON(Payload) = 1),
- NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
- XuLySau datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+ NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
+ XuLySau datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
  TrangThai varchar(20) NOT NULL DEFAULT 'ChoXuLy' CHECK (TrangThai IN ('ChoXuLy','DangXuLy','ThanhCong','ThatBai')),
  SoLanThu int NOT NULL DEFAULT 0 CHECK (SoLanThu >= 0),
  KhoaDen datetime2(3) NULL, LoiCuoi nvarchar(1000) NULL
@@ -428,9 +428,9 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),
  ('ticket.auto_close_days',N'7',N'Đóng sau 7 ngày không có hỏi thêm kể từ phản hồi cuối'),
- ('sla.accept_hours',N'48',N'Hạn tiếp nhận theo QĐ11; cảnh báo vàng sau 24 giờ làm việc'),
+ ('sla.accept_hours',N'48',N'Hạn tiếp nhận 48 giờ liên tục; cảnh báo vàng sau 24 giờ liên tục'),
  ('sla.reply_hours',N'48',N'Cảnh báo chưa phản hồi lần đầu'),
- ('sla.clock',N'BUSINESS',N'Giả định dùng giờ làm việc; cần chốt với giảng viên'),
+ ('sla.clock',N'ELAPSED',N'SLA tính giờ liên tục kể từ khi gửi; giờ trực cố vấn cấu hình riêng'),
  ('session.idle_minutes',N'30',N'Hết phiên sau 30 phút không hoạt động'),
  ('security.otp.expiry_minutes',N'10',N'OTP có hiệu lực 10 phút'),
  ('security.otp.max_verify_attempts',N'5',N'Số lần nhập OTP sai tối đa'),
@@ -441,7 +441,7 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('security.access_token_minutes',N'10',N'JWT ngắn hạn; vẫn kiểm tra phiên bị thu hồi'),
  ('upload.max_bytes_exclusive',N'10485760',N'Tệp phải nhỏ hơn 10 MiB'),
  ('upload.allowed_mime',N'image/jpeg,image/png,application/pdf',N'Kiểm tra chữ ký tệp tại service'),
- ('app.timezone',N'Asia/Ho_Chi_Minh',N'Database lưu UTC, giao diện giờ Việt Nam');
+ ('app.timezone',N'Asia/Ho_Chi_Minh',N'Datetime2 lưu giờ Việt Nam Asia/Ho_Chi_Minh, không cộng thêm 7 giờ khi hiển thị');
 INSERT dbo.LichLamViec(ThuISO,GioBatDau,GioKetThuc)
  SELECT d.Thu,t.BatDau,t.KetThuc FROM (VALUES(1),(2),(3),(4),(5)) d(Thu)
  CROSS JOIN (VALUES(CAST('08:00' AS time),CAST('12:00' AS time)),(CAST('13:00' AS time),CAST('17:00' AS time))) t(BatDau,KetThuc);
@@ -457,11 +457,11 @@ CREATE VIEW dbo.vw_BaiVietCongKhai AS
  FROM dbo.BaiVietHuongDan WHERE TrangThai='XuatBan';
 GO
 CREATE VIEW dbo.vw_ThongKeYeuCauTheoNgay AS
- SELECT CAST(DATEADD(HOUR,7,NgayTao) AS date) AS NgayVietNam,MaDonVi,MaLinhVuc,
+ SELECT CAST(NgayTao AS date) AS NgayVietNam,MaDonVi,MaLinhVuc,
  COUNT_BIG(*) AS TongYeuCau,
  SUM(CAST(CASE WHEN TrangThai IN ('DaPhanHoi','Dong') THEN 1 ELSE 0 END AS bigint)) AS DaHoanTat,
  CAST(100.0*SUM(CASE WHEN TrangThai IN ('DaPhanHoi','Dong') THEN 1 ELSE 0 END)/NULLIF(COUNT_BIG(*),0) AS decimal(6,2)) AS TyLeHoanTat
- FROM dbo.YeuCauTuVan GROUP BY CAST(DATEADD(HOUR,7,NgayTao) AS date),MaDonVi,MaLinhVuc;
+ FROM dbo.YeuCauTuVan GROUP BY CAST(NgayTao AS date),MaDonVi,MaLinhVuc;
 GO
 CREATE TRIGGER dbo.TR_DanhGiaBuoi_HoanThanh ON dbo.DanhGiaBuoiTuVan AFTER INSERT, UPDATE AS
 BEGIN

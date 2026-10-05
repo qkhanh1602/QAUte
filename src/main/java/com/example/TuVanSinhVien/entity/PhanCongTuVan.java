@@ -30,7 +30,7 @@ public class PhanCongTuVan {
 
     @PrePersist
     public void prePersist() {
-        if (ngayPhanCong == null) ngayPhanCong = LocalDateTime.now();
+        if (ngayPhanCong == null) ngayPhanCong = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
 

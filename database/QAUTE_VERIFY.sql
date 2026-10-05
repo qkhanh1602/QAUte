@@ -1,4 +1,4 @@
-﻿-- Database integration checks. Every fixture transaction is rolled back.
+-- Database integration checks. Every fixture transaction is rolled back.
 -- Identity counters can advance, but no test accounts or transactions remain.
 USE QAUTE;
 GO

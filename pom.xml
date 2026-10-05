@@ -39,10 +39,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
-		</dependency>
 		<!-- SiteMesh 3.3 provides the Jakarta EE 11 / Spring Boot 4 integration. -->
 		<dependency>
 			<groupId>org.sitemesh</groupId>

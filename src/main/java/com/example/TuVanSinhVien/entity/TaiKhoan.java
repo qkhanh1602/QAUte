@@ -48,8 +48,8 @@ public class TaiKhoan {
 
     @PrePersist
     public void prePersist() {
-        if (ngayTao == null) ngayTao = LocalDateTime.now();
-        if (ngayCapNhat == null) ngayCapNhat = LocalDateTime.now();
+        if (ngayTao == null) ngayTao = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        if (ngayCapNhat == null) ngayCapNhat = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (trangThai == null) trangThai = "HoatDong";
         if (batBuocDoiMatKhau == null) batBuocDoiMatKhau = false;
         if (tokenVersion == null) tokenVersion = 0;
@@ -58,7 +58,7 @@ public class TaiKhoan {
 
     @PreUpdate
     public void preUpdate() {
-        ngayCapNhat = LocalDateTime.now();
+        ngayCapNhat = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
     @java.lang.SuppressWarnings("all")

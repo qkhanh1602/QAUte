@@ -10,6 +10,8 @@ import java.util.Map;
 
 @Service
 public class ReportService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private final YeuCauTuVanRepository ticketRepo;
     private final LichHenTuVanRepository appointmentRepo;
     private final TaiKhoanRepository taiKhoanRepo;
@@ -587,8 +589,8 @@ public class ReportService {
         long henHoanThanh = appointmentRepo.countByTrangThai("HoanThanh");
         long tongSinhVien = taiKhoanRepo.countByVaiTro("SinhVien");
         long tongCoVan = taiKhoanRepo.countByVaiTro("CoVan");
-        LocalDateTime now = LocalDateTime.now();
-        long canhbSoTiepNhan = ticketRepo.findOverdueAcceptance(now).size();
+        LocalDateTime now = LocalDateTime.now(clock);
+        long canhbSoTiepNhan = ticketRepo.findOverdueAcceptance(now.minusHours(24)).size();
         long canhbSla = ticketRepo.findOverdueSla(now).size();
         Map<String, Long> theoDonVi = new HashMap<>();
         List<Object[]> dvList = ticketRepo.countGroupByDonVi();

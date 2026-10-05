@@ -91,14 +91,7 @@
                     </button>
                 </form>
 
-                <c:if test="${googleSsoEnabled}"><div class="text-center my-3 position-relative"><hr><span class="position-absolute top-50 start-50 translate-middle bg-white px-2 small text-muted">hoặc</span></div>
-                </c:if><c:if test="${googleSsoEnabled}"><a class="btn btn-outline-secondary w-100 py-2 fw-semibold rounded-3 mb-3" href="${pageContext.request.contextPath}/oauth2/authorization/google">
-                    <i class="bi bi-google me-2"></i>Đăng nhập với Google trường
-                </a>
-
-
-
-                </c:if><div class="text-center small text-muted">
+                <div class="text-center small text-muted">
                     Chưa có tài khoản sinh viên? <a class="text-primary fw-semibold text-decoration-none" href="${pageContext.request.contextPath}/register">Đăng ký tại đây</a>
                 </div>
             </div>

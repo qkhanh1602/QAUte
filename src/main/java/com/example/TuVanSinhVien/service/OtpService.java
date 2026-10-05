@@ -15,6 +15,8 @@ import java.util.Optional;
 
 @Service
 public class OtpService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
 
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
@@ -77,7 +79,7 @@ public class OtpService {
             return new OtpSendResult(false, "Địa chỉ email không được để trống.", 0);
         }
         String cleanEmail = email.trim().toLowerCase();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         byte[] ipHash = SecurityAuditService.hashSha256(clientIp);
 
         // 1. Kiểm tra giới hạn 3 lần/giờ theo email
@@ -157,7 +159,7 @@ public class OtpService {
         }
         String cleanEmail = email.trim().toLowerCase();
         String cleanOtp = rawOtp.trim();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         Optional<YeuCauXacMinhOTP> otpOpt = otpRepo.findTopByEmailAndMucDichOrderByNgayTaoDesc(cleanEmail, mucDich);
         if (otpOpt.isEmpty()) {

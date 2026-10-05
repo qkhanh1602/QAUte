@@ -37,7 +37,7 @@ public class PhienChat {
 
     @PrePersist
     public void prePersist() {
-        if (thoiGianBatDau == null) thoiGianBatDau = LocalDateTime.now();
+        if (thoiGianBatDau == null) thoiGianBatDau = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (trangThai == null) trangThai = "ChoTiepNhan";
         if (phienBan == null) phienBan = 0L;
     }

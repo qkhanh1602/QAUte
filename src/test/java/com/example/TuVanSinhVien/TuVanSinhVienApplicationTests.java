@@ -2,6 +2,7 @@ package com.example.TuVanSinhVien;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -24,7 +25,8 @@ import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
 import com.example.TuVanSinhVien.service.JwtService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "app.jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=")
+		properties = {"app.jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=", "app.workflow.scheduling.enabled=false"})
+@org.springframework.context.annotation.Import(ReviewFixedClock.class)
 @org.springframework.test.context.ActiveProfiles("dev")
 class TuVanSinhVienApplicationTests {
 
@@ -56,6 +58,118 @@ class TuVanSinhVienApplicationTests {
                         "Missing advisor for " + unit.getMaDonViCode());
             }
         }
+    }
+
+    private static final String TEST_JWT_KEY = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+    @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    @Autowired private com.example.TuVanSinhVien.service.ProfileService profileService;
+
+    private TaiKhoan jwtTestAccount() {
+        String username = "jwt_" + java.util.UUID.randomUUID().toString().replace("-", "");
+        return accountRepository.saveAndFlush(TaiKhoan.builder().tenDangNhap(username)
+                .matKhau(passwordEncoder.encode("JwtTest@123"))
+                .hoTen("Kiểm thử JWT").email(username + "@example.test")
+                .vaiTro("SinhVien").trangThai("HoatDong").tokenVersion(0)
+                .ngayTao(java.time.LocalDateTime.now()).ngayCapNhat(java.time.LocalDateTime.now()).build());
+    }
+
+    private HttpResponse<String> jwtRequest(String path, String method, String token, String body) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path));
+        if (token != null) request.header("Authorization", "Bearer " + token);
+        if (body != null) request.header("Content-Type", "application/json");
+        request.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body));
+        return HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build()
+                .send(request.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private void assertJwtUnauthorized(HttpResponse<String> response) {
+        assertEquals(401, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("application/json"));
+        assertFalse(response.headers().firstValue("Location").isPresent());
+    }
+
+    @Test
+    void jwtTokenEndpointAndStatelessLogoutRevokeTokens() throws Exception {
+        var account = jwtTestAccount();
+        try {
+            var invalid = jwtRequest("/api/auth/token", "POST", null,
+                    "{\"username\":\"" + account.getTenDangNhap() + "\",\"password\":\"wrong\"}");
+            assertJwtUnauthorized(invalid);
+            var issued = jwtRequest("/api/auth/token", "POST", null,
+                    "{\"username\":\"" + account.getTenDangNhap() + "\",\"password\":\"JwtTest@123\"}");
+            assertEquals(200, issued.statusCode());
+            assertFalse(issued.headers().allValues("Set-Cookie").stream().anyMatch(c -> c.startsWith("JSESSIONID=")));
+            String token = new com.fasterxml.jackson.databind.ObjectMapper().readTree(issued.body()).get("accessToken").asText();
+            var authenticated = jwtRequest("/api/notifications/unread-count", "GET", token, null);
+            assertEquals(200, authenticated.statusCode());
+            assertFalse(authenticated.headers().allValues("Set-Cookie").stream().anyMatch(c -> c.startsWith("JSESSIONID=")));
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", null, null));
+            var forbidden = jwtRequest("/admin/dashboard", "GET", token, null);
+            assertEquals(403, forbidden.statusCode());
+            assertTrue(forbidden.headers().firstValue("Content-Type").orElse("").contains("application/json"));
+            assertEquals(200, jwtRequest("/api/auth/logout", "POST", token, null).statusCode());
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", token, null));
+            assertJwtUnauthorized(jwtRequest("/api/auth/logout", "POST", token, null));
+            assertEquals(1, accountRepository.findById(account.getMaTK()).orElseThrow().getTokenVersion());
+        } finally { accountRepository.deleteById(account.getMaTK()); }
+    }
+
+    @Test
+    void expiredTamperedLockedAndChangedRoleTokensCannotAuthenticate() throws Exception {
+        var account = jwtTestAccount();
+        try {
+            String token = jwtService.createAccessToken(account);
+            String expired = new com.example.TuVanSinhVien.service.JwtService(TEST_JWT_KEY, -1).createAccessToken(account);
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", expired, null));
+            int signatureStart = token.lastIndexOf('.') + 1;
+            String tampered = token.substring(0, signatureStart) + (token.charAt(signatureStart) == 'A' ? "B" : "A") + token.substring(signatureStart + 1);
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", tampered, null));
+            account.setTrangThai("Khoa");
+            account = accountRepository.saveAndFlush(account);
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", token, null));
+            account.setTrangThai("HoatDong"); account.setVaiTro("Admin");
+            account = accountRepository.saveAndFlush(account);
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", token, null));
+            account.setVaiTro("SinhVien"); account = accountRepository.saveAndFlush(account);
+            profileService.changePassword(account.getMaTK(), "JwtTest@123", "JwtChanged@456");
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", token, null));
+            var changed = jwtRequest("/api/auth/token", "POST", null,
+                    "{\"username\":\"" + account.getTenDangNhap() + "\",\"password\":\"JwtChanged@456\"}");
+            assertEquals(200, changed.statusCode());
+        } finally { accountRepository.deleteById(account.getMaTK()); }
+    }
+
+    @Test
+    void browserCookieCannotBypassInvalidBearerAndWebLogoutRevokesJwt() throws Exception {
+        var account = jwtTestAccount();
+        try {
+            String token = jwtService.createAccessToken(account);
+            var cookies = new java.net.CookieManager(null, java.net.CookiePolicy.ACCEPT_ALL);
+            var client = HttpClient.newBuilder().cookieHandler(cookies).followRedirects(HttpClient.Redirect.NEVER).build();
+            String base = "http://127.0.0.1:" + port;
+            var login = client.send(HttpRequest.newBuilder(URI.create(base + "/login")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            var csrf = java.util.regex.Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"").matcher(login.body());
+            assertTrue(csrf.find());
+            var signedIn = client.send(HttpRequest.newBuilder(URI.create(base + "/login"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString("username=" + account.getTenDangNhap() + "&password=JwtTest%40123&_csrf=" + csrf.group(1))).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(302, signedIn.statusCode());
+            assertEquals(200, client.send(HttpRequest.newBuilder(URI.create(base + "/api/notifications/unread-count")).GET().build(), HttpResponse.BodyHandlers.ofString()).statusCode());
+            var csrfDenied = client.send(HttpRequest.newBuilder(URI.create(base + "/api/notifications/1/read"))
+                    .POST(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(403, csrfDenied.statusCode());
+            assertTrue(csrfDenied.headers().firstValue("Content-Type").orElse("").contains("application/json"));
+            assertJwtUnauthorized(client.send(HttpRequest.newBuilder(URI.create(base + "/api/notifications/unread-count"))
+                    .header("Authorization", "Bearer invalid").GET().build(), HttpResponse.BodyHandlers.ofString()));
+            assertEquals(200, client.send(HttpRequest.newBuilder(URI.create(base + "/api/notifications/unread-count")).GET().build(), HttpResponse.BodyHandlers.ofString()).statusCode());
+            var confirm = client.send(HttpRequest.newBuilder(URI.create(base + "/logout")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            var logoutCsrf = java.util.regex.Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"").matcher(confirm.body());
+            assertTrue(logoutCsrf.find());
+            assertEquals(302, client.send(HttpRequest.newBuilder(URI.create(base + "/logout"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString("_csrf=" + logoutCsrf.group(1))).build(), HttpResponse.BodyHandlers.ofString()).statusCode());
+            assertJwtUnauthorized(jwtRequest("/api/notifications/unread-count", "GET", token, null));
+        } finally { accountRepository.deleteById(account.getMaTK()); }
     }
 
 	@Test
@@ -299,6 +413,42 @@ class TuVanSinhVienApplicationTests {
                 chatSessionRepository.deleteById(sessionId);
             });
         }
+    }
+
+    @Test
+    void websocketRequiresLoginAndRejectsDirectBrokerSend() throws Exception {
+        var info = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/ws/info")).GET().build(),HttpResponse.BodyHandlers.ofString());
+        assertEquals(401,info.statusCode());
+        var account=jwtTestAccount();
+        var transport=new org.springframework.web.socket.sockjs.client.WebSocketTransport(new org.springframework.web.socket.client.standard.StandardWebSocketClient());
+        var client=new org.springframework.web.socket.messaging.WebSocketStompClient(new org.springframework.web.socket.sockjs.client.SockJsClient(java.util.List.of(transport)));
+        client.setMessageConverter(new org.springframework.messaging.converter.StringMessageConverter());
+        var errors=new java.util.concurrent.CompletableFuture<String>();
+        org.springframework.messaging.simp.stomp.StompSession socket=null;
+        try {
+            var headers=new org.springframework.web.socket.WebSocketHttpHeaders();headers.setBearerAuth(jwtService.createAccessToken(account));
+            socket=client.connectAsync("ws://127.0.0.1:"+port+"/ws",headers,new org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter() {
+                @Override public java.lang.reflect.Type getPayloadType(org.springframework.messaging.simp.stomp.StompHeaders h) { return String.class; }
+                @Override public void handleFrame(org.springframework.messaging.simp.stomp.StompHeaders h,Object payload) { errors.complete(payload.toString()); }
+                @Override public void handleTransportError(org.springframework.messaging.simp.stomp.StompSession s,Throwable error) { errors.complete("closed"); }
+            }).get(10,java.util.concurrent.TimeUnit.SECONDS);
+            socket.send("/queue/review-probe-"+java.util.UUID.randomUUID(),"forbidden");
+            assertNotNull(errors.get(10,java.util.concurrent.TimeUnit.SECONDS));
+        } finally {
+            if(socket!=null && socket.isConnected()) socket.disconnect();client.stop();accountRepository.deleteById(account.getMaTK());
+        }
+    }
+
+    @Test void temporaryPasswordTokenCanOnlyChangePasswordAndLogout() throws Exception {
+        var account=jwtTestAccount();account.setBatBuocDoiMatKhau(true);account=accountRepository.saveAndFlush(account);
+        try {
+            String token=jwtService.createAccessToken(account);
+            var blocked=jwtRequest("/api/chat/1/messages","GET",token,null);
+            assertEquals(403,blocked.statusCode());assertTrue(blocked.body().contains("PASSWORD_CHANGE_REQUIRED"));
+            var changed=jwtRequest("/api/auth/change-password","POST",token,"{\"oldPassword\":\"JwtTest@123\",\"newPassword\":\"NewJwtTest@456\"}");
+            assertEquals(200,changed.statusCode());assertFalse(accountRepository.findById(account.getMaTK()).orElseThrow().getBatBuocDoiMatKhau());
+            assertEquals(401,jwtRequest("/api/chat/1/messages","GET",token,null).statusCode());
+        } finally {accountRepository.deleteById(account.getMaTK());}
     }
 
     private org.springframework.messaging.simp.stomp.StompFrameHandler chatFrameHandler(java.util.concurrent.BlockingQueue<String> inbox) {

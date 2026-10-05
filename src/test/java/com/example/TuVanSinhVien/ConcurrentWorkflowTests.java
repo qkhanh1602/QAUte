@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(properties="app.workflow.scheduling.enabled=false")
 class ConcurrentWorkflowTests {
     @Autowired TicketService tickets;
     @Autowired AppointmentService appointments;
@@ -62,7 +62,9 @@ class ConcurrentWorkflowTests {
     }
     @Test void onlyOneStudentCanReserveSlot() throws Exception {
         NguoiTuVan advisor=advisor();List<SinhVien> students=students();assertEquals(2,students.size());
-        LocalDateTime start=LocalDate.now().plusDays(2).atTime(3,0);
+        LocalDate day=LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(2);
+        while(day.getDayOfWeek().getValue()>5) day=day.plusDays(1);
+        LocalDateTime start=day.atTime(9,0);
         Integer id=appointments.createSlot(advisor,start,start.plusMinutes(45),"TrucTuyen","https://example.com/test-race").getMaKhungGio();
         try {
             assertEquals(1,race(() -> appointments.bookAppointment(students.get(0),id,"TEST_RACE","Kiểm thử đồng thời."),() -> appointments.bookAppointment(students.get(1),id,"TEST_RACE","Kiểm thử đồng thời.")));

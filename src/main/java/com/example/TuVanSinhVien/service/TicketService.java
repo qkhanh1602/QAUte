@@ -40,8 +40,8 @@ public class TicketService {
             throw new IllegalArgumentException("Lĩnh vực tư vấn không thuộc đơn vị đã chọn hoặc đang tạm ngừng.");
         }
         LocalDateTime now = LocalDateTime.now(clock);
-        LocalDateTime hanTiepNhan = slaService.calculateBusinessDeadline(now, 48);
-        LocalDateTime hanSLA = slaService.calculateBusinessDeadline(now, 48);
+        LocalDateTime hanTiepNhan = slaService.calculateDeadline(now, 48);
+        LocalDateTime hanSLA = slaService.calculateDeadline(now, 48);
         YeuCauTuVan ticket = YeuCauTuVan.builder().sinhVien(sv).donVi(donVi).linhVuc(linhVuc).tieuDe(tieuDe.trim()).noiDung(noiDung.trim()).baoMatDanhTinh(baoMatDanhTinh != null && baoMatDanhTinh).trangThai("ChoTiepNhan").ngayTao(now).ngayCapNhat(now).hanTiepNhan(hanTiepNhan).hanSLA(hanSLA).build();
         ticket = ticketRepo.save(ticket);
         // Lưu lịch sử

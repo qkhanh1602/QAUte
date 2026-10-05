@@ -55,7 +55,7 @@ public class YeuCauXacMinhOTP {
 
     @PrePersist
     public void prePersist() {
-        if (ngayTao == null) ngayTao = LocalDateTime.now();
+        if (ngayTao == null) ngayTao = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (soLanNhapSai == null) soLanNhapSai = 0;
         if (soLanGui == null) soLanGui = 1;
         if (hetHan == null) hetHan = ngayTao.plusMinutes(10);

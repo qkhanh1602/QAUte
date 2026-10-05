@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 
 @Service
 public class SecurityAuditService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAuditService.class);
     private final NhatKyBaoMatRepository nhatKyBaoMatRepo;
@@ -34,7 +36,7 @@ public class SecurityAuditService {
                     .ipHash(ipHash)
                     .userAgentHash(uaHash)
                     .chiTiet(chiTiet != null && chiTiet.length() > 500 ? chiTiet.substring(0, 500) : chiTiet)
-                    .ngayTao(LocalDateTime.now())
+                    .ngayTao(LocalDateTime.now(clock))
                     .build();
 
             nhatKyBaoMatRepo.save(entry);

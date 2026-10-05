@@ -11,6 +11,12 @@ import java.util.UUID;
 
 @Service
 public class ChatService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+    @org.springframework.beans.factory.annotation.Autowired
+    private SlaService officeHours = new SlaService();
+    @org.springframework.beans.factory.annotation.Autowired
+    private TaiKhoanRepository accounts;
     private final PhienChatRepository phienChatRepo;
     private final TinNhanChatRepository tinNhanRepo;
     private final DonViRepository donViRepo;
@@ -45,7 +51,7 @@ public class ChatService {
                     .donVi(donVi)
                     .nguoiTuVan(null)
                     .trangThai("ChoTiepNhan")
-                    .thoiGianBatDau(LocalDateTime.now())
+                    .thoiGianBatDau(LocalDateTime.now(clock))
                     .build();
                 return phienChatRepo.save(session);
             });
@@ -53,6 +59,7 @@ public class ChatService {
 
     @Transactional
     public void advisorJoinSession(Integer maPhienChat, NguoiTuVan cv) {
+        requireAdvisorOfficeHours();
         PhienChat session = phienChatRepo.findById(maPhienChat)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiên tư vấn trực tuyến."));
         if (!session.getDonVi().getMaDonVi().equals(cv.getDonVi().getMaDonVi())) {
@@ -71,6 +78,10 @@ public class ChatService {
 
     @Transactional
     public TinNhanChat sendMessage(Integer maPhienChat, TaiKhoan sender, String noiDung, String loaiTinNhan) {
+        TaiKhoan current = accounts == null ? sender : accounts.findById(sender.getMaTK()).orElseThrow(() -> new SecurityException("Tài khoản không tồn tại."));
+        if (!"HoatDong".equals(current.getTrangThai()) || Boolean.TRUE.equals(current.getBatBuocDoiMatKhau()))
+            throw new SecurityException("Tài khoản chưa được phép gửi tin nhắn.");
+        if ("CoVan".equals(current.getVaiTro())) requireAdvisorOfficeHours();
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung tin nhắn không được để trống.");
         }
@@ -95,7 +106,7 @@ public class ChatService {
             .clientMessageId(UUID.randomUUID())
             .loaiTinNhan(loaiTinNhan != null ? loaiTinNhan : "VanBan")
             .noiDung(noiDung.trim())
-            .thoiGianGui(LocalDateTime.now())
+            .thoiGianGui(LocalDateTime.now(clock))
             .build();
         msg = tinNhanRepo.save(msg);
         events.publishEvent(new ChatDeliveryEvent(
@@ -124,7 +135,7 @@ public class ChatService {
                 .clientMessageId(UUID.randomUUID())
                 .loaiTinNhan("VanBan")
                 .noiDung(autoReply)
-                .thoiGianGui(LocalDateTime.now().plusSeconds(1))
+                .thoiGianGui(LocalDateTime.now(clock).plusSeconds(1))
                 .build();
             tinNhanRepo.save(botMsg);
         } else {
@@ -146,7 +157,7 @@ public class ChatService {
                     .clientMessageId(UUID.randomUUID())
                     .loaiTinNhan("VanBan")
                     .noiDung(ack)
-                    .thoiGianGui(LocalDateTime.now().plusSeconds(1))
+                    .thoiGianGui(LocalDateTime.now(clock).plusSeconds(1))
                     .build();
                 tinNhanRepo.save(ackMsg);
             }
@@ -186,10 +197,11 @@ public class ChatService {
     }
 
     @Transactional
-    public void endSession(Integer maPhienChat) {
+    public void endSession(Integer maPhienChat, TaiKhoan actor) {
+        requireParticipant(getRequiredSession(maPhienChat), actor);
         phienChatRepo.findById(maPhienChat).ifPresent(session -> {
             session.setTrangThai("KetThuc");
-            session.setThoiGianKetThuc(LocalDateTime.now());
+            session.setThoiGianKetThuc(LocalDateTime.now(clock));
             phienChatRepo.save(session);
         });
     }
@@ -214,6 +226,11 @@ public class ChatService {
             throw new SecurityException("Bạn không có quyền xem phiên chat này.");
         }
         return session;
+    }
+
+    private void requireAdvisorOfficeHours() {
+        if (!officeHours.isOfficeTime(LocalDateTime.now(clock)))
+            throw new IllegalStateException("Cố vấn tiếp nhận và trả lời chat trong giờ hành chính: thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00.");
     }
 
     private PhienChat getRequiredSession(Integer maPhienChat) {

@@ -13,6 +13,26 @@ public class SlaService {
         for(String value: dates.split(",")) if(!value.isBlank()) holidays.add(LocalDate.parse(value.trim()));
     }
     // Business hours: Mon–Fri 08:00–12:00, 13:00–17:00; configured holidays excluded.
+    public LocalDateTime calculateDeadline(LocalDateTime from, int hours) {
+        if (from == null || hours < 0) throw new IllegalArgumentException("Thời gian/giờ SLA không hợp lệ.");
+        return from.plusHours(hours);
+    }
+
+    public boolean isOfficeTime(LocalDateTime time) {
+        if (time == null || time.getDayOfWeek().getValue() > 5 || holidays.contains(time.toLocalDate())) return false;
+        LocalTime t = time.toLocalTime();
+        return !t.isBefore(LocalTime.of(8,0)) && t.isBefore(LocalTime.of(12,0))
+                || !t.isBefore(LocalTime.of(13,0)) && t.isBefore(LocalTime.of(17,0));
+    }
+    public boolean isOfficeInterval(LocalDateTime start, LocalDateTime end) {
+        return start != null && end != null && end.isAfter(start) && start.toLocalDate().equals(end.toLocalDate())
+                && isOfficeTime(start) && isOfficeTime(end.minusNanos(1))
+                && !(start.toLocalTime().isBefore(LocalTime.NOON) && end.toLocalTime().isAfter(LocalTime.NOON));
+    }
+    public void requireOfficeInterval(LocalDateTime start, LocalDateTime end) {
+        if (!isOfficeInterval(start,end))
+            throw new IllegalArgumentException("Lịch tư vấn phải nằm trong giờ hành chính: thứ Hai–Sáu, 08:00–12:00 hoặc 13:00–17:00, trừ ngày nghỉ.");
+    }
     public LocalDateTime calculateBusinessDeadline(LocalDateTime from, int businessHours) {
         if(from==null || businessHours<0) throw new IllegalArgumentException("Thời gian/giờ SLA không hợp lệ.");
         LocalDateTime current=from;

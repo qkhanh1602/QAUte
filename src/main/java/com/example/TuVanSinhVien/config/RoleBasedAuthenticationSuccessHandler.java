@@ -38,6 +38,11 @@ public class RoleBasedAuthenticationSuccessHandler implements AuthenticationSucc
         securityAuditService.logEvent(null, "DANG_NHAP_THANH_CONG", true, ip, userAgent,
                 "Người dùng " + username + " đăng nhập thành công");
 
+        if (authentication.getPrincipal() instanceof CustomUserDetails user
+                && Boolean.TRUE.equals(user.getTaiKhoan().getBatBuocDoiMatKhau())) {
+            response.sendRedirect(request.getContextPath() + "/profile?passwordRequired=true");
+            return;
+        }
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             String role = authority.getAuthority();
             if ("ROLE_SinhVien".equals(role)) {

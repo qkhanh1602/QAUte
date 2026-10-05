@@ -20,6 +20,10 @@ public interface LichHenTuVanRepository extends org.springframework.data.jpa.rep
 
     @Query("SELECT COUNT(l) FROM LichHenTuVan l WHERE l.sinhVien.maSV = :maSV AND l.trangThai = 'ChoDuyet'")
     long countPendingByStudent(@Param("maSV") Integer maSV);
+    @Query("SELECT COUNT(l) FROM LichHenTuVan l WHERE l.sinhVien.maSV=:maSV AND l.trangThai='ChoDuyet' AND l.hanDuyet>:now AND l.khungGio.batDau>:now")
+    long countCurrentPendingByStudent(@Param("maSV") Integer maSV, @Param("now") LocalDateTime now);
+    @Query("SELECT l FROM LichHenTuVan l WHERE l.trangThai='ChoDuyet' AND (l.hanDuyet<=:now OR l.khungGio.batDau<=:now)")
+    List<LichHenTuVan> findExpiredPending(@Param("now") LocalDateTime now);
 
     @Query("SELECT COUNT(l) > 0 FROM LichHenTuVan l WHERE l.khungGio.maKhungGio = :maKhungGio AND l.trangThai IN ('ChoDuyet', 'DaXacNhan', 'HoanThanh')")
     boolean isSlotOccupied(@Param("maKhungGio") Integer maKhungGio);

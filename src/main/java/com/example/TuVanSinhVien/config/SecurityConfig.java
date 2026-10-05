@@ -18,8 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,23 +35,20 @@ public class SecurityConfig {
     private final CaptchaAuthenticationFilter captchaFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
-    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
+    private final com.example.TuVanSinhVien.service.TokenRevocationService tokenRevocation;
 
     public SecurityConfig(RoleBasedAuthenticationSuccessHandler successHandler,
                           CustomAuthenticationFailureHandler failureHandler,
                           CaptchaAuthenticationFilter captchaFilter,
                           CustomAccessDeniedHandler accessDeniedHandler,
                           JwtAuthenticationFilter jwtAuthenticationFilter,
-                          GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
-                          ObjectProvider<ClientRegistrationRepository> clientRegistrations) {
+                          com.example.TuVanSinhVien.service.TokenRevocationService tokenRevocation) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
         this.captchaFilter = captchaFilter;
         this.accessDeniedHandler = accessDeniedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
-        this.clientRegistrations = clientRegistrations;
+        this.tokenRevocation = tokenRevocation;
     }
 
     @Bean
@@ -62,6 +57,44 @@ public class SecurityConfig {
     }
 
     @Bean
+    @org.springframework.core.annotation.Order(1)
+    public SecurityFilterChain bearerFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher(request -> request.getHeader("Authorization") != null
+                    || request.getServletPath().startsWith("/api/auth/"))
+            .csrf(csrf -> csrf.disable()) // This chain never authenticates from cookies.
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionCreationPolicy(
+                    org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+            .securityContext(context -> context.securityContextRepository(
+                    new org.springframework.security.web.context.NullSecurityContextRepository()))
+            .requestCache(cache -> cache.disable())
+            .logout(logout -> logout.disable())
+            .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
+                .requestMatchers("/WEB-INF/**", "/advisor-register", "/advisor-register/**").denyAll()
+                .requestMatchers("/api/auth/token", "/api/public/**").permitAll()
+                .requestMatchers("/student/**").hasRole("SinhVien")
+                .requestMatchers("/advisor/**").hasRole("CoVan")
+                .requestMatchers("/admin/**").hasRole("Admin")
+                .anyRequest().authenticated())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(errors -> errors
+                .authenticationEntryPoint((request, response, error) -> writeApiError(response, 401,
+                        "Phiên đăng nhập đã hết hạn hoặc token không hợp lệ. Vui lòng đăng nhập lại."))
+                .accessDeniedHandler((request, response, error) -> writeApiError(response, 403,
+                        "Bạn không có quyền thực hiện thao tác này.")));
+        return http.build();
+    }
+
+    private static void writeApiError(jakarta.servlet.http.HttpServletResponse response, int status, String message)
+            throws java.io.IOException {
+        response.setStatus(status);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
+    }
+
+    @Bean
+    @org.springframework.core.annotation.Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
         csrfRequestHandler.setCsrfRequestAttributeName(null);
@@ -101,6 +134,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
                 .requestMatchers("/WEB-INF/**", "/advisor-register", "/advisor-register/**").denyAll()
+                .requestMatchers("/ws/**").authenticated()
                 .requestMatchers(
                     "/",
                     "/faq/**",
@@ -108,8 +142,6 @@ public class SecurityConfig {
                     "/attachments/**",
                     "/advisors/**",
                     "/login",
-                    "/oauth2/**",
-                    "/login/oauth2/**",
                     "/register",
                     "/verify-otp",
                     "/resend-otp",
@@ -119,7 +151,6 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/webjars/**",
-                    "/ws/**",
                     "/api/public/**",
                     "/api/auth/token"
                 ).permitAll()
@@ -142,6 +173,11 @@ public class SecurityConfig {
             // 8. Logout
             .logout(logout -> logout
                 .logoutUrl("/logout")
+                .addLogoutHandler((request, response, authentication) -> {
+                    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails user) {
+                        tokenRevocation.revokeAll(user.getMaTK());
+                    }
+                })
                 .logoutSuccessUrl("/?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
@@ -151,14 +187,14 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .defaultAuthenticationEntryPointFor(
                     new org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint("/login"),
-                    request -> !request.getServletPath().startsWith("/api/chat/"))
+                    request -> !request.getServletPath().startsWith("/api/") && !request.getServletPath().startsWith("/ws/"))
                 .defaultAuthenticationEntryPointFor((request, response, exception) -> {
                     response.setStatus(401);
                     response.setContentType("application/json;charset=UTF-8");
                     response.getWriter().write("{\"message\":\"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.\"}");
-                }, request -> request.getServletPath().startsWith("/api/chat/"))
+                }, request -> request.getServletPath().startsWith("/api/") || request.getServletPath().startsWith("/ws/"))
                 .accessDeniedHandler((request, response, exception) -> {
-                    if (request.getServletPath().startsWith("/api/chat/")) {
+                    if (request.getServletPath().startsWith("/api/")) {
                         response.setStatus(403);
                         response.setContentType("application/json;charset=UTF-8");
                         response.getWriter().write("{\"message\":\"Bạn không có quyền truy cập phiên chat này.\"}");
@@ -168,10 +204,6 @@ public class SecurityConfig {
                 })
             );
 
-        if (clientRegistrations.getIfAvailable() != null) {
-            http.oauth2Login(oauth -> oauth.loginPage("/login").successHandler(googleOAuth2SuccessHandler)
-                    .failureUrl("/login?msg=Đăng%20nhập%20Google%20không%20thành%20công"));
-        }
         return http.build();
     }
 
@@ -192,6 +224,13 @@ public class SecurityConfig {
     @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<CaptchaAuthenticationFilter> captchaFilterRegistration(CaptchaAuthenticationFilter filter) {
         org.springframework.boot.web.servlet.FilterRegistrationBean<CaptchaAuthenticationFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }

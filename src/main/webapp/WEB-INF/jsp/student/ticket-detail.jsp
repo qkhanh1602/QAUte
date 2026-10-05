@@ -72,7 +72,7 @@
             <c:if test="${empty ticket.phanHoiList}"><div class="qaute-card p-4 text-center text-muted mb-4 border-0 shadow-sm">
                 <i class="bi bi-hourglass-split fs-2 text-warning mb-2"></i>
                 <h6 class="fw-bold text-dark">Đang chờ phản hồi từ Cố vấn</h6>
-                <p class="small text-muted mb-0">Cố vấn chuyên trách đang xem xét nội dung câu hỏi của bạn. Thời hạn xử lý tối đa là 48h làm việc.</p>
+                <p class="small text-muted mb-0">Cố vấn chuyên trách đang xem xét nội dung câu hỏi của bạn. Thời hạn xử lý tối đa là 48 giờ liên tục.</p>
             </div>
 
             </c:if><c:if test="${not (empty ticket.phanHoiList)}"><div class="d-flex flex-column gap-3 mb-4">
@@ -175,7 +175,7 @@
                         <div class="fw-semibold text-dark"><c:out value="${q:formatTemporal(ticket.hanTiepNhan, 'dd/MM/yyyy HH:mm')}" /></div>
                     </div>
                     <div>
-                        <div class="text-muted">Hạn phản hồi chuẩn (48h làm việc):</div>
+                        <div class="text-muted">Hạn phản hồi chuẩn (48 giờ liên tục):</div>
                         <div class="fw-semibold text-dark"><c:out value="${q:formatTemporal(ticket.hanSLA, 'dd/MM/yyyy HH:mm')}" /></div>
                     </div>
                     <c:if test="${ticket.hanTuDongDong != null}"><div>

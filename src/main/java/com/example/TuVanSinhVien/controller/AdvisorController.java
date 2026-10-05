@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/advisor")
 public class AdvisorController {
+    @org.springframework.beans.factory.annotation.Autowired private com.example.TuVanSinhVien.service.SubmissionService submissions;
     private final NguoiTuVanRepository nguoiTuVanRepo;
     private final TicketService ticketService;
     private final AppointmentService appointmentService;
@@ -102,11 +103,7 @@ public class AdvisorController {
     public String replyTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) Boolean deXuatFaq, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            PhanHoiTuVan reply = ticketService.replyTicket(id, cv, noiDung, deXuatFaq);
-            if (attachment != null && !attachment.isEmpty()) {
-                try { attachmentService.attachToReply(attachment, cv.getTaiKhoan(), reply); }
-                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Câu trả lời đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/advisor/tickets/" + id; }
-            }
+            PhanHoiTuVan reply = submissions.reply(id, cv, noiDung, deXuatFaq, attachment);
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu trả lời tư vấn thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -229,16 +226,20 @@ public class AdvisorController {
         return "advisor/chat";
     }
 
+    @PostMapping("/chat/{sessionId}/end")
+    public String endChat(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails user,
+                          RedirectAttributes flash) {
+        try { chatService.endSession(sessionId, user.getTaiKhoan()); flash.addFlashAttribute("successMessage", "Đã kết thúc phiên chat."); }
+        catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
+        return "redirect:/advisor/chat";
+    }
+
     @PostMapping("/chat/{sessionId}/send")
     public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false, defaultValue = "") String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
             if ((noiDung == null || noiDung.isBlank()) && (attachment == null || attachment.isEmpty())) throw new IllegalArgumentException("Vui lòng nhập nội dung hoặc chọn tệp.");
-            TinNhanChat message = chatService.sendMessage(sessionId, cv.getTaiKhoan(), noiDung.isBlank() ? "Đã gửi một tệp đính kèm" : noiDung, attachment != null && !attachment.isEmpty() ? "Tep" : "VanBan");
-            if (attachment != null && !attachment.isEmpty()) {
-                try { attachmentService.attachToMessage(attachment, cv.getTaiKhoan(), message); }
-                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Tin nhắn đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); }
-            }
+            TinNhanChat message = submissions.sendMessage(sessionId, cv.getTaiKhoan(), noiDung, attachment);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

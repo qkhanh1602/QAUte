@@ -12,12 +12,14 @@ import java.util.UUID;
 
 @Service
 public class NotificationService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private final ThongBaoRepository thongBaoRepository;
 
     @Transactional
     public void sendNotification(TaiKhoan recipient, String title, String content, String type, String link) {
         String deduplicationKey = type + "_" + recipient.getMaTK() + "_" + UUID.randomUUID().toString().substring(0, 8);
-        ThongBao tb = ThongBao.builder().taiKhoanNhan(recipient).tieuDe(title).noiDung(content).loaiThongBao(type).lienKet(link).daDoc(false).ngayTao(LocalDateTime.now()).khoaChongLap(deduplicationKey).build();
+        ThongBao tb = ThongBao.builder().taiKhoanNhan(recipient).tieuDe(title).noiDung(content).loaiThongBao(type).lienKet(link).daDoc(false).ngayTao(LocalDateTime.now(clock)).khoaChongLap(deduplicationKey).build();
         thongBaoRepository.save(tb);
     }
 
@@ -28,7 +30,7 @@ public class NotificationService {
         }
         ThongBao notification = ThongBao.builder()
                 .taiKhoanNhan(recipient).tieuDe(title).noiDung(content).loaiThongBao(type)
-                .lienKet(link).daDoc(false).ngayTao(LocalDateTime.now()).khoaChongLap(deduplicationKey)
+                .lienKet(link).daDoc(false).ngayTao(LocalDateTime.now(clock)).khoaChongLap(deduplicationKey)
                 .build();
         thongBaoRepository.save(notification);
         return true;

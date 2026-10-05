@@ -42,7 +42,7 @@
                 <div class="alert alert-info py-2 small mb-4 d-flex align-items-center gap-2 border-0 bg-info bg-opacity-10 text-info-emphasis">
                     <i class="bi bi-info-circle-fill fs-5 text-info"></i>
                     <div>
-                        <strong>Cam kết dịch vụ SLA:</strong> Cố vấn sẽ tiếp nhận xử lý trong vòng <strong>24 giờ làm việc</strong> và có phản hồi chính thức trước <strong>48 giờ làm việc</strong>.
+                        <strong>Cam kết dịch vụ SLA:</strong> Cố vấn sẽ tiếp nhận xử lý trong vòng <strong>24 giờ liên tục</strong> và có phản hồi chính thức trước <strong>48 giờ liên tục</strong>.
                     </div>
                 </div>
 

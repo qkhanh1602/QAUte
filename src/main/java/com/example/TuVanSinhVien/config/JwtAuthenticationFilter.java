@@ -40,23 +40,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         String authorization = request.getHeader("Authorization");
-        if (authorization != null && authorization.startsWith("Bearer ")
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (authorization != null) {
+            SecurityContextHolder.clearContext();
             try {
+                if (!authorization.startsWith("Bearer ")) throw new SecurityException();
                 Claims claims = jwtService.parse(authorization.substring(7));
                 TaiKhoan account = accountRepository.findByTenDangNhap(claims.getSubject())
                         .orElseThrow(SecurityException::new);
                 int tokenVersion = claims.get("tokenVersion", Integer.class);
                 int currentVersion = account.getTokenVersion() == null ? 0 : account.getTokenVersion();
-                if (!"HoatDong".equals(account.getTrangThai()) || tokenVersion != currentVersion) {
+                if (!"HoatDong".equals(account.getTrangThai()) || tokenVersion != currentVersion
+                        || !java.util.Objects.equals(claims.get("accountId", Integer.class), account.getMaTK())
+                        || !java.util.Objects.equals(claims.get("role", String.class), account.getVaiTro())) {
                     throw new SecurityException();
                 }
                 CustomUserDetails principal = new CustomUserDetails(account);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+                authentication.setDetails(claims.getExpiration().toInstant());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (RuntimeException ignored) {
                 SecurityContextHolder.clearContext();
+            }
+        }
+        var active = SecurityContextHolder.getContext().getAuthentication();
+        if (active != null && active.getPrincipal() instanceof CustomUserDetails user) {
+            var current = accountRepository.findById(user.getMaTK()).orElse(null);
+            String path = request.getServletPath();
+            boolean passwordRoute = "/profile".equals(path) && "GET".equals(request.getMethod())
+                    || "/profile/change-password".equals(path) || "/api/auth/change-password".equals(path)
+                    || "/logout".equals(path) || "/api/auth/logout".equals(path)
+                    || path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/");
+            if (current != null && Boolean.TRUE.equals(current.getBatBuocDoiMatKhau()) && !passwordRoute) {
+                if (authorization != null || path.startsWith("/api/") || path.startsWith("/ws/")) {
+                    response.setStatus(403); response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"code\":\"PASSWORD_CHANGE_REQUIRED\",\"message\":\"Vui lòng đổi mật khẩu tạm trước khi sử dụng hệ thống.\"}");
+                } else response.sendRedirect(request.getContextPath() + "/profile?passwordRequired=true");
+                return;
             }
         }
         filterChain.doFilter(request, response);

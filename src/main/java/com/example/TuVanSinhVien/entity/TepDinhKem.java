@@ -39,7 +39,7 @@ public class TepDinhKem {
     @Column(name = "NgayTao", nullable = false)
     private LocalDateTime ngayTao;
 
-    @PrePersist void prePersist() { if (ngayTao == null) ngayTao = LocalDateTime.now(); }
+    @PrePersist void prePersist() { if (ngayTao == null) ngayTao = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")); }
 
     public TepDinhKem() {}
 

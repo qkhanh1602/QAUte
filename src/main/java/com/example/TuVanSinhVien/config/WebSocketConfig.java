@@ -10,6 +10,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final WebSocketAuthorization authorization;
+    public WebSocketConfig(WebSocketAuthorization authorization) { this.authorization = authorization; }
+
+    @Override public void configureClientInboundChannel(org.springframework.messaging.simp.config.ChannelRegistration registration) {
+        registration.interceptors(authorization);
+    }
+    @Override public void configureClientOutboundChannel(org.springframework.messaging.simp.config.ChannelRegistration registration) {
+        registration.interceptors(authorization.outbound());
+    }
 
     @Value("${app.allowed-origins:http://localhost:8080,http://127.0.0.1:8080}")
     private String[] allowedOrigins;

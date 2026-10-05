@@ -25,12 +25,17 @@ public class JwtAuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final LoginAttemptService loginAttemptService;
+    private final com.example.TuVanSinhVien.service.TokenRevocationService tokenRevocation;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.TuVanSinhVien.service.ProfileService profiles;
 
     public JwtAuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-                             LoginAttemptService loginAttemptService) {
+                             LoginAttemptService loginAttemptService,
+                             com.example.TuVanSinhVien.service.TokenRevocationService tokenRevocation) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.loginAttemptService = loginAttemptService;
+        this.tokenRevocation = tokenRevocation;
     }
 
     @PostMapping("/token")
@@ -54,6 +59,21 @@ public class JwtAuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@org.springframework.security.core.annotation.AuthenticationPrincipal CustomUserDetails user) {
+        tokenRevocation.revokeAll(user.getMaTK());
+        return ResponseEntity.ok(Map.of("message", "Đã đăng xuất và thu hồi các token của tài khoản."));
+    }
+
     public record TokenRequest(@NotBlank String username, @NotBlank String password) {}
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@org.springframework.security.core.annotation.AuthenticationPrincipal CustomUserDetails user,
+                                            @Valid @RequestBody PasswordRequest request) {
+        try {
+            profiles.changePassword(user.getMaTK(), request.oldPassword(), request.newPassword());
+            return ResponseEntity.ok(Map.of("message", "Đã đổi mật khẩu. Vui lòng đăng nhập lại."));
+        } catch (IllegalArgumentException ex) { return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage())); }
+    }
+    public record PasswordRequest(@NotBlank String oldPassword, @NotBlank String newPassword) {}
     public record TokenResponse(String accessToken, String tokenType, long expiresIn) {}
 }

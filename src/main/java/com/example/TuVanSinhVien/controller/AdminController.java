@@ -112,20 +112,10 @@ public class AdminController {
 
     @PostMapping("/users/{id}/toggle-status")
     public String toggleUserStatus(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
-        taiKhoanRepo.findById(id).ifPresent(u -> {
-            if ("ChoDuyet".equals(u.getTrangThai())) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Hồ sơ cố vấn chờ duyệt phải dùng nút Phê duyệt hoặc Từ chối.");
-                return;
-            }
-            if ("HoatDong".equals(u.getTrangThai())) {
-                u.setTrangThai("Khoa");
-            } else {
-                u.setTrangThai("HoatDong");
-            }
-            u.setTokenVersion((u.getTokenVersion() == null ? 0 : u.getTokenVersion()) + 1);
-            taiKhoanRepo.save(u);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái tài khoản #" + id + " thành công!");
-        });
+        try {
+            userAccountService.toggleStatus(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái tài khoản.");
+        } catch (RuntimeException ex) { redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage()); }
         return "redirect:/admin/users";
     }
 

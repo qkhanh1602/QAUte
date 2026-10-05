@@ -29,7 +29,7 @@ public class PhanHoiTuVan {
 
     @PrePersist
     public void prePersist() {
-        if (ngayTraLoi == null) ngayTraLoi = LocalDateTime.now();
+        if (ngayTraLoi == null) ngayTraLoi = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (deXuatFAQ == null) deXuatFAQ = false;
     }
 

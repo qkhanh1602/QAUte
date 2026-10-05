@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class ProfileService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private static final Pattern PHONE = Pattern.compile("^(?:\\+84|0)[0-9]{9,10}$");
     private static final Pattern STRONG_PASSWORD = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,72}$");
 
@@ -55,7 +57,8 @@ public class ProfileService {
 
     @Transactional
     public void changePassword(Integer accountId, String oldPassword, String newPassword) {
-        TaiKhoan account = getAccount(accountId);
+        TaiKhoan account = accountRepository.findLockedById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
         if (!passwordEncoder.matches(oldPassword, account.getMatKhau())) {
             throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác.");
         }
@@ -90,7 +93,7 @@ public class ProfileService {
         if (accountRepository.existsByEmail(email)) throw new IllegalArgumentException("Email đã được sử dụng.");
         TaiKhoan account = getAccount(accountId);
         account.setEmail(email);
-        account.setNgayCapNhat(java.time.LocalDateTime.now());
+        account.setNgayCapNhat(java.time.LocalDateTime.now(clock));
         return accountRepository.save(account);
     }
 }

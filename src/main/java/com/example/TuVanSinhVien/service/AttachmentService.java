@@ -14,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class AttachmentService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private final Cloudinary cloudinary;
     private final FileValidationService validator;
     private final TepDinhKemRepository attachmentRepo;
@@ -50,14 +52,34 @@ public class AttachmentService {
             Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                     "folder", "qaute/attachments", "resource_type", resourceType, "type", "authenticated",
                     "use_filename", true, "unique_filename", true));
+            String publicId = String.valueOf(result.get("public_id"));
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override public void afterCompletion(int status) {
+                                if (status != STATUS_COMMITTED) {
+                                    try { cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType, "type", "authenticated")); }
+                                    catch (Exception cleanupError) {
+                                        org.slf4j.LoggerFactory.getLogger(AttachmentService.class).error("Không xóa được asset sau rollback: {}", publicId, cleanupError);
+                                    }
+                                }
+                            }
+                        });
+            }
             TepDinhKem attachment = new TepDinhKem();
             attachment.setTaiKhoanTaiLen(uploader); attachment.setTenGoc(validation.getSafeFileName());
             attachment.setMimeType(file.getContentType()); attachment.setDungLuong(file.getSize());
             attachment.setCloudinaryAssetId(String.valueOf(result.get("asset_id")));
             attachment.setCloudinaryPublicId(String.valueOf(result.get("public_id")));
             attachment.setResourceType(resourceType); attachment.setDeliveryType("authenticated");
-            attachment.setNgayTao(LocalDateTime.now()); return attachment;
+            attachment.setNgayTao(LocalDateTime.now(clock)); return attachment;
         } catch (Exception ex) { throw new IllegalStateException("Không thể tải tệp lên Cloudinary: " + ex.getMessage(), ex); }
+    }
+
+    public void validateOptional(MultipartFile file) {
+        if (file == null || file.isEmpty()) return;
+        var result = validator.validateFile(file);
+        if (!result.isValid()) throw new IllegalArgumentException(result.getMessage());
     }
 
     public List<TepDinhKem> getTicketAttachments(Integer ticketId) { return attachmentRepo.findByYeuCauTuVan_MaYeuCauOrderByNgayTaoAsc(ticketId); }

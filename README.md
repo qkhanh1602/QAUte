@@ -127,7 +127,7 @@ flowchart TD
     G --> H[Cấp tài khoản cố vấn theo danh sách của trường]
 ```
 
-Đăng nhập bằng form chuyển tới `/student/dashboard`, `/advisor/dashboard` hoặc `/admin/dashboard`. Google SSO là tùy chọn, chỉ hoạt động khi có OAuth client và cấu hình phù hợp; không bắt buộc để chạy tài khoản demo. Đăng xuất bằng nút trên giao diện để gửi POST có CSRF; mở trực tiếp `/logout` là trang xác nhận.
+Đăng nhập bằng form chuyển tới `/student/dashboard`, `/advisor/dashboard` hoặc `/admin/dashboard`. Google SSO đã được loại bỏ theo quyết định hiện tại; đăng nhập bằng tên đăng nhập và mật khẩu. Đăng xuất bằng nút trên giao diện để gửi POST có CSRF; mở trực tiếp `/logout` là trang xác nhận.
 
 ### Phiếu yêu cầu tư vấn
 
@@ -188,9 +188,38 @@ Bản cập nhật gồm sửa khai báo JSTL/điều kiện boolean, chat phát
 
 Các phần còn cần chốt/kiểm thử:
 
-- SLA trong code hiện vẫn tính **giờ hành chính** (thứ Hai–thứ Sáu, 08:00–12:00 và 13:00–17:00), chưa chuyển sang yêu cầu mới **48 giờ liên tục kể từ lúc gửi**. Chưa có cơ chế bắt buộc chặn chat ngoài giờ hành chính. Đây là phần cần chỉnh tiếp, không coi đã hoàn tất.
-- Google SSO cần cấu hình bên ngoài và thử tài khoản thật. Cloudairy chờ xác nhận mục đích từ giảng viên; không đồng nhất với Cloudinary.
+- SLA tính **48 giờ liên tục từ lúc gửi câu hỏi**, cảnh báo vàng sau 24 giờ chưa tiếp nhận; dashboard và scheduler dùng cùng mốc. Giờ trực chat/lịch tư vấn: thứ Hai–thứ Sáu, 08:00–12:00 và 13:00–17:00, trừ ngày `SLA_HOLIDAYS`. Sinh viên vẫn gửi câu hỏi và để lại tin chờ ngoài giờ.
+- Cloudairy chờ xác nhận mục đích từ giảng viên; không đồng nhất với Cloudinary.
 - Chưa UAT đầy đủ OTP/email/upload trên hosting thật; chưa kiểm thử Azure/deploy nhiều instance và chưa xác minh hình ảnh desktop/mobile bằng trình duyệt.
 - Kiểm thử tự động bao gồm render JSP/SiteMesh, quyền và nghiệp vụ, login/logout, WebSocket hai chiều, API chat khi hết phiên. Cần SQL Server/schema hợp lệ để chạy; SMTP thật được bỏ qua khi chưa bật cấu hình kiểm thử tương ứng.
 
 Sau khi pull bản sửa giao diện/chat, dừng instance cũ, build/chạy lại và nhấn **Ctrl+F5** để tải JS/CSS mới. Nếu STS còn marker cũ: Maven → Update Project, Project → Clean và kiểm tra JDK 25.
+
+Google SSO/OAuth2 client đã được gỡ khỏi dependency, SecurityConfig và giao diện đăng nhập. Không cần tạo OAuth client hoặc khai báo biến môi trường Google. Đăng ký sinh viên qua OTP email và JWT vẫn giữ nguyên.
+
+
+## JWT: cấp token, xác thực và đăng xuất API
+
+Giao diện JSP/chat dùng session và CSRF như trước. Request có header `Authorization` và các endpoint `/api/auth/**` đi qua security chain riêng: không lấy danh tính từ cookie, không lưu xác thực vào session và không tạo session cho việc cấp/gọi API bằng JWT. Vì vậy cookie còn đăng nhập không thể làm token sai/hết hạn trở thành hợp lệ. API của giao diện vẫn có thể dùng session khi không gửi header Authorization.
+
+- `POST /api/auth/token`: JSON gồm `username`, `password`; đúng thông tin trả `accessToken`, `tokenType` và `expiresIn` (mặc định900giây). Sai thông tin trả401; thử sai nhiều lần có thể trả429.
+- Gọi API bảo vệ bằng `Authorization: Bearer <accessToken>`. Mỗi request kiểm tra chữ ký, thời hạn, mã tài khoản, vai trò hiện hành, trạng thái và tokenVersion trong DB. Token không hợp lệ trả401 JSON; thiếu quyền trả403 JSON.
+- `POST /api/auth/logout`: gửi Bearer token hợp lệ để đăng xuất API. Đây là thao tác **thu hồi toàn bộ token đã cấp của tài khoản**, bằng tăng tokenVersion trong transaction có khóa bản ghi.
+- Đăng xuất giao diện bằng POST `/logout` có CSRF cũng thu hồi toàn bộ token của tài khoản, rồi xóa session/cookie. Các phiên đăng nhập khác của tài khoản sẽ phải đăng nhập lại khi được kiểm tra ở request tiếp theo. GET `/logout` vẫn chỉ mở trang xác nhận.
+- Đổi/reset mật khẩu, khóa tài khoản hoặc thay quyền làm token cũ không còn được chấp nhận. Token không hợp lệ không ghi đè hoặc phá session trình duyệt ở luồng stateless.
+- Tài khoản dùng mật khẩu tạm phải đổi mật khẩu trước khi sử dụng chức năng khác. UI chuyển về `/profile`; API trả `403 PASSWORD_CHANGE_REQUIRED`. Dùng `POST /api/auth/change-password` với Bearer token và JSON `oldPassword`, `newPassword`, sau đó đăng nhập lại lấy token mới.
+- Chưa dùng refresh token: token hết hạn thì gọi lại endpoint đăng nhập bằng thông tin hợp lệ. Đây là quy ước hiện tại, không cần triển khai refresh token để thử project.
+- JWT_SECRET phải là Base64 của ít nhất32byte ngẫu nhiên. Local cấu hình trong file ignored; Render cấu hình biến môi trường riêng. Không đưa secret lên Git và không để token trong URL.
+
+Kiểm thử đã bổ sung cấp token/sai mật khẩu, API không tạo session, token hết hạn/bị sửa, tài khoản khóa/đổi vai trò, đổi mật khẩu, thu hồi sau logout API/giao diện, cookie không vượt qua Bearer sai, API403 JSON và CSRF của giao diện. Chat WebSocket hai chiều, JSP/SiteMesh và login/logout vẫn được kiểm tra trong cùng suite.
+
+## Quy trình backend cập nhật ngày 05/10/2026
+
+- Hệ thống dùng admin duy nhất đã được cấp sẵn. Giao diện không có nút khóa admin; backend từ chối khóa hoặc tạo thêm admin. Cố vấn còn phiếu, lịch hoặc chat đang mở phải xử lý xong trước khi khóa/chuyển đơn vị. Có nút **Kết thúc chat** cho người tham gia.
+- WebSocket `/ws` yêu cầu đăng nhập. Client chỉ SEND tới `/app/chat.send`, SUBSCRIBE vào queue của mình và kênh presence được phép. Khi logout/khóa/đổi mật khẩu hoặc quyền, socket cũ bị chặn gửi và nhận; JWT socket cũng kiểm tra hạn token.
+- Slot chỉ mở trong giờ hành chính. Khi đặt lịch, backend kiểm tra lại cố vấn/đơn vị đang hoạt động và nhận tư vấn. Hạn duyệt là thời điểm sớm hơn giữa 24 giờ từ lúc đặt và giờ bắt đầu; job từ chối cả lịch chờ đã qua giờ bắt đầu.
+- Tệp được kiểm tra trước khi lưu nghiệp vụ. Nội dung và metadata tệp cùng transaction; lỗi upload/save làm rollback. Asset Cloudinary đã upload được xóa khi rollback; lỗi xóa được ghi log để xử lý.
+- Email cảnh báo SLA được ghi vào `HangDoiSuKien` riêng với thông báo trên web. Worker gửi lại khi SMTP thất bại, tối đa 5 lần, các lần chờ 5/10/20/40 phút; bản ghi thất bại được giữ để kiểm tra. SMTP không cung cấp bảo đảm gửi đúng một lần khi có lỗi commit sau khi gửi.
+- Tất cả thời gian nghiệp vụ `datetime2` dùng giờ Việt Nam `Asia/Ho_Chi_Minh`; JWT dùng thời điểm UTC tuyệt đối. SQL view thống kê không cộng thêm 7 giờ vào thời điểm đã lưu theo giờ Việt Nam.
+
+Khi chạy bản mới, `WorkflowPolicyInitializer` tự áp dụng `src/main/resources/db/workflow-policy-20261005.sql`: cập nhật hạn của phiếu/lịch đang mở, cấu hình SLA, default thời gian và view thống kê. Script chạy lặp an toàn, giữ nguyên tài khoản/nội dung/thời điểm lịch sử. Tài khoản SQL cần quyền sửa default/view; nếu deploy bằng user giới hạn, chạy script một lần bằng tài khoản quản trị DB rồi đặt `WORKFLOW_POLICY_MIGRATION_ENABLED=false`. Dữ liệu lịch sử từng nhập sai timezone cần kiểm tra nguồn trước khi sửa riêng.

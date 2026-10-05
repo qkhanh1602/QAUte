@@ -19,6 +19,8 @@ import java.util.List;
 
 @Service
 public class WorkflowScheduler {
+    @org.springframework.beans.factory.annotation.Autowired private EmailOutboxService outbox;
+    @org.springframework.beans.factory.annotation.Value("${app.workflow.scheduling.enabled:true}") private boolean enabled = true;
     private final java.time.Clock clock;
     private static final Logger log = LoggerFactory.getLogger(WorkflowScheduler.class);
     private final TicketService ticketService;
@@ -46,10 +48,11 @@ public class WorkflowScheduler {
     @Scheduled(cron = "0 */15 * * * *", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void processTicketDeadlines() {
+        if (!enabled) return;
         LocalDateTime now = LocalDateTime.now(clock);
         int autoClosed = ticketService.autoCloseExpiredTickets(now);
         notifyOverdue(ticketRepo.findByTrangThaiOrderByNgayTaoDesc("ChoTiepNhan").stream()
-                .filter(t -> !slaService.calculateBusinessDeadline(t.getNgayTao(), 24).isAfter(now)).toList(), false);
+                .filter(t -> !slaService.calculateDeadline(t.getNgayTao(), 24).isAfter(now)).toList(), false);
         appointmentService.expirePendingAppointments(now);
         notifyOverdue(ticketRepo.findOverdueSla(now), true);
         if (autoClosed > 0) {
@@ -67,10 +70,10 @@ public class WorkflowScheduler {
             String content = "Phiếu #" + ticket.getMaYeuCau() + " - " + ticket.getTieuDe()
                     + " thuộc " + ticket.getDonVi().getTenDonVi() + " đang ở mức cảnh báo " + level + ".";
             for (TaiKhoan recipient : recipients) {
-                boolean created = notificationService.sendNotificationOnce(recipient,
+                notificationService.sendNotificationOnce(recipient,
                         keyPrefix + ticket.getMaYeuCau(), title, content, "SLA", "/admin/tickets");
-                if (created && redAlert) {
-                    emailService.sendNotificationEmail(recipient.getEmail(), "[QAUTE] " + title,
+                if (redAlert) {
+                    outbox.queue(keyPrefix + ticket.getMaYeuCau() + "_" + recipient.getMaTK(), recipient.getEmail(), "[QAUTE] " + title,
                             "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(content) + "</p><p>Vui lòng điều phối xử lý trên hệ thống QAUTE.</p>");
                 }
             }
@@ -80,6 +83,7 @@ public class WorkflowScheduler {
     @Scheduled(cron = "0 0 8 * * FRI,SAT", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void remindAdvisorWeeklySlots() {
+        if (!enabled) return;
         int week = LocalDate.now(clock).get(WeekFields.ISO.weekOfWeekBasedYear());
         for (NguoiTuVan advisor : advisorRepo.findByNhanTuVanTrue()) {
             long count = appointmentService.countNextWeekOpenSlots(advisor.getMaCV());

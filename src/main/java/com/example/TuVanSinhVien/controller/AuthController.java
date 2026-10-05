@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -56,8 +55,6 @@ public class AuthController {
     private final SecurityAuditService auditService;
     private final ProfileService profileService;
 
-    @Value("${app.google-sso.enabled:false}")
-    private boolean googleSsoEnabled;
 
     public AuthController(TaiKhoanRepository taiKhoanRepo,
                           SinhVienRepository sinhVienRepo,
@@ -115,7 +112,6 @@ public class AuthController {
 
         boolean requireCaptcha = (captcha != null) || loginAttemptService.isCaptchaRequired(clientIp, null);
         model.addAttribute("requireCaptcha", requireCaptcha);
-        model.addAttribute("googleSsoEnabled", googleSsoEnabled);
 
         return "auth/login";
     }
@@ -253,7 +249,7 @@ public class AuthController {
             return "redirect:/register";
         }
         // 3. Tạo tài khoản chính thức (Hoạt động)
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         TaiKhoan tk = TaiKhoan.builder()
                 .tenDangNhap(regDto.getTenDangNhap())
                 .matKhau(regDto.getMatKhau())

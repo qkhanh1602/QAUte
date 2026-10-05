@@ -41,7 +41,7 @@ public class CauHoiFAQ {
 
     @PrePersist
     public void prePersist() {
-        if (ngayTao == null) ngayTao = LocalDateTime.now();
+        if (ngayTao == null) ngayTao = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (luotXem == null) luotXem = 0;
         if (trangThai == null) trangThai = "BanNhao";
     }

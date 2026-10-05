@@ -21,6 +21,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/student")
 public class StudentController {
+    @org.springframework.beans.factory.annotation.Autowired private com.example.TuVanSinhVien.service.SubmissionService submissions;
     private final SinhVienRepository sinhVienRepo;
     private final TicketService ticketService;
     private final AppointmentService appointmentService;
@@ -72,11 +73,7 @@ public class StudentController {
     public String createTicket(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Integer maDonVi, @RequestParam Integer maLinhVuc, @RequestParam String tieuDe, @RequestParam String noiDung, @RequestParam(required = false) Boolean baoMatDanhTinh, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            YeuCauTuVan ticket = ticketService.createTicket(sv, maLinhVuc, maDonVi, tieuDe, noiDung, baoMatDanhTinh);
-            if (attachment != null && !attachment.isEmpty()) {
-                try { attachmentService.attachToTicket(attachment, sv.getTaiKhoan(), ticket); }
-                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Phiếu đã được gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/student/tickets/" + ticket.getMaYeuCau(); }
-            }
+            YeuCauTuVan ticket = submissions.createTicket(sv, maLinhVuc, maDonVi, tieuDe, noiDung, baoMatDanhTinh, attachment);
             redirectAttributes.addFlashAttribute("successMessage", "Gửi yêu cầu tư vấn thành công! Mã phiếu: #" + ticket.getMaYeuCau());
             return "redirect:/student/tickets/" + ticket.getMaYeuCau();
         } catch (Exception e) {
@@ -107,11 +104,7 @@ public class StudentController {
     public String followUpTicket(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
-            PhanHoiTuVan reply = ticketService.studentFollowUp(id, sv, noiDung);
-            if (attachment != null && !attachment.isEmpty()) {
-                try { attachmentService.attachToReply(attachment, sv.getTaiKhoan(), reply); }
-                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Câu hỏi bổ sung đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); return "redirect:/student/tickets/" + id; }
-            }
+            PhanHoiTuVan reply = submissions.followUp(id, sv, noiDung, attachment);
             redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu hỏi bổ sung tới cố vấn!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -211,17 +204,21 @@ public class StudentController {
         return "student/chat";
     }
 
+    @PostMapping("/chat/{sessionId}/end")
+    public String endChat(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails user,
+                          RedirectAttributes flash) {
+        try { chatService.endSession(sessionId, user.getTaiKhoan()); flash.addFlashAttribute("successMessage", "Đã kết thúc phiên chat."); }
+        catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
+        return "redirect:/student/chat";
+    }
+
     @PostMapping("/chat/{sessionId}/send")
     public String sendChatMessage(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(required = false, defaultValue = "") String noiDung, @RequestParam(required = false) MultipartFile attachment, RedirectAttributes redirectAttributes) {
         Integer maDonVi = null;
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
             if ((noiDung == null || noiDung.isBlank()) && (attachment == null || attachment.isEmpty())) throw new IllegalArgumentException("Vui lòng nhập nội dung hoặc chọn tệp.");
-            TinNhanChat msg = chatService.sendMessage(sessionId, sv.getTaiKhoan(), noiDung.isBlank() ? "Đã gửi một tệp đính kèm" : noiDung, attachment != null && !attachment.isEmpty() ? "Tep" : "VanBan");
-            if (attachment != null && !attachment.isEmpty()) {
-                try { attachmentService.attachToMessage(attachment, sv.getTaiKhoan(), msg); }
-                catch (RuntimeException uploadError) { redirectAttributes.addFlashAttribute("errorMessage", "Tin nhắn đã gửi nhưng tệp chưa tải lên được: " + uploadError.getMessage()); }
-            }
+            TinNhanChat msg = submissions.sendMessage(sessionId, sv.getTaiKhoan(), noiDung, attachment);
             maDonVi = msg.getPhienChat().getDonVi().getMaDonVi();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

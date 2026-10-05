@@ -16,6 +16,8 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private SlaService officeHours = new SlaService();
     private final java.time.Clock clock;
     private final KhungGioTuVanRepository slotRepo;
     private final LichHenTuVanRepository appointmentRepo;
@@ -32,6 +34,7 @@ public class AppointmentService {
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
         long minutes = ChronoUnit.MINUTES.between(start, end);
+        officeHours.requireOfficeInterval(start, end);
         if (minutes != 45 && minutes != 60) {
             throw new IllegalArgumentException("Thời lượng khung giờ tư vấn phải đúng 45 hoặc 60 phút.");
         }
@@ -61,7 +64,7 @@ public class AppointmentService {
         // Lọc bỏ slot đã có người đặt chiếm chỗ
         List<KhungGioTuVan> result = new ArrayList<>();
         for (KhungGioTuVan s : slots) {
-            if (!appointmentRepo.isSlotOccupied(s.getMaKhungGio())) {
+            if (officeHours.isOfficeInterval(s.getBatDau(),s.getKetThuc()) && !appointmentRepo.isSlotOccupied(s.getMaKhungGio())) {
                 result.add(s);
             }
         }
@@ -78,16 +81,20 @@ public class AppointmentService {
         }
         // Quy tắc: tối đa 2 lịch chờ duyệt trên mỗi sinh viên
         accountRepo.findLockedById(sv.getTaiKhoan().getMaTK()).orElseThrow();
-        long pendingCount = appointmentRepo.countPendingByStudent(sv.getMaSV());
+        LocalDateTime now = LocalDateTime.now(clock);
+        long pendingCount = appointmentRepo.countCurrentPendingByStudent(sv.getMaSV(), now);
         if (pendingCount >= 2) {
             throw new IllegalStateException("Bạn đã có 2 lịch hẹn đang chờ duyệt. Vui lòng đợi cố vấn xử lý trước khi đặt thêm.");
         }
+        KhungGioTuVan preview = slotRepo.findById(maKhungGio).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ tư vấn."));
+        TaiKhoan advisorAccount = accountRepo.findLockedById(preview.getNguoiTuVan().getTaiKhoan().getMaTK()).orElseThrow();
+        requireEligibleAdvisor(preview.getNguoiTuVan(), advisorAccount);
         KhungGioTuVan slot = slotRepo.findLockedById(maKhungGio).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ tư vấn."));
         if (!"Mo".equals(slot.getTrangThai())) {
             throw new IllegalStateException("Khung giờ tư vấn này hiện đang bị khóa.");
         }
-        LocalDateTime now = LocalDateTime.now(clock);
-        if (slot.getBatDau().isBefore(now)) {
+        officeHours.requireOfficeInterval(slot.getBatDau(), slot.getKetThuc());
+        if (!slot.getBatDau().isAfter(now)) {
             throw new IllegalStateException("Không thể đặt khung giờ trong quá khứ.");
         }
         if (slot.getBatDau().isAfter(now.plusDays(7))) {
@@ -101,7 +108,8 @@ public class AppointmentService {
         if (appointmentRepo.existsOverlappingStudentAppointment(sv.getMaSV(), slot.getBatDau(), slot.getKetThuc())) {
             throw new IllegalStateException("Bạn đã có một lịch hẹn khác trong khoảng thời gian này.");
         }
-        LichHenTuVan appointment = LichHenTuVan.builder().sinhVien(sv).nguoiTuVan(slot.getNguoiTuVan()).khungGio(slot).chuDe(chuDe.trim()).noiDungHen(noiDungHen.trim()).trangThai("ChoDuyet").ngayTao(now).hanDuyet(now.plusHours(24)).build();
+        LocalDateTime deadline = now.plusHours(24).isBefore(slot.getBatDau()) ? now.plusHours(24) : slot.getBatDau();
+        LichHenTuVan appointment = LichHenTuVan.builder().sinhVien(sv).nguoiTuVan(slot.getNguoiTuVan()).khungGio(slot).chuDe(chuDe.trim()).noiDungHen(noiDungHen.trim()).trangThai("ChoDuyet").ngayTao(now).hanDuyet(deadline).build();
         appointment = appointmentRepo.save(appointment);
         // Báo cho cố vấn
         notificationService.sendNotification(slot.getNguoiTuVan().getTaiKhoan(), "Có yêu cầu đặt lịch hẹn mới", "Sinh viên " + sv.getTaiKhoan().getHoTen() + " vừa đặt lịch hẹn: \'" + chuDe + "\'.", "LichHen", "/advisor/appointments");
@@ -241,7 +249,8 @@ public class AppointmentService {
         for (KhungGioTuVan source : slotRepo.findAdvisorSlotsInRange(advisor.getMaCV(), previousStart, previousEnd)) {
             LocalDateTime newStart = source.getBatDau().plusWeeks(1);
             LocalDateTime newEnd = source.getKetThuc().plusWeeks(1);
-            if ("Mo".equals(source.getTrangThai()) && newStart.isAfter(LocalDateTime.now(clock)) && !slotRepo.existsOverlappingSlot(advisor.getMaCV(), newStart, newEnd)) {
+            if ("Mo".equals(source.getTrangThai()) && newStart.isAfter(LocalDateTime.now(clock).plusMinutes(15))
+                    && officeHours.isOfficeInterval(newStart,newEnd) && !slotRepo.existsOverlappingSlot(advisor.getMaCV(), newStart, newEnd)) {
                 slotRepo.save(KhungGioTuVan.builder()
                         .nguoiTuVan(advisor).batDau(newStart).ketThuc(newEnd)
                         .hinhThuc(source.getHinhThuc()).diaDiemLink(source.getDiaDiemLink()).trangThai("Mo")
@@ -279,6 +288,7 @@ public class AppointmentService {
         if (!java.util.Set.of("TrucTiep", "TrucTuyen").contains(type) || location == null || location.isBlank() || location.length()>1000)
             throw new IllegalArgumentException("Hình thức hoặc địa điểm không hợp lệ.");
         LocalDateTime end = start.plusMinutes(minutes);
+        officeHours.requireOfficeInterval(start, end);
         if (slotRepo.overlapsOther(advisor.getMaCV(), id, start, end)) throw new IllegalStateException("Khung giờ trùng với lịch khác.");
         slot.setBatDau(start); slot.setKetThuc(end); slot.setHinhThuc(type); slot.setDiaDiemLink(location.trim()); slot.setTrangThai("Mo");
         slotRepo.save(slot);
@@ -287,13 +297,18 @@ public class AppointmentService {
     @Transactional
     public int expirePendingAppointments(LocalDateTime now) {
         int expired = 0;
-        for (LichHenTuVan candidate : appointmentRepo.findByTrangThaiAndHanDuyetLessThanEqual("ChoDuyet", now)) {
+        for (LichHenTuVan candidate : appointmentRepo.findExpiredPending(now)) {
             LichHenTuVan app = appointmentRepo.findLockedById(candidate.getMaLichHen()).orElseThrow();
-            if (!"ChoDuyet".equals(app.getTrangThai()) || app.getHanDuyet().isAfter(now)) continue;
-            app.setTrangThai("TuChoi"); app.setLyDo("Tự động từ chối do quá hạn duyệt 24 giờ."); app.setNgayDuyet(now);
+            if (!"ChoDuyet".equals(app.getTrangThai()) || app.getHanDuyet().isAfter(now) && app.getKhungGio().getBatDau().isAfter(now)) continue;
+            app.setTrangThai("TuChoi"); app.setLyDo("Tự động từ chối do quá hạn duyệt hoặc đã qua giờ bắt đầu."); app.setNgayDuyet(now);
             appointmentRepo.save(app); expired++;
             notificationService.sendNotification(app.getSinhVien().getTaiKhoan(), "Lịch hẹn quá hạn duyệt", app.getLyDo(), "LichHen", "/student/appointments");
         }
         return expired;
+    }
+    private void requireEligibleAdvisor(NguoiTuVan advisor, TaiKhoan account) {
+        if (!"HoatDong".equals(account.getTrangThai()) || !"CoVan".equals(account.getVaiTro())
+                || !Boolean.TRUE.equals(advisor.getNhanTuVan()) || !Boolean.TRUE.equals(advisor.getDonVi().getHoatDong()))
+            throw new IllegalStateException("Cố vấn hoặc đơn vị hiện không tiếp nhận lịch tư vấn.");
     }
 }

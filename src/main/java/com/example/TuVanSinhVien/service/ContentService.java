@@ -12,6 +12,8 @@ import java.util.List;
 
 @Service
 public class ContentService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private final CauHoiFAQRepository faqRepo;
     private final BaiVietHuongDanRepository articleRepo;
     private final LinhVucTuVanRepository fieldRepo;
@@ -59,7 +61,7 @@ public class ContentService {
         faqRepo.findById(id).ifPresent(f -> {
             f.setTrangThai("HienThi");
             f.setTaiKhoanDuyet(admin);
-            f.setNgayDuyet(LocalDateTime.now());
+            f.setNgayDuyet(LocalDateTime.now(clock));
             faqRepo.save(f);
         });
     }
@@ -69,7 +71,7 @@ public class ContentService {
         articleRepo.findById(id).ifPresent(a -> {
             a.setTrangThai("XuatBan");
             a.setTaiKhoanDuyet(admin);
-            a.setNgayDang(LocalDateTime.now());
+            a.setNgayDang(LocalDateTime.now(clock));
             articleRepo.save(a);
         });
     }
@@ -98,9 +100,9 @@ public class ContentService {
         article.setLinhVuc(field);
         if (article.getTaiKhoanAdmin() == null) article.setTaiKhoanAdmin(admin);
         if (article.getLuotXem() == null) article.setLuotXem(0);
-        if (article.getNgayTao() == null) article.setNgayTao(LocalDateTime.now());
+        if (article.getNgayTao() == null) article.setNgayTao(LocalDateTime.now(clock));
         article.setTrangThai(publish ? "XuatBan" : "BanNhao");
-        article.setNgayDang(publish ? LocalDateTime.now() : null);
+        article.setNgayDang(publish ? LocalDateTime.now(clock) : null);
         article.setTaiKhoanDuyet(publish ? admin : null);
         return articleRepo.save(article);
     }
@@ -120,10 +122,10 @@ public class ContentService {
         faq.setLinhVuc(field);
         if (faq.getTaiKhoanDeXuat() == null) faq.setTaiKhoanDeXuat(admin);
         if (faq.getLuotXem() == null) faq.setLuotXem(0);
-        if (faq.getNgayTao() == null) faq.setNgayTao(LocalDateTime.now());
+        if (faq.getNgayTao() == null) faq.setNgayTao(LocalDateTime.now(clock));
         faq.setTrangThai(publish ? "HienThi" : "BanNhao");
         faq.setTaiKhoanDuyet(publish ? admin : null);
-        faq.setNgayDuyet(publish ? LocalDateTime.now() : null);
+        faq.setNgayDuyet(publish ? LocalDateTime.now(clock) : null);
         return faqRepo.save(faq);
     }
 

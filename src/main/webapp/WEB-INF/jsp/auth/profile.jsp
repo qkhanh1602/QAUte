@@ -10,6 +10,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
 </head>
 <body>
+<c:if test="${user.batBuocDoiMatKhau}"><div class="alert alert-warning">Bạn đang dùng mật khẩu tạm. Hãy đổi mật khẩu bên dưới để tiếp tục sử dụng hệ thống.</div></c:if>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-5">

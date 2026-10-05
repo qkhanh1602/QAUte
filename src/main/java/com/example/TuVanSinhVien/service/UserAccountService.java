@@ -21,6 +21,8 @@ import java.util.List;
 
 @Service
 public class UserAccountService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private java.time.Clock clock = java.time.Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     private final TaiKhoanRepository accountRepo;
     private final SinhVienRepository studentRepo;
     private final PasswordEncoder passwordEncoder;
@@ -40,7 +42,7 @@ public class UserAccountService {
 
     @Transactional
     public TaiKhoan createAdmin(String username, String password, String fullName, String email, String phone) {
-        return createBaseAccount(username, password, fullName, email, phone, "Admin");
+        throw new IllegalArgumentException("Hệ thống sử dụng tài khoản admin duy nhất đã được cấp sẵn.");
     }
 
     @Transactional
@@ -65,7 +67,7 @@ public class UserAccountService {
         if (accountRepo.existsByTenDangNhap(normalizedUsername) || accountRepo.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("Tên đăng nhập hoặc email đã tồn tại.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         return accountRepo.save(TaiKhoan.builder().tenDangNhap(normalizedUsername).matKhau(passwordEncoder.encode(password))
                 .hoTen(required(fullName, "Họ tên")).email(normalizedEmail).soDienThoai(blankToNull(phone))
                 .vaiTro(role).trangThai("HoatDong").batBuocDoiMatKhau(true).ngayTao(now).ngayCapNhat(now).build());
@@ -84,7 +86,7 @@ public class UserAccountService {
                 || studentRepo.findByMssv(normalizedStudentCode).isPresent()) {
             throw new IllegalArgumentException("Tên đăng nhập, email hoặc MSSV đã tồn tại.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         TaiKhoan account = accountRepo.save(TaiKhoan.builder()
                 .tenDangNhap(normalizedUsername).matKhau(passwordEncoder.encode(password))
                 .hoTen(required(fullName, "Họ tên")).email(normalizedEmail)
@@ -155,6 +157,7 @@ public class UserAccountService {
     @Transactional
     public void editAccount(Integer id, Integer actorId, String name, String email, String phone, String role, Integer unitId) {
         TaiKhoan account=accountRepo.findLockedById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if ("Admin".equals(role) && !"Admin".equals(account.getVaiTro())) throw new IllegalArgumentException("Không cấp thêm vai trò admin; hệ thống dùng một admin duy nhất.");
         if (!java.util.Set.of("Admin","CoVan","SinhVien").contains(role)) throw new IllegalArgumentException("Vai trò không hợp lệ.");
         String cleanEmail=required(email,"Email").toLowerCase();
         if (cleanEmail.length()>254 || !cleanEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw new IllegalArgumentException("Email không hợp lệ.");
@@ -178,13 +181,33 @@ public class UserAccountService {
         if(advisor!=null && !"CoVan".equals(role)) { requireNoActiveWork(advisor); advisor.setNhanTuVan(false); advisorRepo.save(advisor); }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
         account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
-        account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now());
+        account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now(clock));
         accountRepo.save(account);
     }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.TuVanSinhVien.repository.PhienChatRepository chatRepo;
 
     private void requireNoActiveWork(NguoiTuVan advisor) {
         if(ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(t -> java.util.Set.of("DangXuLy","DaPhanHoi").contains(t.getTrangThai()))
             || appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(a -> java.util.Set.of("ChoDuyet","DaXacNhan").contains(a.getTrangThai())))
-            throw new IllegalStateException("Cố vấn còn phiếu/lịch hẹn đang xử lý; hãy điều phối xong trước khi đổi vai trò/đơn vị.");
+            throw new IllegalStateException("Cố vấn còn phiếu/lịch hẹn đang xử lý; hãy điều phối xong trước khi khóa hoặc đổi vai trò/đơn vị.");
+        if (chatRepo != null && chatRepo.findByNguoiTuVan_MaCVOrderByThoiGianBatDauDesc(advisor.getMaCV()).stream()
+                .anyMatch(c -> "DangHoatDong".equals(c.getTrangThai())))
+            throw new IllegalStateException("Cố vấn còn phiên chat đang mở; hãy kết thúc phiên trước khi khóa hoặc đổi đơn vị.");
+    }
+
+    @Transactional
+    public void toggleStatus(Integer id) {
+        TaiKhoan account = accountRepo.findLockedById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if ("Admin".equals(account.getVaiTro())) throw new IllegalArgumentException("Tài khoản admin không được khóa.");
+        if (!java.util.Set.of("HoatDong", "Khoa").contains(account.getTrangThai()))
+            throw new IllegalArgumentException("Tài khoản chưa được duyệt phải xử lý qua luồng phê duyệt.");
+        if ("HoatDong".equals(account.getTrangThai())) {
+            advisorRepo.findByTaiKhoan_MaTK(id).ifPresent(this::requireNoActiveWork);
+        }
+        account.setTrangThai("HoatDong".equals(account.getTrangThai()) ? "Khoa" : "HoatDong");
+        account.setTokenVersion((account.getTokenVersion() == null ? 0 : account.getTokenVersion()) + 1);
+        accountRepo.save(account);
     }
 }

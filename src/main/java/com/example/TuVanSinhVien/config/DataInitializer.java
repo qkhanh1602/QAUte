@@ -44,7 +44,7 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
         log.info("Bắt đầu khởi tạo dữ liệu mẫu cho hệ thống QAUTE...");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         // 1. Tạo tài khoản Admin
         TaiKhoan admin = TaiKhoan.builder().tenDangNhap("admin").matKhau(passwordEncoder.encode("Admin@123")).hoTen("Ban Quản trị QAUTE").email("qaute.edu@gmail.com").soDienThoai("0901234567").vaiTro("Admin").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
         admin = taiKhoanRepo.save(admin);

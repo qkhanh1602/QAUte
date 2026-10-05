@@ -10,6 +10,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
 </head>
 <body>
+<div class="alert alert-info mx-3 mt-3 small">Cố vấn trực chat thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00 (trừ ngày nghỉ). Sinh viên có thể để lại tin nhắn chờ ngoài giờ.</div>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4">
@@ -66,7 +67,8 @@
                             </small>
                         </c:if></div>
                     </div>
-                    <span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${q:chatStatusLabel(currentSession.trangThai)}" /></span>
+                    <div class="d-flex align-items-center gap-2"><span class="${'status-badge status-' += currentSession.trangThai}"><c:out value="${q:chatStatusLabel(currentSession.trangThai)}" /></span>
+<c:if test="${currentSession.trangThai != 'KetThuc'}"><form method="post" action="${pageContext.request.contextPath}/student/chat/${currentSession.maPhienChat}/end"><sec:csrfInput /><button class="btn btn-outline-secondary btn-sm" type="submit">Kết thúc chat</button></form></c:if></div>
                 </div>
 
                 <!-- Messages Stream -->

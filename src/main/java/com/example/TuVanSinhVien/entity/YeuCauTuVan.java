@@ -67,8 +67,8 @@ public class YeuCauTuVan {
 
     @PrePersist
     public void prePersist() {
-        if (ngayTao == null) ngayTao = LocalDateTime.now();
-        if (ngayCapNhat == null) ngayCapNhat = LocalDateTime.now();
+        if (ngayTao == null) ngayTao = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        if (ngayCapNhat == null) ngayCapNhat = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (trangThai == null) trangThai = "ChoTiepNhan";
         if (baoMatDanhTinh == null) baoMatDanhTinh = false;
         if (phienBan == null) phienBan = 0L;
@@ -76,7 +76,7 @@ public class YeuCauTuVan {
 
     @PreUpdate
     public void preUpdate() {
-        ngayCapNhat = LocalDateTime.now();
+        ngayCapNhat = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
     @java.lang.SuppressWarnings("all")

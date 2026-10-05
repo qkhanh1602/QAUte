@@ -33,7 +33,7 @@ public class TinNhanChat {
     @PrePersist
     public void prePersist() {
         if (clientMessageId == null) clientMessageId = UUID.randomUUID();
-        if (thoiGianGui == null) thoiGianGui = LocalDateTime.now();
+        if (thoiGianGui == null) thoiGianGui = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         if (loaiTinNhan == null) loaiTinNhan = "VanBan";
     }
 

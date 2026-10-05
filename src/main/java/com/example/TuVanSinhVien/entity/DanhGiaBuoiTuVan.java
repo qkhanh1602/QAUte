@@ -26,7 +26,7 @@ public class DanhGiaBuoiTuVan {
 
     @PrePersist
     public void prePersist() {
-        if (ngayDanhGia == null) ngayDanhGia = LocalDateTime.now();
+        if (ngayDanhGia == null) ngayDanhGia = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
 

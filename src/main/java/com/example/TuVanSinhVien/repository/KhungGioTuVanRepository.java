@@ -14,19 +14,19 @@ public interface KhungGioTuVanRepository extends JpaRepository<KhungGioTuVan, In
 
     List<KhungGioTuVan> findByNguoiTuVan_MaCVOrderByBatDauAsc(Integer maCV);
 
-    @Query("SELECT k FROM KhungGioTuVan k WHERE k.trangThai = 'Mo' AND k.batDau >= :fromTime AND k.batDau <= :toTime ORDER BY k.batDau ASC")
+    @Query("SELECT k FROM KhungGioTuVan k WHERE k.trangThai = 'Mo' AND k.nguoiTuVan.nhanTuVan = true AND k.nguoiTuVan.taiKhoan.trangThai = 'HoatDong' AND k.nguoiTuVan.taiKhoan.vaiTro = 'CoVan' AND k.nguoiTuVan.donVi.hoatDong = true AND k.batDau >= :fromTime AND k.batDau <= :toTime ORDER BY k.batDau ASC")
     List<KhungGioTuVan> findAvailableSlotsWithinWindow(@Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
 
-    @Query("SELECT k FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.batDau >= :fromTime AND k.batDau <= :toTime ORDER BY k.batDau ASC")
+    @Query("SELECT k FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.nguoiTuVan.nhanTuVan = true AND k.nguoiTuVan.taiKhoan.trangThai = 'HoatDong' AND k.nguoiTuVan.taiKhoan.vaiTro = 'CoVan' AND k.nguoiTuVan.donVi.hoatDong = true AND k.batDau >= :fromTime AND k.batDau <= :toTime ORDER BY k.batDau ASC")
     List<KhungGioTuVan> findAvailableSlotsByAdvisor(@Param("maCV") Integer maCV, @Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
 
-    @Query("SELECT COUNT(k) > 0 FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.batDau < :end AND k.ketThuc > :start")
+    @Query("SELECT COUNT(k) > 0 FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.nguoiTuVan.nhanTuVan = true AND k.nguoiTuVan.taiKhoan.trangThai = 'HoatDong' AND k.nguoiTuVan.taiKhoan.vaiTro = 'CoVan' AND k.nguoiTuVan.donVi.hoatDong = true AND k.batDau < :end AND k.ketThuc > :start")
     boolean existsOverlappingSlot(@Param("maCV") Integer maCV, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT k FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.batDau >= :fromTime AND k.batDau < :toTime ORDER BY k.batDau ASC")
     List<KhungGioTuVan> findAdvisorSlotsInRange(@Param("maCV") Integer maCV, @Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
 
-    @Query("SELECT COUNT(k) FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.batDau >= :fromTime AND k.batDau < :toTime")
+    @Query("SELECT COUNT(k) FROM KhungGioTuVan k WHERE k.nguoiTuVan.maCV = :maCV AND k.trangThai = 'Mo' AND k.nguoiTuVan.nhanTuVan = true AND k.nguoiTuVan.taiKhoan.trangThai = 'HoatDong' AND k.nguoiTuVan.taiKhoan.vaiTro = 'CoVan' AND k.nguoiTuVan.donVi.hoatDong = true AND k.batDau >= :fromTime AND k.batDau < :toTime")
     long countOpenSlotsInRange(@Param("maCV") Integer maCV, @Param("fromTime") LocalDateTime fromTime, @Param("toTime") LocalDateTime toTime);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from KhungGioTuVan e where e."+"maKhungGio = :id")

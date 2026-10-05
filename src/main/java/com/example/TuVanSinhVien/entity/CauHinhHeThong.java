@@ -23,7 +23,7 @@ public class CauHinhHeThong {
     @PrePersist
     @PreUpdate
     public void prePersist() {
-        ngayCapNhat = LocalDateTime.now();
+        ngayCapNhat = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
 
