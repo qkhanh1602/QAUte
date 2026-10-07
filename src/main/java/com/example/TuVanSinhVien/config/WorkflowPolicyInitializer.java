@@ -16,5 +16,6 @@ public class WorkflowPolicyInitializer implements ApplicationRunner {
     @Override public void run(ApplicationArguments arguments) throws Exception {
         String sql=new ClassPathResource("db/workflow-policy-20261005.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         jdbc.execute(sql);
+        jdbc.execute(new ClassPathResource("db/forum-20261006.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
     }
 }

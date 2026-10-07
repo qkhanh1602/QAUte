@@ -524,3 +524,6 @@
     </style>
 
 <link href="${pageContext.request.contextPath}/css/qaute-theme.css?v=20261003-chat-layout-2" rel="stylesheet">
+
+<link href="${pageContext.request.contextPath}/css/qaute-password.css?v=20261007" rel="stylesheet">
+<script src="${pageContext.request.contextPath}/js/qaute-password.js?v=20261007" defer></script>

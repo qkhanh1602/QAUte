@@ -29,8 +29,8 @@
                         <i class="bi bi-pencil-square fs-3"></i>
                     </div>
                     <div>
-                        <h4 class="fw-bold text-dark mb-1">Gửi Phiếu Tư Vấn Mới</h4>
-                        <p class="text-muted small mb-0">Biểu mẫu BM02 - Tiếp nhận yêu cầu tư vấn học đường</p>
+                        <h4 class="fw-bold text-dark mb-1">Đặt câu hỏi trên diễn đàn</h4>
+                        <p class="text-muted small mb-0">Câu hỏi và nội dung trao đổi sẽ được hiển thị công khai trên diễn đàn.</p>
                     </div>
                 </div>
 
@@ -89,6 +89,7 @@
                         <div class="form-text">Hỗ trợ JPG, PNG hoặc PDF; dung lượng nhỏ hơn 10 MB.</div>
                     </div>
 
+                    <div class="alert alert-warning small">Câu hỏi và các trao đổi tiếp theo sẽ được công khai. Không đưa mật khẩu, số điện thoại hay thông tin nhạy cảm vào nội dung. Tệp đính kèm chỉ người có quyền xử lý xem được; cần trao đổi riêng, hãy dùng Chat trực tuyến.</div>
                     <!-- Anonymous Checkbox -->
                     <div class="p-3 bg-light rounded-3 mb-4 border">
                         <div class="form-check">
@@ -106,7 +107,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <a class="btn btn-outline-secondary rounded-pill px-4" href="${pageContext.request.contextPath}/student/tickets">Hủy bỏ</a>
                         <button type="submit" class="btn btn-qaute-primary rounded-pill px-5 fw-bold">
-                            <i class="bi bi-send-fill me-1"></i>Gửi phiếu tư vấn
+                            <i class="bi bi-send-fill me-1"></i>Đăng câu hỏi
                         </button>
                     </div>
                 </form>

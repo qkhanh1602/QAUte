@@ -223,3 +223,17 @@ Kiểm thử đã bổ sung cấp token/sai mật khẩu, API không tạo sessi
 - Tất cả thời gian nghiệp vụ `datetime2` dùng giờ Việt Nam `Asia/Ho_Chi_Minh`; JWT dùng thời điểm UTC tuyệt đối. SQL view thống kê không cộng thêm 7 giờ vào thời điểm đã lưu theo giờ Việt Nam.
 
 Khi chạy bản mới, `WorkflowPolicyInitializer` tự áp dụng `src/main/resources/db/workflow-policy-20261005.sql`: cập nhật hạn của phiếu/lịch đang mở, cấu hình SLA, default thời gian và view thống kê. Script chạy lặp an toàn, giữ nguyên tài khoản/nội dung/thời điểm lịch sử. Tài khoản SQL cần quyền sửa default/view; nếu deploy bằng user giới hạn, chạy script một lần bằng tài khoản quản trị DB rồi đặt `WORKFLOW_POLICY_MIGRATION_ENABLED=false`. Dữ liệu lịch sử từng nhập sai timezone cần kiểm tra nguồn trước khi sửa riêng.
+
+## Diễn đàn công khai (cập nhật 06/10/2026)
+
+- `/forum`: đọc câu hỏi công khai không cần đăng nhập; tìm kiếm, sắp xếp mới nhất/lượt xem và phân trang 20 câu hỏi.
+- `/forum/{id}`: nội dung câu hỏi, trả lời của cố vấn và trao đổi bổ sung của người hỏi. Mỗi lần mở chi tiết tăng một lượt xem; không phải số người xem duy nhất.
+- Sinh viên đặt câu hỏi qua `/student/tickets/new`; vẫn dùng quy trình tiếp nhận, phân công, trả lời và SLA 48 giờ liên tục hiện có. Câu hỏi và các trao đổi tiếp theo được công khai ngay.
+- Theo quyết định của chủ project ngày 06/10/2026, **cả phiếu cũ cũng công khai**. Tùy chọn `BaoMatDanhTinh` che tên người hỏi trong bài và trao đổi bổ sung; không che nội dung.
+- Trang công khai không lấy email, MSSV, số điện thoại, lịch sử phân công nội bộ hoặc đường dẫn tệp đính kèm. Chat 1–1 và tệp vẫn theo quyền truy cập hiện có. Chỉ người hỏi/cố vấn phụ trách được tiếp tục trao đổi qua luồng phiếu; khách không có quyền đăng trả lời.
+- `src/main/resources/db/forum-20261006.sql` tạo bảng `CauHoiDienDan` và công khai các phiếu đang có **một lần khi tạo bảng**. Startup runner chạy migration nếu `WORKFLOW_POLICY_MIGRATION_ENABLED=true` (mặc định). Với tài khoản DB không có quyền CREATE TABLE, chạy script trước bằng tài khoản quản trị. Hai script schema trong `database/` cũng đã cập nhật.
+- Các công nghệ và luồng xác thực/đặt lịch/chat không thay đổi; Cloudairy vẫn chờ xác nhận của giảng viên.
+
+### Hiện/ẩn mật khẩu (07/10/2026)
+
+Các ô mật khẩu ở đăng nhập, đăng ký, hồ sơ và modal admin tạo tài khoản có nút con mắt để bật/tắt hiển thị từng ô. Mặc định mật khẩu vẫn được che; nút không gửi form và không thay đổi quy trình xác thực. Tải lại trang sau khi cập nhật source nếu đang mở bản cũ.

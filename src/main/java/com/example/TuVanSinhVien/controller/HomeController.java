@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class HomeController {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.TuVanSinhVien.service.ForumService forumService;
     private final ContentService contentService;
     private final CatalogService catalogService;
     private final ReportService reportService;
@@ -25,6 +27,7 @@ public class HomeController {
         if (logout != null) {
             model.addAttribute("logoutMessage", "Bạn đã đăng xuất khỏi hệ thống thành công.");
         }
+        model.addAttribute("questions", forumService.list(null, 0, 6, "latest"));
         model.addAttribute("faqs", contentService.getPublicFaqs(null, null));
         model.addAttribute("articles", contentService.getPublicArticles(null, null));
         model.addAttribute("advisors", catalogService.getAllActiveAdvisors());

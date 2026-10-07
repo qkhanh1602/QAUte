@@ -11,6 +11,8 @@ import java.util.List;
 @Service
 public class TicketService {
     private final java.time.Clock clock;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ForumService forumService;
     private final YeuCauTuVanRepository ticketRepo;
     private final PhanCongTuVanRepository phanCongRepo;
     private final PhanHoiTuVanRepository phanHoiRepo;
@@ -43,7 +45,8 @@ public class TicketService {
         LocalDateTime hanTiepNhan = slaService.calculateDeadline(now, 48);
         LocalDateTime hanSLA = slaService.calculateDeadline(now, 48);
         YeuCauTuVan ticket = YeuCauTuVan.builder().sinhVien(sv).donVi(donVi).linhVuc(linhVuc).tieuDe(tieuDe.trim()).noiDung(noiDung.trim()).baoMatDanhTinh(baoMatDanhTinh != null && baoMatDanhTinh).trangThai("ChoTiepNhan").ngayTao(now).ngayCapNhat(now).hanTiepNhan(hanTiepNhan).hanSLA(hanSLA).build();
-        ticket = ticketRepo.save(ticket);
+        ticket = ticketRepo.saveAndFlush(ticket);
+        forumService.publishNewTicket(ticket.getMaYeuCau());
         // Lưu lịch sử
         LichSuYeuCau ls = LichSuYeuCau.builder().yeuCauTuVan(ticket).taiKhoanThucHien(sv.getTaiKhoan()).hanhDong("TaoYeuCau").trangThaiMoi("ChoTiepNhan").ngayTao(now).build();
         lichSuRepo.save(ls);
