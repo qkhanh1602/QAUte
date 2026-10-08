@@ -2,16 +2,29 @@ package com.example.TuVanSinhVien.service;
 
 import com.example.TuVanSinhVien.entity.PhanHoiTuVan;
 import com.example.TuVanSinhVien.entity.YeuCauTuVan;
+import com.example.TuVanSinhVien.repository.YeuCauTuVanRepository;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 
 @Service
+@Transactional(readOnly = true)
 public class ConsultationRecordPdfService {
+    private final YeuCauTuVanRepository ticketRepo;
+
+    public ConsultationRecordPdfService(YeuCauTuVanRepository ticketRepo) {
+        this.ticketRepo = ticketRepo;
+    }
+
     public byte[] exportTicket(YeuCauTuVan ticket) {
+        if (ticket == null) return new byte[0];
+        if (ticket.getMaYeuCau() != null) {
+            ticket = ticketRepo.findById(ticket.getMaYeuCau()).orElse(ticket);
+        }
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 42, 42, 42, 42);
             PdfWriter.getInstance(document, output);
