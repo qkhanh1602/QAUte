@@ -58,8 +58,13 @@
                         </div>
                         <div class="col-md-6">
                             <label for="linhVucInput" class="form-label small fw-semibold">2. Lĩnh vực cụ thể *</label>
-                            <input name="tenLinhVuc" id="linhVucInput" list="linhVucSuggestions" class="form-control" required maxlength="100" autocomplete="off" placeholder="Nhập hoặc chọn lĩnh vực" value="<c:out value='${enteredField}' />">
-                            <datalist id="linhVucSuggestions"></datalist>
+                            <div class="position-relative" id="fieldPicker">
+                                <div class="input-group">
+                                    <input name="tenLinhVuc" id="linhVucInput" class="form-control" required maxlength="100" autocomplete="off" placeholder="Nhập hoặc chọn lĩnh vực" aria-expanded="false" aria-controls="linhVucSuggestions" value="<c:out value='${enteredField}' />">
+                                    <button type="button" id="fieldToggle" class="btn btn-outline-secondary" aria-label="Chọn lĩnh vực" aria-expanded="false" aria-controls="linhVucSuggestions"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                                </div>
+                                <div id="linhVucSuggestions" class="position-absolute bg-white border rounded shadow-sm w-100 p-1" style="z-index: 1050; max-height: 240px; overflow-y: auto;" hidden></div>
+                            </div>
                             <div class="form-text" id="fieldStatus" role="status">Chọn đơn vị để xem gợi ý. Bạn cũng có thể nhập lĩnh vực khác.</div>
                         </div>
                     </div>
@@ -139,28 +144,90 @@ function updateBodyCount() {
 }
 
 let fieldRequest;
+let fieldNames = [];
+let fieldMessage = 'Chọn đơn vị để xem danh sách lĩnh vực.';
+const fieldInput = document.getElementById('linhVucInput');
+const fieldList = document.getElementById('linhVucSuggestions');
+const fieldToggle = document.getElementById('fieldToggle');
+function closeFields() {
+    fieldList.hidden = true;
+    fieldInput.setAttribute('aria-expanded', 'false');
+    fieldToggle.setAttribute('aria-expanded', 'false');
+}
+function showFields(filter = '') {
+    fieldList.replaceChildren();
+    const names = fieldNames.filter(name => name.toLocaleLowerCase('vi').includes(filter.trim().toLocaleLowerCase('vi')));
+    names.forEach(name => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'dropdown-item rounded text-wrap';
+        option.textContent = name;
+        option.addEventListener('click', () => {
+            fieldInput.value = name;
+            fieldInput.focus();
+            closeFields();
+        });
+        fieldList.appendChild(option);
+    });
+    if (!names.length) {
+        const empty = document.createElement('div');
+        empty.className = 'small text-muted p-2';
+        empty.textContent = fieldNames.length ? 'Không có gợi ý phù hợp. Bạn có thể nhập lĩnh vực khác.' : fieldMessage;
+        fieldList.appendChild(empty);
+    }
+    fieldList.hidden = false;
+    fieldInput.setAttribute('aria-expanded', 'true');
+    fieldToggle.setAttribute('aria-expanded', 'true');
+}
+fieldToggle.addEventListener('click', () => fieldList.hidden ? showFields() : closeFields());
+fieldInput.addEventListener('focus', () => showFields());
+fieldInput.addEventListener('input', () => showFields(fieldInput.value));
+document.addEventListener('click', event => {
+    if (!document.getElementById('fieldPicker').contains(event.target)) closeFields();
+});
+document.getElementById('fieldPicker').addEventListener('focusout', event => {
+    if (!event.currentTarget.contains(event.relatedTarget)) closeFields();
+});
+document.getElementById('fieldPicker').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { closeFields(); fieldInput.focus(); closeFields(); return; }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    if (fieldList.hidden) showFields();
+    const options = Array.from(fieldList.querySelectorAll('button'));
+    if (!options.length) return;
+    const index = options.indexOf(document.activeElement);
+    const next = index < 0 ? (event.key === 'ArrowDown' ? 0 : options.length - 1)
+        : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+    options[next].focus();
+});
 async function loadLinhVuc(maDonVi, preserve = false) {
     fieldRequest?.abort();
     const input = document.getElementById('linhVucInput');
     const list = document.getElementById('linhVucSuggestions');
     const status = document.getElementById('fieldStatus');
     list.replaceChildren();
+    closeFields();
+    fieldNames = [];
+    fieldMessage = 'Chọn đơn vị để xem danh sách lĩnh vực.';
     if (!preserve) input.value = '';
     if (!maDonVi) return;
     fieldRequest = new AbortController();
     status.textContent = 'Đang tải gợi ý…';
+    fieldMessage = 'Đang tải danh sách lĩnh vực…';
     try {
         const response = await fetch('${pageContext.request.contextPath}/api/public/linh-vuc-by-don-vi?maDonVi=' + encodeURIComponent(maDonVi), {signal: fieldRequest.signal});
         if (!response.ok) throw new Error('load');
         const data = await response.json();
-        data.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.tenLinhVuc;
-            list.appendChild(option);
-        });
-        status.textContent = 'Chọn gợi ý hoặc nhập lĩnh vực phù hợp với câu hỏi.';
+        fieldNames = data.map(item => item.tenLinhVuc);
+        fieldMessage = 'Đơn vị chưa có lĩnh vực gợi ý. Bạn có thể nhập lĩnh vực khác.';
+        status.textContent = fieldNames.length ? 'Bấm mũi tên để chọn hoặc nhập lĩnh vực khác.' : fieldMessage;
+        if (!list.hidden) showFields(input.value);
     } catch (error) {
-        if (error.name !== 'AbortError') status.textContent = 'Chưa tải được gợi ý. Bạn vẫn có thể nhập lĩnh vực.';
+        if (error.name !== 'AbortError') {
+            fieldMessage = 'Chưa tải được danh sách. Bạn vẫn có thể nhập lĩnh vực.';
+            status.textContent = fieldMessage;
+            if (!list.hidden) showFields(input.value);
+        }
     }
 }
 loadLinhVuc(document.getElementById('donViSelect').value, true);
