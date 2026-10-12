@@ -40,7 +40,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 80px;">Mã</th>
                         <th>Tiêu đề yêu cầu</th>
                         <th>Đơn vị &amp; Lĩnh vực</th>
                         <th>Cố vấn xử lý</th>
@@ -52,7 +51,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="t" items="${tickets}"><tr>
-                        <td><strong class="text-secondary"><c:out value="${'#' += t.maYeuCau}" /></strong></td>
                         <td>
                             <a class="fw-bold text-dark text-decoration-none hover-primary d-block" href="${pageContext.request.contextPath}/forum/${t.maYeuCau}"><c:out value="${t.tieuDe}" /></a>
                             <c:if test="${t.baoMatDanhTinh}"><small class="badge bg-secondary-subtle text-secondary" style="font-size: 0.7rem;">

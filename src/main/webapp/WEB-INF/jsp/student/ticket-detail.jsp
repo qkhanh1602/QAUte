@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<c:set var="pageTitle" value="Chi tiết câu hỏi #${ticket.maYeuCau}" />
+<c:set var="pageTitle" value="Chi tiết câu hỏi" />
 <%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
 </head>
 <body>
@@ -17,7 +17,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a class="text-decoration-none" href="${pageContext.request.contextPath}/student/dashboard">Cổng sinh viên</a></li>
             <li class="breadcrumb-item"><a class="text-decoration-none" href="${pageContext.request.contextPath}/student/tickets">Câu hỏi của tôi</a></li>
-            <li class="breadcrumb-item active"><c:out value="${'#' += ticket.maYeuCau}" /></li>
+            <li class="breadcrumb-item active">Chi tiết câu hỏi</li>
         </ol>
     </nav>
 
@@ -35,7 +35,7 @@
             <!-- Ticket Info Card -->
             <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted small">Câu hỏi <strong><c:out value="${'#' += ticket.maYeuCau}" /></strong></span>
+                    <span class="text-muted small">Câu hỏi</span>
                     <span class="${'status-badge status-' += ticket.trangThai}"><c:out value="${ticket.trangThai}" /></span>
                 </div>
 

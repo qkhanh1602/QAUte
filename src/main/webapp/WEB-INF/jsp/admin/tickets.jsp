@@ -24,7 +24,7 @@
                 <thead><tr><th>Câu hỏi</th><th>Đơn vị</th><th>Trạng thái</th><th>Cố vấn</th><th>Điều phối</th><th>Hiển thị diễn đàn</th></tr></thead>
                 <tbody>
                 <c:forEach var="ticket" items="${tickets}"><tr>
-                    <td><strong><c:out value="${'#' += ticket.maYeuCau += ' · ' += ticket.tieuDe}" /></strong><div class="small text-muted"><c:out value="${q:formatTemporal(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}" /></div></td>
+                    <td><strong><c:out value="${ticket.tieuDe}" /></strong><div class="small text-muted"><c:out value="${q:formatTemporal(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}" /></div></td>
                     <td><c:out value="${ticket.donVi.tenDonVi}" /></td>
                     <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${ticket.trangThai}" /></span></td>
                     <td><c:out value="${ticket.coVanPhuTrach != null ? ticket.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}" /></td>

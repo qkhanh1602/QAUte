@@ -39,7 +39,6 @@
                     <table class="table table-hover align-middle small">
                         <thead class="table-light">
                             <tr>
-                                <th>Mã</th>
                                 <th>Tên Đơn vị</th>
                                 <th>Loại</th>
                                 <th>Trạng thái</th>
@@ -48,7 +47,6 @@
                         </thead>
                         <tbody>
                             <c:forEach var="d" items="${donViList}"><tr>
-                                <td><code><c:out value="${d.maDonViCode}" /></code></td>
                                 <td class="fw-bold"><c:out value="${d.tenDonVi}" /></td>
                                 <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${d.loaiDonVi}" /></span></td>
                                 <td>
@@ -59,7 +57,7 @@
                                     <button class="btn btn-light btn-sm border" data-bs-toggle="collapse" data-bs-target="${'#edit-unit-' += d.maDonVi}">Sửa</button>
                                     <form method="post" class="d-inline" action="${pageContext.request.contextPath}/admin/catalogs/units/${d.maDonVi}/toggle"><sec:csrfInput /><button class="btn btn-outline-warning btn-sm" type="submit"><c:out value="${d.hoatDong ? 'Ngưng' : 'Bật'}" /></button></form>
                                     <form class="collapse mt-2" method="post" style="min-width:240px" action="${pageContext.request.contextPath}/admin/catalogs/units/save" id="${'edit-unit-' += d.maDonVi}">
-                                        <sec:csrfInput /><input type="hidden" name="id" value="${d.maDonVi}"><input class="form-control form-control-sm mb-1" name="code" required value="${d.maDonViCode}"><input class="form-control form-control-sm mb-1" name="name" required value="${d.tenDonVi}">
+                                        <sec:csrfInput /><input type="hidden" name="id" value="${d.maDonVi}"><input type="hidden" name="code" value="${d.maDonViCode}"><input class="form-control form-control-sm mb-1" name="name" required value="${d.tenDonVi}">
                                         <select class="form-select form-select-sm mb-1" name="type">
                                             <option value="Khoa" ${d.loaiDonVi == 'Khoa' ? 'selected="selected"' : ''}>Khoa</option>
                                             <option value="PhongBan" ${d.loaiDonVi == 'PhongBan' ? 'selected="selected"' : ''}>Phòng ban</option>
@@ -83,7 +81,6 @@
                     <table class="table table-hover align-middle small">
                         <thead class="table-light">
                             <tr>
-                                <th>Mã</th>
                                 <th>Tên lĩnh vực</th>
                                 <th>Đơn vị phụ trách</th>
                                 <th>Đặc thù</th>
@@ -93,7 +90,6 @@
                         </thead>
                         <tbody>
                             <c:forEach var="l" items="${linhVucList}"><tr>
-                                <td><code><c:out value="${l.maLinhVucCode}" /></code></td>
                                 <td class="fw-bold text-dark"><c:out value="${l.tenLinhVuc}" /></td>
                                 <td><c:out value="${l.donVi.tenDonVi}" /></td>
                                 <td>
@@ -104,7 +100,7 @@
                                     <button class="btn btn-light btn-sm border" data-bs-toggle="collapse" data-bs-target="${'#edit-field-' += l.maLinhVuc}">Sửa</button>
                                     <form method="post" class="d-inline" action="${pageContext.request.contextPath}/admin/catalogs/fields/${l.maLinhVuc}/toggle"><sec:csrfInput /><button class="btn btn-outline-warning btn-sm" type="submit"><c:out value="${l.trangThai == 'HoatDong' ? 'Ngưng' : 'Bật'}" /></button></form>
                                     <form class="collapse mt-2" method="post" style="min-width:260px" action="${pageContext.request.contextPath}/admin/catalogs/fields/save" id="${'edit-field-' += l.maLinhVuc}">
-                                        <sec:csrfInput /><input type="hidden" name="id" value="${l.maLinhVuc}"><input class="form-control form-control-sm mb-1" name="code" required value="${l.maLinhVucCode}"><input class="form-control form-control-sm mb-1" name="name" required value="${l.tenLinhVuc}"><textarea class="form-control form-control-sm mb-1" name="description" placeholder="Mô tả"><c:out value="${l.moTa}" /></textarea>
+                                        <sec:csrfInput /><input type="hidden" name="id" value="${l.maLinhVuc}"><input type="hidden" name="code" value="${l.maLinhVucCode}"><input class="form-control form-control-sm mb-1" name="name" required value="${l.tenLinhVuc}"><textarea class="form-control form-control-sm mb-1" name="description" placeholder="Mô tả"><c:out value="${l.moTa}" /></textarea>
                                         <select class="form-select form-select-sm mb-1" name="unitId" required><c:forEach var="unit" items="${donViList}"><c:choose><c:when test="${unit.maDonVi == l.donVi.maDonVi}"><option value="${unit.maDonVi}" selected><c:out value="${unit.tenDonVi}" /></option></c:when><c:otherwise><option value="${unit.maDonVi}"><c:out value="${unit.tenDonVi}" /></option></c:otherwise></c:choose></c:forEach></select><label class="small"><c:choose><c:when test="${l.nhayCam}"><input type="checkbox" name="sensitive" value="true" checked></c:when><c:otherwise><input type="checkbox" name="sensitive" value="true"></c:otherwise></c:choose> Nội dung nhạy cảm</label><button class="btn btn-primary btn-sm w-100 mt-1">Lưu</button>
                                     </form>
                                 </td>
@@ -121,8 +117,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="unitModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" method="post" action="${pageContext.request.contextPath}/admin/catalogs/units/save"><sec:csrfInput /><div class="modal-header"><h5 class="modal-title">Thêm đơn vị</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input class="form-control" name="code" placeholder="Mã đơn vị" required><input class="form-control" name="name" placeholder="Tên đơn vị" required><select class="form-select" name="type"><option value="Khoa">Khoa</option><option value="PhongBan">Phòng ban</option><option value="TrungTam">Trung tâm</option></select><input class="form-control" name="email" type="email" placeholder="Email"><input class="form-control" name="phone" placeholder="Số điện thoại"></div><div class="modal-footer"><button class="btn btn-primary">Lưu đơn vị</button></div></form></div></div>
-<div class="modal fade" id="fieldModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" method="post" action="${pageContext.request.contextPath}/admin/catalogs/fields/save"><sec:csrfInput /><div class="modal-header"><h5 class="modal-title">Thêm lĩnh vực</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input class="form-control" name="code" placeholder="Mã lĩnh vực" required><input class="form-control" name="name" placeholder="Tên lĩnh vực" required><textarea class="form-control" name="description" placeholder="Mô tả"></textarea><select class="form-select" name="unitId" required><option value="">Chọn đơn vị</option><c:forEach var="unit" items="${donViList}"><option value="${unit.maDonVi}"><c:out value="${unit.tenDonVi}" /></option></c:forEach></select><label><input type="checkbox" name="sensitive" value="true"> Nội dung nhạy cảm</label></div><div class="modal-footer"><button class="btn btn-primary">Lưu lĩnh vực</button></div></form></div></div>
+<div class="modal fade" id="unitModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" method="post" action="${pageContext.request.contextPath}/admin/catalogs/units/save"><sec:csrfInput /><div class="modal-header"><h5 class="modal-title">Thêm đơn vị</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input type="hidden" name="code" value=""><input class="form-control" name="name" placeholder="Tên đơn vị" required><select class="form-select" name="type"><option value="Khoa">Khoa</option><option value="PhongBan">Phòng ban</option><option value="TrungTam">Trung tâm</option></select><input class="form-control" name="email" type="email" placeholder="Email"><input class="form-control" name="phone" placeholder="Số điện thoại"></div><div class="modal-footer"><button class="btn btn-primary">Lưu đơn vị</button></div></form></div></div>
+<div class="modal fade" id="fieldModal" tabindex="-1"><div class="modal-dialog"><form class="modal-content" method="post" action="${pageContext.request.contextPath}/admin/catalogs/fields/save"><sec:csrfInput /><div class="modal-header"><h5 class="modal-title">Thêm lĩnh vực</h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div><div class="modal-body d-grid gap-2"><input type="hidden" name="code" value=""><input class="form-control" name="name" placeholder="Tên lĩnh vực" required><textarea class="form-control" name="description" placeholder="Mô tả"></textarea><select class="form-select" name="unitId" required><option value="">Chọn đơn vị</option><c:forEach var="unit" items="${donViList}"><option value="${unit.maDonVi}"><c:out value="${unit.tenDonVi}" /></option></c:forEach></select><label><input type="checkbox" name="sensitive" value="true"> Nội dung nhạy cảm</label></div><div class="modal-footer"><button class="btn btn-primary">Lưu lĩnh vực</button></div></form></div></div>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>
 

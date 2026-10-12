@@ -40,7 +40,6 @@
             <table class="table table-hover align-middle small">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Câu hỏi</th>
                         <th>Lĩnh vực</th>
                         <th>Người đề xuất</th>
@@ -50,7 +49,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="f" items="${faqs}"><tr>
-                        <td><strong><c:out value="${'#' += f.maFAQ}" /></strong></td>
                         <td>
                             <div class="fw-bold text-dark"><c:out value="${f.cauHoi}" /></div>
                             <small class="text-secondary text-truncate d-block" style="max-width: 450px;"><c:out value="${f.cauTraLoi}" /></small>
@@ -83,7 +81,6 @@
             <table class="table table-hover align-middle small">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Tiêu đề bài viết</th>
                         <th>Lĩnh vực</th>
                         <th>Lượt xem</th>
@@ -93,7 +90,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="b" items="${articles}"><tr>
-                        <td><strong><c:out value="${'#' += b.maBaiViet}" /></strong></td>
                         <td class="fw-bold text-dark"><c:out value="${b.tieuDe}" /></td>
                         <td><c:out value="${b.linhVuc.tenLinhVuc}" /></td>
                         <td><c:out value="${b.luotXem}" /></td>

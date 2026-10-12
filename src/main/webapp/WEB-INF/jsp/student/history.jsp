@@ -33,7 +33,6 @@
             <table class="table table-hover align-middle small">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Tiêu đề</th>
                         <th>Đơn vị</th>
                         <th>Cố vấn</th>
@@ -45,7 +44,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="t" items="${tickets}"><tr>
-                        <td><strong><c:out value="${'#' += t.maYeuCau}" /></strong></td>
                         <td class="fw-bold"><c:out value="${t.tieuDe}" /></td>
                         <td><c:out value="${t.donVi.tenDonVi}" /></td>
                         <td><c:out value="${t.coVanPhuTrach != null ? t.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}" /></td>

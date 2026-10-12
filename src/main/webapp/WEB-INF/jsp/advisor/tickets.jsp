@@ -51,7 +51,7 @@
             <div class="qaute-card p-4 border-0 shadow-sm">
                 <c:if test="${empty closedTickets}"><p class="text-muted mb-0">Chưa có câu hỏi đã đóng.</p></c:if>
                 <c:forEach var="t" items="${closedTickets}"><div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
-                    <div><strong>#<c:out value="${t.maYeuCau}" /> · <c:out value="${t.tieuDe}" /></strong><div class="small text-muted">Đã đóng · <c:out value="${q:formatTemporal(t.ngayDong, 'dd/MM/yyyy HH:mm')}" /></div></div>
+                    <div><strong><c:out value="${t.tieuDe}" /></strong><div class="small text-muted">Đã đóng · <c:out value="${q:formatTemporal(t.ngayDong, 'dd/MM/yyyy HH:mm')}" /></div></div>
                     <a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/advisor/tickets/${t.maYeuCau}">Xem lại</a>
                 </div></c:forEach>
             </div>
@@ -69,7 +69,6 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Mã</th>
                                 <th>Tiêu đề yêu cầu</th>
                                 <th>Sinh viên</th>
                                 <th>Lĩnh vực</th>
@@ -81,7 +80,6 @@
                         </thead>
                         <tbody>
                             <c:forEach var="t" items="${assignedTickets}"><tr>
-                                <td><strong class="text-secondary"><c:out value="${'#' += t.maYeuCau}" /></strong></td>
                                 <td>
                                     <a class="fw-bold text-dark text-decoration-none hover-primary d-block" href="${pageContext.request.contextPath}/advisor/tickets/${t.maYeuCau}"><c:out value="${t.tieuDe}" /></a>
                                     <small class="text-muted">Ngày gửi: <c:out value="${q:formatTemporal(t.ngayTao, 'dd/MM/yyyy HH:mm')}" /></small>
@@ -128,7 +126,6 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Mã</th>
                                 <th>Tiêu đề yêu cầu</th>
                                 <th>Lĩnh vực</th>
                                 <th>Thời gian gửi</th>
@@ -138,7 +135,6 @@
                         </thead>
                         <tbody>
                             <c:forEach var="q" items="${queueTickets}"><tr>
-                                <td><strong class="text-secondary"><c:out value="${'#' += q.maYeuCau}" /></strong></td>
                                 <td class="fw-bold text-dark"><c:out value="${q.tieuDe}" /></td>
                                 <td class="small"><c:out value="${q.linhVuc.tenLinhVuc}" /></td>
                                 <td class="small text-muted"><c:out value="${q:formatTemporal(q.ngayTao, 'dd/MM/yyyy HH:mm')}" /></td>

@@ -94,8 +94,8 @@ public class AdminController {
         try {
             forumService.setVisibility(id, visible, user.getMaTK(), reason);
             redirectAttributes.addFlashAttribute("successMessage", visible
-                    ? "Đã khôi phục câu hỏi #" + id + " trên diễn đàn."
-                    : "Đã ẩn câu hỏi #" + id + " khỏi diễn đàn. Lịch sử trao đổi vẫn được giữ lại.");
+                    ? "Đã khôi phục câu hỏi trên diễn đàn."
+                    : "Đã ẩn câu hỏi khỏi diễn đàn. Lịch sử trao đổi vẫn được giữ lại.");
         } catch (IllegalArgumentException | SecurityException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -111,7 +111,7 @@ public class AdminController {
             TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK())
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy tài khoản Admin."));
             ticketService.assignTicket(id, advisorId, admin, note);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công câu hỏi #" + id + " thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công câu hỏi thành công.");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -378,7 +378,7 @@ public class AdminController {
     public String approveFaq(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, RedirectAttributes redirectAttributes) {
         TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElse(null);
         contentService.approveFaq(id, admin);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã duyệt và công khai câu hỏi FAQ #" + id);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã duyệt và công khai câu hỏi FAQ.");
         return "redirect:/admin/content";
     }
 
@@ -386,7 +386,7 @@ public class AdminController {
     public String approveArticle(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, RedirectAttributes redirectAttributes) {
         TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElse(null);
         contentService.approveArticle(id, admin);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xuất bản bài viết hướng dẫn #" + id);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã xuất bản bài viết hướng dẫn.");
         return "redirect:/admin/content";
     }
 
@@ -413,6 +413,7 @@ public class AdminController {
                          @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
                          @RequestParam(defaultValue="0") int page, Model model) {
         model.addAttribute("type",type); model.addAttribute("units",catalogService.getAllDonVi());
+        model.addAttribute("searchAccounts",taiKhoanRepo.findAll());
         try { model.addAttribute("results",searchService.search(type,keyword,status,unitId,accountId,from,to,page)); }
         catch(IllegalArgumentException ex) { model.addAttribute("errorMessage",ex.getMessage()); }
         return "admin/search";

@@ -45,6 +45,8 @@ public class CatalogService {
     @Transactional
     public DonVi saveDonVi(Integer id, String code, String name, String type, String email, String phone) {
         String normalizedCode = code == null ? "" : code.trim().toUpperCase();
+        if (normalizedCode.isEmpty()) normalizedCode = id == null ? "DV_" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 24).toUpperCase(java.util.Locale.ROOT)
+                : donViRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị.")).getMaDonViCode();
         if (!normalizedCode.matches("^[A-Z0-9_-]{2,30}$") || name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Mã hoặc tên đơn vị không hợp lệ.");
         }
@@ -75,6 +77,8 @@ public class CatalogService {
     public LinhVucTuVan saveLinhVuc(Integer id, String code, String name, String description,
                                     Integer unitId, boolean sensitive) {
         String normalizedCode = code == null ? "" : code.trim().toUpperCase();
+        if (normalizedCode.isEmpty()) normalizedCode = id == null ? "LV_" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 24).toUpperCase(java.util.Locale.ROOT)
+                : linhVucRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lĩnh vực.")).getMaLinhVucCode();
         if (!normalizedCode.matches("^[A-Z0-9_-]{2,30}$") || name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Mã hoặc tên lĩnh vực không hợp lệ.");
         }

@@ -36,13 +36,13 @@ public class ReportExportService {
             XSSFSheet sheet = workbook.createSheet("BaoCao");
             CellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont(); headerFont.setBold(true); headerStyle.setFont(headerFont);
-            String[] headers = {"Mã câu hỏi", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái", "Cố vấn"};
+            String[] headers = {"Tiêu đề câu hỏi", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái", "Cố vấn"};
             org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) { header.createCell(i).setCellValue(headers[i]); header.getCell(i).setCellStyle(headerStyle); }
             int rowIndex = 1;
             for (YeuCauTuVan ticket : tickets) {
                 org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(ticket.getMaYeuCau());
+                row.createCell(0).setCellValue(ticket.getTieuDe());
                 row.createCell(1).setCellValue(ticket.getNgayTao().toString());
                 row.createCell(2).setCellValue(ticket.getSinhVien().getTaiKhoan().getHoTen());
                 row.createCell(3).setCellValue(ticket.getDonVi().getTenDonVi());
@@ -82,10 +82,10 @@ public class ReportExportService {
             var canvas = writer.getDirectContent().createTemplate(700, 120); float chartX = 10, chartY = 100, maxWidth = 280; long max = Math.max(1, counts.values().stream().mapToLong(Long::longValue).max().orElse(1));
             int bar = 0; for (Map.Entry<String, Long> entry : counts.entrySet()) { float width = maxWidth * entry.getValue() / max; canvas.setColorFill(new Color(22,101,52)); canvas.rectangle(chartX, chartY - bar * 24, width, 14); canvas.fill(); canvas.beginText(); canvas.setFontAndSize(base, 9); canvas.setColorFill(Color.BLACK); canvas.setTextMatrix(chartX + maxWidth + 10, chartY - bar * 24 + 2); canvas.showText(entry.getKey() + ": " + entry.getValue()); canvas.endText(); bar++; }
             document.add(com.lowagie.text.Image.getInstance(canvas));
-            PdfPTable table = new PdfPTable(new float[]{1, 2, 3, 3, 3, 2}); table.setWidthPercentage(100);
+            PdfPTable table = new PdfPTable(new float[]{4, 2, 3, 3, 3, 2}); table.setWidthPercentage(100);
             table.setHeaderRows(1); table.setSpacingBefore(12);
-            for (String header : List.of("Mã", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái")) { PdfPCell cell = new PdfPCell(new Phrase(header, bodyFont)); cell.setBackgroundColor(new Color(220, 232, 224)); table.addCell(cell); }
-            for (YeuCauTuVan ticket : tickets) { add(table, bodyFont, String.valueOf(ticket.getMaYeuCau())); add(table, bodyFont, ticket.getNgayTao().toLocalDate().toString()); add(table, bodyFont, ticket.getSinhVien().getTaiKhoan().getHoTen()); add(table, bodyFont, ticket.getDonVi().getTenDonVi()); add(table, bodyFont, ticket.getLinhVuc().getTenLinhVuc()); add(table, bodyFont, ticket.getTrangThai()); }
+            for (String header : List.of("Tiêu đề", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái")) { PdfPCell cell = new PdfPCell(new Phrase(header, bodyFont)); cell.setBackgroundColor(new Color(220, 232, 224)); table.addCell(cell); }
+            for (YeuCauTuVan ticket : tickets) { add(table, bodyFont, ticket.getTieuDe()); add(table, bodyFont, ticket.getNgayTao().toLocalDate().toString()); add(table, bodyFont, ticket.getSinhVien().getTaiKhoan().getHoTen()); add(table, bodyFont, ticket.getDonVi().getTenDonVi()); add(table, bodyFont, ticket.getLinhVuc().getTenLinhVuc()); add(table, bodyFont, ticket.getTrangThai()); }
             document.add(table);
             Paragraph signature = new Paragraph("\nNgười lập báo cáo                                      Xác nhận của đơn vị", bodyFont); signature.setAlignment(Element.ALIGN_RIGHT); document.add(signature);
             document.close(); return output.toByteArray();

@@ -24,7 +24,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Sinh viên</th>
                         <th>Chủ đề &amp; Nội dung</th>
                         <th>Thời gian</th>
@@ -35,7 +34,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="a" items="${appointments}"><tr>
-                        <td><strong class="text-secondary"><c:out value="${'#' += a.maLichHen}" /></strong></td>
                         <td>
                             <div class="fw-bold text-dark"><c:out value="${a.sinhVien.taiKhoan.hoTen}" /></div>
                             <small class="text-muted"><c:out value="${a.sinhVien.mssv += ' - ' += a.sinhVien.lop}" /></small>

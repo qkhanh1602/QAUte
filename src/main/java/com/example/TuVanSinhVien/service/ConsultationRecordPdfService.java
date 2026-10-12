@@ -27,7 +27,6 @@ public class ConsultationRecordPdfService {
             Font body = new Font(base, 10);
             Paragraph name = new Paragraph("BIÊN BẢN KẾT QUẢ TƯ VẤN SINH VIÊN", title);
             name.setAlignment(Element.ALIGN_CENTER); name.setSpacingAfter(16); document.add(name);
-            add(document, body, "Mã câu hỏi: #" + ticket.getMaYeuCau());
             add(document, body, "Sinh viên: " + ticket.getSinhVien().getTaiKhoan().getHoTen() + " - " + ticket.getSinhVien().getMssv());
             add(document, body, "Đơn vị: " + ticket.getDonVi().getTenDonVi());
             add(document, body, "Lĩnh vực: " + ticket.getLinhVuc().getTenLinhVuc());

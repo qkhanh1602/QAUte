@@ -215,6 +215,10 @@ public class ThongBao {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
+    public String getNoiDungHienThi() {
+        return noiDung == null ? null : noiDung.replaceAll("(?iu)(câu hỏi|yêu cầu|phiếu)\\s+#\\d+\\s*(?:-\\s*)?", "$1: ");
+    }
+
     public String getNoiDung() {
         return this.noiDung;
     }

@@ -50,7 +50,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Tên đăng nhập</th>
                         <th>Họ và tên</th>
                         <th>Email &amp; SĐT</th>
@@ -62,7 +61,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="u" items="${users}"><tr>
-                        <td><strong class="text-secondary"><c:out value="${'#' += u.maTK}" /></strong></td>
                         <td><code class="fw-bold text-dark"><c:out value="${u.tenDangNhap}" /></code></td>
                         <td>
                             <div class="fw-semibold text-dark"><c:out value="${u.hoTen}" /></div>

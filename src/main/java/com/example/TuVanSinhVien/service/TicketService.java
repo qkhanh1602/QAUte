@@ -314,7 +314,7 @@ public class TicketService {
         lichSuRepo.save(LichSuYeuCau.builder().yeuCauTuVan(ticket).taiKhoanThucHien(admin)
                 .hanhDong("PhanCong").trangThaiCu("ChoTiepNhan").trangThaiMoi("DangXuLy").ngayTao(now).build());
         notificationService.sendNotification(advisor.getTaiKhoan(), "Bạn được phân công câu hỏi diễn đàn",
-                "Câu hỏi #" + ticket.getMaYeuCau() + " - " + ticket.getTieuDe(), "DienDan",
+                "Câu hỏi: " + ticket.getTieuDe(), "DienDan",
                 "/advisor/tickets/" + ticket.getMaYeuCau());
     }
 

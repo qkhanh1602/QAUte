@@ -71,7 +71,7 @@ public class AdvisorController {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
             ticketService.claimTicket(id, cv);
-            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã tiếp nhận câu hỏi diễn đàn #" + id + " thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Bạn đã tiếp nhận câu hỏi diễn đàn thành công!");
             return "redirect:/advisor/tickets/" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

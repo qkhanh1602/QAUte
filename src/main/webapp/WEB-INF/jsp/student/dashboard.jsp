@@ -133,7 +133,7 @@
                 </c:if><c:if test="${not (empty notifications)}"><div class="d-flex flex-column gap-2">
                     <c:forEach var="n" items="${notifications}"><div class="p-2 border-bottom small">
                         <div class="fw-bold text-dark"><c:out value="${n.tieuDe}" /></div>
-                        <div class="text-secondary"><c:out value="${n.noiDung}" /></div>
+                        <div class="text-secondary"><c:out value="${n.noiDungHienThi}" /></div>
                         <div class="text-muted" style="font-size: 0.75rem;"><c:out value="${q:formatTemporal(n.ngayTao, 'dd/MM/yyyy HH:mm')}" /></div>
                     </div>
                 </c:forEach></div>

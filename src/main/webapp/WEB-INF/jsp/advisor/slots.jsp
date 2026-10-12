@@ -69,7 +69,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã</th>
                         <th>Ngày tư vấn</th>
                         <th>Khung thời gian</th>
                         <th>Hình thức</th>
@@ -79,7 +78,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="s" items="${slots}"><tr>
-                        <td><strong class="text-secondary"><c:out value="${'#' += s.maKhungGio}" /></strong></td>
                         <td class="fw-bold text-dark"><c:out value="${q:formatTemporal(s.batDau, 'EEEE, dd/MM/yyyy')}" /></td>
                         <td>
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">

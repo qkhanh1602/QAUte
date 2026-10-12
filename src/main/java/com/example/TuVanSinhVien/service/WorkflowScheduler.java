@@ -73,7 +73,7 @@ public class WorkflowScheduler {
             String level = redAlert ? "đỏ" : "vàng";
             String keyPrefix = redAlert ? "SLA_RED_" : "SLA_YELLOW_";
             String title = redAlert ? "Cảnh báo đỏ: câu hỏi quá hạn phản hồi" : "Cảnh báo vàng: câu hỏi chưa được tiếp nhận";
-            String content = "Câu hỏi #" + ticket.getMaYeuCau() + " - " + ticket.getTieuDe()
+            String content = "Câu hỏi: " + ticket.getTieuDe()
                     + " thuộc " + ticket.getDonVi().getTenDonVi() + " đang ở mức cảnh báo " + level + ".";
             for (TaiKhoan recipient : recipients) {
                 notificationService.sendNotificationOnce(recipient,

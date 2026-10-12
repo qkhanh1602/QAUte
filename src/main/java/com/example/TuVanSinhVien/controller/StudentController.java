@@ -73,7 +73,7 @@ public class StudentController {
         try {
             SinhVien sv = getStudentOrThrow(userDetails);
             YeuCauTuVan ticket = submissions.createTicket(sv, maLinhVuc, maDonVi, tieuDe, noiDung, baoMatDanhTinh, attachment);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã đăng câu hỏi lên diễn đàn! Mã câu hỏi: #" + ticket.getMaYeuCau());
+            redirectAttributes.addFlashAttribute("successMessage", "Đã đăng câu hỏi lên diễn đàn!");
             return "redirect:/forum/" + ticket.getMaYeuCau();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
