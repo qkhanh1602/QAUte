@@ -148,11 +148,11 @@ class BackendReviewRegressionTest {
         assertThrows(IllegalStateException.class,()->service.sendMessage(1,advisor,"Reply","VanBan"));
         assertThrows(IllegalStateException.class,()->service.advisorJoinSession(1,NguoiTuVan.builder().taiKhoan(advisor).build()));
         var student=account(1,"SinhVien");when(accounts.findById(1)).thenReturn(Optional.of(student));
-        var session=PhienChat.builder().maPhienChat(1).sinhVien(SinhVien.builder().taiKhoan(student).build()).trangThai("ChoTiepNhan").build();
+        var session=PhienChat.builder().maPhienChat(1).donVi(DonVi.builder().maDonVi(3).build()).sinhVien(SinhVien.builder().taiKhoan(student).build()).trangThai("ChoTiepNhan").build();
         when(sessions.findById(1)).thenReturn(Optional.of(session));
         when(messages.save(any())).thenAnswer(i->{var message=(TinNhanChat)i.getArgument(0);message.setMaTinNhan(1L);return message;});
         assertNotNull(service.sendMessage(1,student,"Câu hỏi chờ phản hồi","VanBan"));
-        verify(events).publishEvent(any(ChatDeliveryEvent.class));
+        verify(events,times(2)).publishEvent(any(ChatDeliveryEvent.class));
     }
 
     @Test void dashboardUsesSame24HourCutoffWithVietnamClock() {

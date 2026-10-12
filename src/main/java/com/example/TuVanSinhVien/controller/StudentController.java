@@ -221,6 +221,7 @@ public class StudentController {
         if (targetDonVi != null) {
             PhienChat session = chatService.getOrCreateSession(sv, targetDonVi);
             model.addAttribute("currentSession", session);
+            model.addAttribute("quickSuggestions", com.example.TuVanSinhVien.service.ChatQuickGuide.forUnit(session.getDonVi().getMaDonViCode()));
             model.addAttribute("messages", chatService.getMessages(session.getMaPhienChat(), sv.getTaiKhoan()));
             model.addAttribute("messageAttachments", chatService.getMessages(session.getMaPhienChat(), sv.getTaiKhoan()).stream()
                     .collect(Collectors.toMap(TinNhanChat::getMaTinNhan, m -> attachmentService.getMessageAttachments(m.getMaTinNhan()))));

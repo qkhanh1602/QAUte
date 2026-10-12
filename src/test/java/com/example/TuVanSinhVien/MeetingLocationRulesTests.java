@@ -73,15 +73,15 @@ class MeetingLocationRulesTests {
  }
  @Test void inPersonCancellationKeepsTwelveHourBoundary() {
   var app=fixture("DaXacNhan"); app.getSinhVien().setMaSV(2);
-  app.getKhungGio().setHinhThuc("TrucTiep"); app.getKhungGio().setBatDau(now.plusHours(12));
+  app.getKhungGio().setHinhThuc("TrucTiep"); app.getKhungGio().setBatDau(now.plusHours(3));
   assertEquals(now,service.cancellationDeadline(app));
   assertEquals("",service.cancellationBlockReason(app));
   service.cancelAppointment(1,2,"Trùng lịch học"); assertEquals("Huy",app.getTrangThai());
  }
- @Test void inPersonCancellationLessThanTwelveHoursIsRejectedEvenWithMoreThanThreeHoursLeft() {
+ @Test void inPersonCancellationLessThanThreeHoursIsRejected() {
   var app=fixture("DaXacNhan"); app.getSinhVien().setMaSV(2);
-  app.getKhungGio().setHinhThuc("TrucTiep"); app.getKhungGio().setBatDau(now.plusHours(12).minusSeconds(1));
-  assertTrue(service.cancellationBlockReason(app).contains("12 giờ"));
+  app.getKhungGio().setHinhThuc("TrucTiep"); app.getKhungGio().setBatDau(now.plusHours(3).minusSeconds(1));
+  assertTrue(service.cancellationBlockReason(app).contains("3 giờ"));
   assertThrows(IllegalStateException.class,()->service.cancelAppointment(1,2,"Trùng lịch học"));
   assertEquals("DaXacNhan",app.getTrangThai()); verify(repo,never()).save(any());
  }

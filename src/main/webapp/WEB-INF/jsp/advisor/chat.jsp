@@ -43,9 +43,9 @@
                                 <strong class="small d-block text-dark"><c:out value="${wq.sinhVien.taiKhoan.hoTen}" /></strong>
                                 <small class="text-muted"><c:out value="${wq.donVi.tenDonVi}" /></small>
                             </div>
-                            <a class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-3" href="${pageContext.request.contextPath}/advisor/chat?sessionId=${wq.maPhienChat}">
-                                Nhận chat
-                            </a>
+                            <form method="post" action="${pageContext.request.contextPath}/advisor/chat/${wq.maPhienChat}/join">
+                                <sec:csrfInput /><button type="submit" class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-3">Nhận chat</button>
+                            </form>
                         </div>
                     </c:forEach></div>
                 </c:if></div>
@@ -109,14 +109,9 @@
                     </div>
 
                     </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
-                            <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
-                                <span><c:out value="${empty m.taiKhoanGui ? 'QAUTE tự động' : m.taiKhoanGui.hoTen}" /></span>
-                                <c:if test="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}"><span class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
-                                    <i class="bi bi-robot me-1"></i>Tự động
-                                </span>
-                            </c:if></div>
-                            <div style="white-space: pre-line;"><c:out value="${m.noiDung}" /></div>
+                        <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" >
+                            <c:if test="${not empty m.taiKhoanGui}"><div class="small fw-bold mb-1 opacity-75"><c:out value="${m.taiKhoanGui.hoTen}" /></div></c:if>
+                            <div style="white-space: pre-line;"><c:out value="${m.noiDungHienThi}" /></div>
                             <c:if test="${messageAttachments != null and messageAttachments[m.maTinNhan] != null}"><div class="mt-2"><c:forEach var="file" items="${messageAttachments[m.maTinNhan]}"><a class="btn btn-sm btn-light border" target="_blank" rel="noopener" href="${pageContext.request.contextPath}/attachments/${file.maTep}"><i class="bi bi-paperclip"></i> <span><c:out value="${file.tenGoc}" /></span></a></c:forEach></div>
                             </c:if><div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;"><c:out value="${q:formatTemporal(m.thoiGianGui, 'HH:mm')}" /></div>
                         </div>
@@ -148,7 +143,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261003-json-fix" defer></script>
+<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261013-1" defer></script>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>
 

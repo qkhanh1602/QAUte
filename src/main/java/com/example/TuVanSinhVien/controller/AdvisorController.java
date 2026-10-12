@@ -61,6 +61,7 @@ public class AdvisorController {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
         model.addAttribute("advisor", cv);
         model.addAttribute("assignedTickets", ticketService.getAdvisorAssignedTickets(cv.getMaCV()));
+        model.addAttribute("closedTickets", ticketService.getAdvisorClosedTickets(cv.getMaCV()));
         model.addAttribute("queueTickets", ticketService.getDepartmentQueue(cv.getDonVi().getMaDonVi()));
         return "advisor/tickets";
     }
@@ -233,17 +234,32 @@ public class AdvisorController {
             try {
                 PhienChat session = chatService.getAdvisorSession(sessionId, cv);
                 if (session.getNguoiTuVan() == null) {
-                    chatService.advisorJoinSession(sessionId, cv);
+                    model.addAttribute("errorMessage", "Vui lòng nhấn Nhận chat trong hàng đợi để tiếp nhận phiên.");
+                } else {
+                    var messages = chatService.getMessages(sessionId, cv.getTaiKhoan());
+                    var files = messages.stream().collect(Collectors.toMap(TinNhanChat::getMaTinNhan,
+                            m -> attachmentService.getMessageAttachments(m.getMaTinNhan())));
+                    model.addAttribute("currentSession", session);
+                    model.addAttribute("messages", messages);
+                    model.addAttribute("messageAttachments", files);
                 }
-                model.addAttribute("currentSession", session);
-                model.addAttribute("messages", chatService.getMessages(sessionId, cv.getTaiKhoan()));
-                model.addAttribute("messageAttachments", chatService.getMessages(sessionId, cv.getTaiKhoan()).stream()
-                        .collect(Collectors.toMap(TinNhanChat::getMaTinNhan, m -> attachmentService.getMessageAttachments(m.getMaTinNhan()))));
             } catch (RuntimeException e) {
                 model.addAttribute("errorMessage", e.getMessage());
             }
         }
         return "advisor/chat";
+    }
+
+    @PostMapping("/chat/{sessionId}/join")
+    public String joinChat(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails user,
+                           RedirectAttributes flash) {
+        try {
+            chatService.advisorJoinSession(sessionId, getAdvisorOrThrow(user));
+            return "redirect:/advisor/chat?sessionId=" + sessionId;
+        } catch (RuntimeException ex) {
+            flash.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/advisor/chat";
+        }
     }
 
     @PostMapping("/chat/{sessionId}/end")

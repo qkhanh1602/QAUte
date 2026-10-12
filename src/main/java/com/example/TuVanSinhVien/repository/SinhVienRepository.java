@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface SinhVienRepository extends JpaRepository<SinhVien, Integer> {
     Optional<SinhVien> findByMssv(String mssv);
     Optional<SinhVien> findByTaiKhoan(TaiKhoan taiKhoan);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "taiKhoan")
     Optional<SinhVien> findByTaiKhoan_MaTK(Integer maTK);
     boolean existsByMssv(String mssv);
 }

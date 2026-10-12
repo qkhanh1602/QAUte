@@ -221,14 +221,14 @@ public class AppointmentService {
         var deadline=cancellationDeadline(app);
         if (LocalDateTime.now(clock).isAfter(deadline))
             return "Đã hết hạn hủy. Chỉ được hủy trước giờ hẹn ít nhất "
-                    + ("TrucTuyen".equals(app.getKhungGio().getHinhThuc()) ? 3 : 12)
+                    + 3
                     + " giờ; hạn hủy lịch này là "
                     + deadline.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ".";
         return "";
     }
 
     public LocalDateTime cancellationDeadline(LichHenTuVan app) {
-        return app.getKhungGio().getBatDau().minusHours("TrucTuyen".equals(app.getKhungGio().getHinhThuc()) ? 3 : 12);
+        return app.getKhungGio().getBatDau().minusHours(3);
     }
 
     @Transactional

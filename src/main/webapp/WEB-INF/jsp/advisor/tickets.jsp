@@ -43,9 +43,19 @@
                 <i class="bi bi-inbox-fill me-1"></i>Hàng đợi chưa tiếp nhận (<span><c:out value="${fn:length(queueTickets)}" /></span>)
             </button>
         </li>
+        <li class="nav-item"><button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="tab" data-bs-target="#closed-tickets" type="button">Đã đóng (<c:out value="${fn:length(closedTickets)}" />)</button></li>
     </ul>
 
     <div class="tab-content" id="advisorTicketTabContent">
+        <div class="tab-pane fade" id="closed-tickets" role="tabpanel">
+            <div class="qaute-card p-4 border-0 shadow-sm">
+                <c:if test="${empty closedTickets}"><p class="text-muted mb-0">Chưa có câu hỏi đã đóng.</p></c:if>
+                <c:forEach var="t" items="${closedTickets}"><div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
+                    <div><strong>#<c:out value="${t.maYeuCau}" /> · <c:out value="${t.tieuDe}" /></strong><div class="small text-muted">Đã đóng · <c:out value="${q:formatTemporal(t.ngayDong, 'dd/MM/yyyy HH:mm')}" /></div></div>
+                    <a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/advisor/tickets/${t.maYeuCau}">Xem lại</a>
+                </div></c:forEach>
+            </div>
+        </div>
         <!-- TAB 1: Assigned Tickets -->
         <div class="tab-pane fade show active" id="assigned-tickets" role="tabpanel">
             <div class="qaute-card p-4 border-0 shadow-sm">

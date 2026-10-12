@@ -373,7 +373,7 @@ INSERT dbo.LinhVucTuVan(MaLinhVucCode, TenLinhVuc, MaDonVi, NhayCam)
 INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('booking.window_days',N'7',N'Cho phép đặt trong 7 ngày tới'),
  ('booking.max_pending',N'2',N'Tối đa 2 lịch chờ duyệt trên mỗi sinh viên'),
- ('booking.cancel_before_hours',N'12',N'Hủy trước ít nhất 12 giờ'),
+ ('booking.cancel_before_hours',N'3',N'Hủy trước ít nhất 3 giờ cho cả hai hình thức'),
  ('booking.approve_hours',N'24',N'Hạn duyệt lịch theo giờ thực'),
  ('booking.allowed_slot_minutes',N'45,60',N'Ưu tiên QĐ24; sửa CHECK nếu đổi thời lượng'),
  ('booking.min_weekly_slots',N'2',N'Tối thiểu hai slot mỗi tuần'),

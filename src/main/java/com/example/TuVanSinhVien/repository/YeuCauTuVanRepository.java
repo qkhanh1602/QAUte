@@ -24,9 +24,11 @@ public interface YeuCauTuVanRepository extends org.springframework.data.jpa.repo
     @Query("SELECT y FROM YeuCauTuVan y WHERE y.coVanPhuTrach.maCV = :advisorId "
             + "ORDER BY CASE WHEN y.trangThai IN ('ChoTiepNhan', 'DangXuLy') THEN 0 "
             + "WHEN y.trangThai = 'DaPhanHoi' THEN 1 ELSE 2 END, y.hanSLA ASC, y.ngayTao ASC, y.maYeuCau ASC")
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"sinhVien.taiKhoan", "linhVuc", "donVi", "coVanPhuTrach.taiKhoan"})
     List<YeuCauTuVan> findAdvisorTicketsByDeadline(@Param("advisorId") Integer advisorId);
 
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"sinhVien.taiKhoan", "linhVuc", "donVi", "coVanPhuTrach.taiKhoan"})
     List<YeuCauTuVan> findByDonVi_MaDonViAndTrangThaiOrderByNgayTaoAsc(Integer maDonVi, String trangThai);
 
     List<YeuCauTuVan> findByTrangThaiOrderByNgayTaoDesc(String trangThai);

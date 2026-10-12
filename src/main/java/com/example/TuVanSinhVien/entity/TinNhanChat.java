@@ -216,6 +216,11 @@ public class TinNhanChat {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
+    public String getNoiDungHienThi() {
+        return taiKhoanGui == null && noiDung != null
+                ? noiDung.replaceFirst("^\\[🤖 Trả lời tự động\\]\\s*", "") : noiDung;
+    }
+
     public String getNoiDung() {
         return this.noiDung;
     }

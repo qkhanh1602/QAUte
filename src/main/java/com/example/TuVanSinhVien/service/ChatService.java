@@ -60,7 +60,7 @@ public class ChatService {
     @Transactional
     public void advisorJoinSession(Integer maPhienChat, NguoiTuVan cv) {
         requireAdvisorOfficeHours();
-        PhienChat session = phienChatRepo.findById(maPhienChat)
+        PhienChat session = phienChatRepo.findLockedById(maPhienChat)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiên tư vấn trực tuyến."));
         if (!session.getDonVi().getMaDonVi().equals(cv.getDonVi().getMaDonVi())) {
             throw new SecurityException("Bạn chỉ được tiếp nhận phiên chat thuộc đơn vị của mình.");
@@ -120,23 +120,30 @@ public class ChatService {
     }
 
     private void triggerAutoReply(PhienChat session, String text) {
-        CauHoiFAQ faq = findBestMatchingFaq(text);
+        var suggestion = ChatQuickGuide.forUnit(session.getDonVi().getMaDonViCode()).stream()
+                .filter(q -> q.question().equalsIgnoreCase(text.strip()) || q.label().equalsIgnoreCase(text.strip()))
+                .findFirst();
+        CauHoiFAQ faq = suggestion.isPresent() ? null : findBestMatchingFaq(text);
         String content;
-        if (faq != null) {
+        if (suggestion.isPresent()) {
+            content = suggestion.get().answer();
+        } else if (faq != null) {
             String answer = faq.getCauTraLoi().strip();
             if (answer.length() > 450) answer = answer.substring(0, 447) + "…";
             content = answer + "\nXem thêm trong FAQ. Cần hỗ trợ thêm, bạn cứ nhắn tại đây.";
         } else {
             if (tinNhanRepo.countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(
                     session.getMaPhienChat(), session.getSinhVien().getTaiKhoan().getMaTK()) > 1) return;
-            content = "Đã nhận tin nhắn. Cố vấn sẽ phản hồi trong giờ hành chính (thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00).";
+            content = "Chào em " + session.getSinhVien().getTaiKhoan().getHoTen()
+                    + (session.getSinhVien().getMssv() == null ? "" : " - " + session.getSinhVien().getMssv())
+                    + ", em cần trợ giúp gì? Em có thể nhập câu hỏi hoặc chọn gợi ý bên dưới.";
         }
         TinNhanChat reply = tinNhanRepo.save(TinNhanChat.builder().phienChat(session)
                 .taiKhoanGui(null).clientMessageId(UUID.randomUUID()).loaiTinNhan("VanBan")
-                .noiDung("[🤖 Trả lời tự động]\n" + content).thoiGianGui(LocalDateTime.now(clock)).build());
+                .noiDung(content).thoiGianGui(LocalDateTime.now(clock)).build());
         events.publishEvent(new ChatDeliveryEvent(session.getSinhVien().getTaiKhoan().getTenDangNhap(), null,
                 new ChatDeliveryEvent.Message(reply.getMaTinNhan(), session.getMaPhienChat(), null,
-                        "QAUTE tự động", reply.getNoiDung(), reply.getThoiGianGui())));
+                        "", reply.getNoiDungHienThi(), reply.getThoiGianGui())));
     }
 
     private CauHoiFAQ findBestMatchingFaq(String text) {
@@ -182,9 +189,7 @@ public class ChatService {
     }
 
     public List<PhienChat> getWaitingQueue(Integer maDonVi) {
-        return phienChatRepo.findByTrangThaiOrderByThoiGianBatDauAsc("ChoTiepNhan").stream()
-                .filter(session -> session.getDonVi().getMaDonVi().equals(maDonVi))
-                .toList();
+        return phienChatRepo.findByDonVi_MaDonViAndTrangThaiOrderByThoiGianBatDauAsc(maDonVi, "ChoTiepNhan");
     }
 
     public List<PhienChat> getAdvisorSessions(Integer maCV) {

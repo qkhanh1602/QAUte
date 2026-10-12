@@ -251,7 +251,13 @@ public class TicketService {
     }
 
     public List<YeuCauTuVan> getAdvisorAssignedTickets(Integer maCV) {
-        return ticketRepo.findAdvisorTicketsByDeadline(maCV);
+        return ticketRepo.findAdvisorTicketsByDeadline(maCV).stream()
+                .filter(t -> List.of("ChoTiepNhan", "DangXuLy", "DaPhanHoi").contains(t.getTrangThai())).toList();
+    }
+
+    public List<YeuCauTuVan> getAdvisorClosedTickets(Integer maCV) {
+        return ticketRepo.findAdvisorTicketsByDeadline(maCV).stream()
+                .filter(t -> "Dong".equals(t.getTrangThai())).toList();
     }
 
     public List<YeuCauTuVan> getDepartmentQueue(Integer maDonVi) {

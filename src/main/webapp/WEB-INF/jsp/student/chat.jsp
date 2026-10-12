@@ -79,14 +79,9 @@
                     </div>
 
                     </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
-                            <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
-                                <span><c:out value="${empty m.taiKhoanGui ? 'QAUTE tự động' : m.taiKhoanGui.hoTen}" /></span>
-                                <c:if test="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}"><span class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
-                                    <i class="bi bi-robot me-1"></i>Tự động
-                                </span>
-                            </c:if></div>
-                            <div style="white-space: pre-line;"><c:out value="${m.noiDung}" /></div>
+                        <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" >
+                            <c:if test="${not empty m.taiKhoanGui}"><div class="small fw-bold mb-1 opacity-75"><c:out value="${m.taiKhoanGui.hoTen}" /></div></c:if>
+                            <div style="white-space: pre-line;"><c:out value="${m.noiDungHienThi}" /></div>
                             <c:if test="${messageAttachments != null and messageAttachments[m.maTinNhan] != null}"><div class="mt-2"><c:forEach var="file" items="${messageAttachments[m.maTinNhan]}"><a class="btn btn-sm btn-light border" target="_blank" rel="noopener" href="${pageContext.request.contextPath}/attachments/${file.maTep}"><i class="bi bi-paperclip"></i> <span><c:out value="${file.tenGoc}" /></span></a></c:forEach></div>
                             </c:if><div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;"><c:out value="${q:formatTemporal(m.thoiGianGui, 'HH:mm')}" /></div>
                         </div>
@@ -96,10 +91,9 @@
                 <!-- Quick Suggestions -->
                 <div class="px-3 pt-2 pb-1 bg-white border-top d-flex gap-1 flex-wrap align-items-center">
                     <span class="text-muted small me-1"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Gợi ý hỏi nhanh:</span>
-                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Làm thế nào để đăng ký học phần vượt quá số tín chỉ quy định?')">Vượt tín chỉ</button>
-                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Quy trình xin cấp giấy xác nhận sinh viên để hoãn nghĩa vụ quân sự?')">Giấy xác nhận NVQS</button>
-                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Hướng dẫn điều kiện xét học bổng khuyến khích học tập?')">Học bổng</button>
-                    <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" onclick="fillMessage('Em muốn hỏi về điều kiện rút học phần trong học kỳ?')">Rút học phần</button>
+                    <c:forEach var="suggestion" items="${quickSuggestions}">
+                        <button type="button" class="btn btn-sm btn-light rounded-pill border small px-2 py-0 text-secondary" data-quick-question="<c:out value='${suggestion.question}' />"><c:out value="${suggestion.label}" /></button>
+                    </c:forEach>
                 </div>
 
                 <!-- Chat Input Form -->
@@ -135,7 +129,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
-<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261003-json-fix" defer></script>
+<script src="${pageContext.request.contextPath}/js/qaute-chat.js?v=20261013-1" defer></script>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>
 

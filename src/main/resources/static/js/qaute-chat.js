@@ -5,10 +5,13 @@
     const form = document.getElementById('chatSendForm') || document.getElementById('advisorChatSendForm');
     const input = form.querySelector('[name=noiDung]');
     const button = form.querySelector('[type=submit]');
+    document.querySelectorAll('[data-quick-question]').forEach(button => button.addEventListener('click', () => {
+        input.value = button.dataset.quickQuestion; input.focus();
+    }));
     const presence = document.getElementById('advisorPresence');
     const seen = new Set([...stream.querySelectorAll('[data-message-id]')].map(e => e.dataset.messageId));
     const status = document.createElement('div');
-    status.className = 'small text-muted px-3 py-2';
+    status.className = 'visually-hidden';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
     form.parentElement.prepend(status);
@@ -22,7 +25,7 @@
         pending = null; pendingViaSocket = false;
         button.disabled = false;
         status.textContent = error || (client?.connected ? 'Đã kết nối trực tuyến' : 'Đang đồng bộ tin nhắn');
-        status.classList.toggle('text-danger', Boolean(error));
+        status.className = error ? 'small text-danger px-3 py-2' : 'visually-hidden';
     };
     const append = message => {
         if (Number(message.sessionId) !== sessionId || seen.has(String(message.messageId))) return;
@@ -38,7 +41,8 @@
         const content = document.createElement('div'); content.style.whiteSpace = 'pre-line'; content.textContent = message.content;
         const time = document.createElement('div'); time.className = 'small text-end mt-1 opacity-75';
         time.textContent = String(message.sentAt || '').slice(11, 16);
-        bubble.append(sender, content, time); wrap.append(bubble); stream.append(wrap); scroll();
+        if (message.senderName) bubble.append(sender);
+        bubble.append(content, time); wrap.append(bubble); stream.append(wrap); scroll();
         if (own && pendingViaSocket && pending === message.content) finish();
     };
     // Same authorized MVC page supplies fallback history and attachment markup.

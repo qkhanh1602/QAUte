@@ -88,7 +88,7 @@ Các khoa bổ sung có tài khoản `covan.<mã khoa>` do `FacultyAdvisorSeeder
 
 Câu hỏi: Chờ tiếp nhận → Đang xử lý → Đã phản hồi → Đã đóng. Hỏi thêm có thể đưa về Đang xử lý. FAQ/cẩm nang là nội dung biên tập riêng. Có phân trang và lượt xem theo truy cập; hiển thị trong danh sách không tự tăng lượt xem.
 
-Lịch gợi ý trong 7 ngày tới, thứ Hai–thứ Sáu 08:00–12:00/13:00–17:00, loại ngày nghỉ và giờ còn dưới 15 phút. Tối đa 2 lịch chờ; cố vấn duyệt/từ chối. Hủy trực tuyến trước ít nhất 3 giờ, trực tiếp trước ít nhất 12 giờ. Lịch cập nhật WebSocket với truy vấn nền dự phòng, tránh thay form khi đang chỉnh sửa.
+Lịch gợi ý trong 7 ngày tới, thứ Hai–thứ Sáu 08:00–12:00/13:00–17:00, loại ngày nghỉ và giờ còn dưới 15 phút. Tối đa 2 lịch chờ; cố vấn duyệt/từ chối. Cả lịch trực tuyến và trực tiếp đều được hủy trước giờ bắt đầu ít nhất 3 giờ. Lịch cập nhật WebSocket với truy vấn nền dự phòng, tránh thay form khi đang chỉnh sửa.
 
 Chat lưu SQL Server trước khi phát qua STOMP, có kiểm tra quyền và đồng bộ lịch sử. Upload JPG/PNG/PDF tối đa 10 MiB theo quyền đối tượng. Mật khẩu 8–72 ký tự có chữ ASCII và số, không vượt 72 byte UTF-8. Quên mật khẩu sử dụng OTP email.
 

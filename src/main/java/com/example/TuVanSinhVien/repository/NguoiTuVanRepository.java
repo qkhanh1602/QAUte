@@ -14,6 +14,7 @@ public interface NguoiTuVanRepository extends JpaRepository<NguoiTuVan, Integer>
     Optional<NguoiTuVan> findByMaCanBo(String maCanBo);
     boolean existsByMaCanBo(String maCanBo);
     Optional<NguoiTuVan> findByTaiKhoan(TaiKhoan taiKhoan);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"taiKhoan", "donVi"})
     Optional<NguoiTuVan> findByTaiKhoan_MaTK(Integer maTK);
     List<NguoiTuVan> findByDonVi_MaDonVi(Integer maDonVi);
     List<NguoiTuVan> findByNhanTuVanTrue();

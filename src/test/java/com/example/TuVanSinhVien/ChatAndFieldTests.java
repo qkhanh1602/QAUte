@@ -31,7 +31,7 @@ class ChatAndFieldTests {
         verify(messages,times(2)).save(saved.capture());
         var reply=saved.getAllValues().get(1);
         assertNull(reply.getTaiKhoanGui());
-        assertTrue(reply.getNoiDung().contains("Đã nhận tin nhắn"));
+        assertTrue(reply.getNoiDung().contains("Chào em Sinh viên"));
         assertTrue(reply.getNoiDung().length()<200);
         verify(events,times(2)).publishEvent(any(ChatDeliveryEvent.class));
     }

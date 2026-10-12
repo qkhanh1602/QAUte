@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface TinNhanChatRepository extends JpaRepository<TinNhanChat, Long> {
     long countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(Integer sessionId, Integer accountId);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "taiKhoanGui")
     List<TinNhanChat> findByPhienChat_MaPhienChatOrderByThoiGianGuiAsc(Integer maPhienChat);
 }

@@ -13,7 +13,7 @@
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4" data-appointment-live-root data-context-path="${pageContext.request.contextPath}">
-    <p class="small text-secondary" data-appointment-live-status role="status">Đang kết nối cập nhật lịch…</p>
+    <p class="visually-hidden" data-appointment-live-status role="status">Đang kết nối cập nhật lịch…</p>
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h2 class="fw-bold text-dark m-0">Quản Lý Khung Giờ Tư Vấn (Slots)</h2>
