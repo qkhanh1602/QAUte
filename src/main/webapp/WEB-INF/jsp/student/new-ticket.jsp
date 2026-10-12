@@ -65,7 +65,6 @@
                                 </div>
                                 <div id="linhVucSuggestions" class="position-absolute bg-white border rounded shadow-sm w-100 p-1" style="z-index: 1050; max-height: 240px; overflow-y: auto;" hidden></div>
                             </div>
-                            <div class="form-text" id="fieldStatus" role="status">Chọn đơn vị để xem gợi ý. Bạn cũng có thể nhập lĩnh vực khác.</div>
                         </div>
                     </div>
 
@@ -204,7 +203,6 @@ async function loadLinhVuc(maDonVi, preserve = false) {
     fieldRequest?.abort();
     const input = document.getElementById('linhVucInput');
     const list = document.getElementById('linhVucSuggestions');
-    const status = document.getElementById('fieldStatus');
     list.replaceChildren();
     closeFields();
     fieldNames = [];
@@ -212,7 +210,6 @@ async function loadLinhVuc(maDonVi, preserve = false) {
     if (!preserve) input.value = '';
     if (!maDonVi) return;
     fieldRequest = new AbortController();
-    status.textContent = 'Đang tải gợi ý…';
     fieldMessage = 'Đang tải danh sách lĩnh vực…';
     try {
         const response = await fetch('${pageContext.request.contextPath}/api/public/linh-vuc-by-don-vi?maDonVi=' + encodeURIComponent(maDonVi), {signal: fieldRequest.signal});
@@ -220,12 +217,10 @@ async function loadLinhVuc(maDonVi, preserve = false) {
         const data = await response.json();
         fieldNames = data.map(item => item.tenLinhVuc);
         fieldMessage = 'Đơn vị chưa có lĩnh vực gợi ý. Bạn có thể nhập lĩnh vực khác.';
-        status.textContent = fieldNames.length ? 'Bấm mũi tên để chọn hoặc nhập lĩnh vực khác.' : fieldMessage;
         if (!list.hidden) showFields(input.value);
     } catch (error) {
         if (error.name !== 'AbortError') {
             fieldMessage = 'Chưa tải được danh sách. Bạn vẫn có thể nhập lĩnh vực.';
-            status.textContent = fieldMessage;
             if (!list.hidden) showFields(input.value);
         }
     }
