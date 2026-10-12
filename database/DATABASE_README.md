@@ -33,3 +33,10 @@ Chỉ chạy migration phù hợp với schema cũ. Không có Flyway tự chạ
 `WorkflowPolicyInitializer` mặc định chạy bốn script trong `src/main/resources/db`: chính sách SLA/giờ, cấu trúc diễn đàn, tên hiển thị cố vấn và xử lý slot mẫu cũ. Giữ các resource này để ứng dụng khởi động. Bước cập nhật cần quyền DDL tương ứng; sau khi hoàn tất có thể đặt `app.workflow.policy-migration.enabled=false` và thu hồi quyền DDL của tài khoản vận hành.
 
 `QAUTE_VERIFY.sql` kiểm tra ràng buộc bằng transaction rollback; chỉ chạy trên database thử nghiệm. Integration test Java cũng cần database thử riêng vì có thể tạo/cập nhật dữ liệu. Không commit kết quả chạy, MDF/LDF, `.bak` hoặc file cấu hình thật.
+
+## Dọn sáu bảng không dùng
+
+Chạy `V8__remove_unused_tables.sql`. V8 chạy thủ công sau khi triển khai bản code đã bỏ entity `LichLamViec`, `NgayNghi`, `NhatKyHeThong`; không tự chạy khi khởi động. Sao lưu cấu trúc và dữ liệu sáu bảng trước khi chạy. Script dùng transaction, dừng nếu có khóa ngoại trỏ vào bảng, năm bảng nghiệp vụ có dữ liệu hoặc lịch làm việc có giờ tùy chỉnh. Schema cài mới đã bỏ sáu bảng nên không cần chạy V8. Bản ứng dụng cũ có các entity này không tương thích với schema sau V8; khi rollback code phải khôi phục bảng trước.
+
+Quên mật khẩu vẫn dùng `YeuCauXacMinhOTP`; giờ hành chính do `SlaService` kiểm tra, ngày nghỉ dùng `SLA_HOLIDAYS`; tra cứu nhật ký dùng `NhatKyBaoMat` và lịch sử câu hỏi dùng `LichSuYeuCau`. Giữ `CauHinhHeThong` và `CoVanLinhVuc` vì các script hiện tại còn phụ thuộc.
+

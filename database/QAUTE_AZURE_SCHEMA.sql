@@ -275,26 +275,6 @@ MaThongBao bigint IDENTITY PRIMARY KEY,
  UNIQUE (MaTK_Nhan, KhoaChongLap)
 );
 
-CREATE TABLE dbo.PhienDangNhap (
-MaPhien uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- RefreshTokenHash binary(32) NOT NULL UNIQUE,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- LanHoatDongCuoi datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- HetHan datetime2(3) NOT NULL, ThuHoiLuc datetime2(3) NULL,
- UserAgent nvarchar(500) NULL,
- CHECK (HetHan > NgayTao)
-);
-
-CREATE TABLE dbo.TokenDatLaiMatKhau (
-MaToken bigint IDENTITY PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- TokenHash binary(32) NOT NULL UNIQUE,
- HetHan datetime2(3) NOT NULL, DaDungLuc datetime2(3) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- CHECK (HetHan > NgayTao)
-);
-
 -- OTP is for a registration/verification flow. Never store the one-time code itself.
 CREATE TABLE dbo.YeuCauXacMinhOTP (
  MaOTP uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
@@ -327,37 +307,11 @@ CREATE TABLE dbo.NhatKyBaoMat (
  NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
-CREATE TABLE dbo.DanhTinhSSO (
-MaDanhTinh int IDENTITY PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- NhaCungCap varchar(30) NOT NULL, SubjectId varchar(255) NOT NULL,
- UNIQUE (NhaCungCap, SubjectId), UNIQUE (MaTK, NhaCungCap)
-);
-
 CREATE TABLE dbo.CauHinhHeThong (
 Khoa varchar(80) NOT NULL PRIMARY KEY,
  GiaTri nvarchar(1000) NOT NULL, MoTa nvarchar(500) NOT NULL,
  MaTK_CapNhat int NULL REFERENCES dbo.TaiKhoan(MaTK),
  NgayCapNhat datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
-);
-
-CREATE TABLE dbo.LichLamViec (
-MaCa int IDENTITY PRIMARY KEY,
- ThuISO tinyint NOT NULL CHECK (ThuISO BETWEEN 1 AND 7),
- GioBatDau time(0) NOT NULL, GioKetThuc time(0) NOT NULL,
- CHECK (GioKetThuc > GioBatDau), UNIQUE (ThuISO, GioBatDau)
-);
-
-CREATE TABLE dbo.NgayNghi (
-Ngay date NOT NULL PRIMARY KEY, LyDo nvarchar(200) NOT NULL
-);
-
-CREATE TABLE dbo.NhatKyHeThong (
-MaNhatKy bigint IDENTITY PRIMARY KEY,
- MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
- HanhDong varchar(60) NOT NULL, LoaiDoiTuong varchar(60) NOT NULL,
- MaDoiTuong varchar(100) NULL, ChiTiet nvarchar(2000) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.HangDoiSuKien (
@@ -387,7 +341,6 @@ CREATE INDEX IX_Chat_SinhVien ON dbo.PhienChat(MaSV, ThoiGianBatDau DESC);
 CREATE INDEX IX_Chat_HangDoi ON dbo.PhienChat(MaDonVi, TrangThai, ThoiGianBatDau);
 CREATE INDEX IX_TinNhan_LichSu ON dbo.TinNhanChat(MaPhienChat, MaTinNhan);
 CREATE INDEX IX_ThongBao_ChuaDoc ON dbo.ThongBao(MaTK_Nhan, NgayTao DESC) WHERE DaDoc = 0;
-CREATE INDEX IX_Phien_TaiKhoan ON dbo.PhienDangNhap(MaTK, ThuHoiLuc, HetHan);
 CREATE INDEX IX_OTP_TraCuu ON dbo.YeuCauXacMinhOTP(Email, MucDich, NgayTao DESC)
  INCLUDE(HetHan, DaDungLuc, SoLanNhapSai, GuiLaiSau);
 CREATE INDEX IX_NhatKyBaoMat_TaiKhoan ON dbo.NhatKyBaoMat(MaTK, NgayTao DESC);
@@ -442,9 +395,6 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('upload.max_bytes_exclusive',N'10485760',N'Tệp phải nhỏ hơn 10 MiB'),
  ('upload.allowed_mime',N'image/jpeg,image/png,application/pdf',N'Kiểm tra chữ ký tệp tại service'),
  ('app.timezone',N'Asia/Ho_Chi_Minh',N'Datetime2 lưu giờ Việt Nam Asia/Ho_Chi_Minh, không cộng thêm 7 giờ khi hiển thị');
-INSERT dbo.LichLamViec(ThuISO,GioBatDau,GioKetThuc)
- SELECT d.Thu,t.BatDau,t.KetThuc FROM (VALUES(1),(2),(3),(4),(5)) d(Thu)
- CROSS JOIN (VALUES(CAST('08:00' AS time),CAST('12:00' AS time)),(CAST('13:00' AS time),CAST('17:00' AS time))) t(BatDau,KetThuc);
 COMMIT;
 GO
 
