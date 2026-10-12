@@ -1,0 +1,16 @@
+# Copy to application-local.properties (ignored by Git).
+# Development only. Do not enable demo accounts on a public deployment.
+spring.profiles.active=dev
+spring.datasource.url=jdbc:sqlserver://127.0.0.1:1433;databaseName=QAUTE;trustServerCertificate=true;encrypt=false
+spring.datasource.username=qaute_app
+spring.datasource.password=REPLACE_WITH_YOUR_SQL_LOGIN_PASSWORD
+
+# Generate a Base64 secret from at least 32 random bytes (see README).
+app.jwt.secret=REPLACE_WITH_RANDOM_BASE64_SECRET
+
+# Required for registration/email verification. Use your own Gmail App Password.
+spring.mail.username=
+spring.mail.password=
+
+# Required for uploading avatars/attachments. Leave empty to configure later.
+cloudinary.url=

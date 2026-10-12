@@ -1,0 +1,15 @@
+<%@ page pageEncoding="UTF-8" %>
+<c:if test="${empty questions}"><p class="text-secondary text-center py-4">Chưa có câu hỏi phù hợp.</p></c:if>
+<c:forEach var="question" items="${questions}">
+ <article class="border-bottom py-3 d-flex gap-3 align-items-start">
+  <i class="bi bi-question-circle-fill text-danger mt-1" aria-hidden="true"></i>
+  <div class="flex-grow-1" style="min-width:0">
+   <a class="fw-semibold text-decoration-none d-block" href="${pageContext.request.contextPath}/forum/${question.id}"><c:out value="${question.title}" /></a>
+   <div class="small text-secondary d-flex flex-wrap gap-2 mt-2">
+    <time><c:out value="${question.createdAt}" /></time><span>· <c:out value="${question.fieldName}" /></span>
+    <span>· <c:out value="${question.statusLabel}" /></span>
+   </div>
+  </div>
+  <span class="small text-secondary text-nowrap flex-shrink-0" aria-label="Lượt xem"><i class="bi bi-eye me-1" aria-hidden="true"></i><c:out value="${question.views}" /> lượt xem</span>
+ </article>
+</c:forEach>

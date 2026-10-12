@@ -1,0 +1,13 @@
+.git
+target
+.env
+src/main/resources/application-local.properties
+.settings
+*.bak
+.work
+.env.*
+!.env.example
+**/*.log
+**/*.war
+**/*.mdf
+**/*.ldf
