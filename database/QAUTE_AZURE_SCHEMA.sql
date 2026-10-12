@@ -231,7 +231,7 @@ MaPhienChat int IDENTITY PRIMARY KEY,
 CREATE TABLE dbo.TinNhanChat (
 MaTinNhan bigint IDENTITY PRIMARY KEY,
  MaPhienChat int NOT NULL REFERENCES dbo.PhienChat(MaPhienChat),
- MaTK_Gui int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
+ MaTK_Gui int NULL REFERENCES dbo.TaiKhoan(MaTK),
  ClientMessageId uniqueidentifier NOT NULL,
  LoaiTinNhan varchar(20) NOT NULL DEFAULT 'VanBan' CHECK (LoaiTinNhan IN ('VanBan','TepTin','HinhAnh')),
  NoiDung nvarchar(max) NULL,

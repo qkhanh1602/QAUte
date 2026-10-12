@@ -21,7 +21,8 @@ public class ChatHistoryController {
     @Transactional(readOnly = true)
     public List<Message> messages(@PathVariable Integer sessionId, @AuthenticationPrincipal CustomUserDetails user) {
         return chat.getMessages(sessionId, user.getTaiKhoan()).stream().map(m -> new Message(
-                m.getMaTinNhan(), sessionId, m.getTaiKhoanGui().getMaTK(), m.getTaiKhoanGui().getHoTen(),
+                m.getMaTinNhan(), sessionId, m.getTaiKhoanGui() == null ? null : m.getTaiKhoanGui().getMaTK(),
+                m.getTaiKhoanGui() == null ? "QAUTE tự động" : m.getTaiKhoanGui().getHoTen(),
                 m.getNoiDung(), m.getThoiGianGui(), attachments.getMessageAttachments(m.getMaTinNhan()).stream()
                 .map(a -> new File(a.getMaTep(), a.getTenGoc())).toList())).toList();
     }

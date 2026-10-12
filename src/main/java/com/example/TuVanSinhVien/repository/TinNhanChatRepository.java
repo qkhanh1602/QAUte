@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface TinNhanChatRepository extends JpaRepository<TinNhanChat, Long> {
+    long countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(Integer sessionId, Integer accountId);
     List<TinNhanChat> findByPhienChat_MaPhienChatOrderByThoiGianGuiAsc(Integer maPhienChat);
 }

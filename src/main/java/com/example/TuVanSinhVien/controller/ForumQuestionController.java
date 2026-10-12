@@ -35,17 +35,23 @@ public class ForumQuestionController {
 
     @PostMapping("/forum/ask")
     public String publish(@AuthenticationPrincipal CustomUserDetails user,
-            @RequestParam Integer maDonVi, @RequestParam Integer maLinhVuc,
+            @RequestParam Integer maDonVi, @RequestParam(required = false) Integer maLinhVuc,
+            @RequestParam(required = false) String tenLinhVuc,
             @RequestParam String tieuDe, @RequestParam String noiDung,
             @RequestParam(required = false) Boolean baoMatDanhTinh,
             @RequestParam(required = false) MultipartFile attachment, RedirectAttributes flash) {
         try {
             var student = students.findByTaiKhoan_MaTK(user.getMaTK()).orElseThrow();
-            var question = submissions.createTicket(student, maLinhVuc, maDonVi, tieuDe, noiDung, baoMatDanhTinh, attachment);
+            var question = submissions.createQuestion(student, maLinhVuc, maDonVi, tenLinhVuc, tieuDe, noiDung, baoMatDanhTinh, attachment);
             flash.addFlashAttribute("successMessage", "Đã đăng câu hỏi lên diễn đàn.");
             return "redirect:/forum/" + question.getMaYeuCau();
         } catch (Exception ex) {
             flash.addFlashAttribute("errorMessage", ex.getMessage());
+            flash.addFlashAttribute("selectedUnit", maDonVi);
+            flash.addFlashAttribute("enteredField", tenLinhVuc);
+            flash.addFlashAttribute("enteredTitle", tieuDe);
+            flash.addFlashAttribute("enteredContent", noiDung);
+            flash.addFlashAttribute("enteredAnonymous", baoMatDanhTinh);
             return "redirect:/forum/ask";
         }
     }

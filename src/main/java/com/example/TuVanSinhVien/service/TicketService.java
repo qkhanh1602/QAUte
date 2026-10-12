@@ -26,6 +26,33 @@ public class TicketService {
     private final NguoiTuVanRepository nguoiTuVanRepo;
 
     @Transactional
+    public Integer resolveQuestionField(Integer unitId, Integer fieldId, String fieldName) {
+        if (fieldName == null || fieldName.isBlank()) {
+            if (fieldId == null) throw new IllegalArgumentException("Vui lòng nhập hoặc chọn lĩnh vực.");
+            return fieldId;
+        }
+        String name = fieldName.strip().replaceAll("\\s+", " ");
+        if (name.length() > 100 || name.codePoints().anyMatch(Character::isISOControl))
+            throw new IllegalArgumentException("Tên lĩnh vực tối đa 100 ký tự, không chứa ký tự điều khiển.");
+        // Serialize creation per unit so concurrent submissions reuse the same field.
+        DonVi unit = donViRepo.lockById(unitId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn vị yêu cầu."));
+        if (!Boolean.TRUE.equals(unit.getHoatDong()))
+            throw new IllegalArgumentException("Đơn vị đang tạm ngừng tiếp nhận.");
+        var existing = linhVucRepo.findByDonVi_MaDonVi(unitId).stream()
+                .filter(f -> f.getDonVi().getMaDonVi().equals(unitId) && f.getTenLinhVuc().equalsIgnoreCase(name))
+                .findFirst();
+        if (existing.isPresent()) {
+            if (!"HoatDong".equals(existing.get().getTrangThai()))
+                throw new IllegalArgumentException("Lĩnh vực này đang tạm ngừng. Vui lòng chọn lĩnh vực khác.");
+            return existing.get().getMaLinhVuc();
+        }
+        return linhVucRepo.save(LinhVucTuVan.builder().donVi(unit).tenLinhVuc(name)
+                .maLinhVucCode("SV_" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 27))
+                .moTa("Lĩnh vực được đề xuất khi đăng câu hỏi.").build()).getMaLinhVuc();
+    }
+
+    @Transactional
     public YeuCauTuVan createTicket(SinhVien sv, Integer maLinhVuc, Integer maDonVi, String tieuDe, String noiDung, Boolean baoMatDanhTinh) {
         if (tieuDe == null || tieuDe.trim().length() < 10) {
             throw new IllegalArgumentException("Tiêu đề yêu cầu tư vấn phải có tối thiểu 10 ký tự.");

@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface LinhVucTuVanRepository extends JpaRepository<LinhVucTuVan, Integer> {
     Optional<LinhVucTuVan> findByMaLinhVucCode(String maLinhVucCode);
     List<LinhVucTuVan> findByTrangThai(String trangThai);
+    List<LinhVucTuVan> findByDonVi_MaDonVi(Integer maDonVi);
     List<LinhVucTuVan> findByDonVi_MaDonViAndTrangThai(Integer maDonVi, String trangThai);
 }

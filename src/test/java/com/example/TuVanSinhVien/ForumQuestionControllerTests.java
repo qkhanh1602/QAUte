@@ -20,16 +20,16 @@ class ForumQuestionControllerTests {
         var student = SinhVien.builder().maSV(2).taiKhoan(account).build();
         when(students.findByTaiKhoan_MaTK(1)).thenReturn(Optional.of(student));
         var question = YeuCauTuVan.builder().maYeuCau(3).build();
-        when(submissions.createTicket(student, 4, 5, "Question title", "Question content", true, null))
+        when(submissions.createQuestion(student, 4, 5, null, "Question title", "Question content", true, null))
                 .thenReturn(question);
         var flash = new RedirectAttributesModelMap();
-        assertEquals("redirect:/forum/3", controller.publish(new CustomUserDetails(account), 5, 4,
+        assertEquals("redirect:/forum/3", controller.publish(new CustomUserDetails(account), 5, 4, null,
                 "Question title", "Question content", true, null, flash));
         assertTrue(flash.getFlashAttributes().containsKey("successMessage"));
-        when(submissions.createTicket(student, 4, 5, "Question title", "Question content", true, null))
+        when(submissions.createQuestion(student, 4, 5, null, "Question title", "Question content", true, null))
                 .thenThrow(new IllegalArgumentException("Nội dung không hợp lệ."));
         flash = new RedirectAttributesModelMap();
-        assertEquals("redirect:/forum/ask", controller.publish(new CustomUserDetails(account), 5, 4,
+        assertEquals("redirect:/forum/ask", controller.publish(new CustomUserDetails(account), 5, 4, null,
                 "Question title", "Question content", true, null, flash));
         assertEquals("Nội dung không hợp lệ.", flash.getFlashAttributes().get("errorMessage"));
     }

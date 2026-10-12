@@ -20,6 +20,12 @@ public class SubmissionService {
         if (present(file)) attachments.attachToTicket(file,student.getTaiKhoan(),ticket);
         return ticket;
     }
+    @Transactional public YeuCauTuVan createQuestion(SinhVien student, Integer fieldId, Integer unitId,
+            String fieldName, String title, String content, Boolean confidential, MultipartFile file) {
+        attachments.validateOptional(file);
+        Integer resolved = tickets.resolveQuestionField(unitId, fieldId, fieldName);
+        return createTicket(student, resolved, unitId, title, content, confidential, file);
+    }
     @Transactional public PhanHoiTuVan reply(Integer id, NguoiTuVan advisor, String content, Boolean faq, MultipartFile file) {
         attachments.validateOptional(file);
         var reply=tickets.replyTicket(id,advisor,content,faq);

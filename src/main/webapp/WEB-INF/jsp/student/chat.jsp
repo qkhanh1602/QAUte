@@ -81,7 +81,7 @@
                     </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
                         <div class="${m.taiKhoanGui.maTK == student.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" style="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]') ? 'background: #edf2fa; border-left: 4px solid #123b76;' : ''}">
                             <div class="small fw-bold mb-1 opacity-75 d-flex align-items-center">
-                                <span><c:out value="${m.taiKhoanGui.hoTen}" /></span>
+                                <span><c:out value="${empty m.taiKhoanGui ? 'QAUTE tự động' : m.taiKhoanGui.hoTen}" /></span>
                                 <c:if test="${m.noiDung != null and m.noiDung.contains('[🤖 Trả lời tự động]')}"><span class="badge bg-primary-subtle text-primary ms-2 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
                                     <i class="bi bi-robot me-1"></i>Tự động
                                 </span>

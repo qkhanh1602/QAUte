@@ -115,53 +115,28 @@ public class ChatService {
                 new ChatDeliveryEvent.Message(msg.getMaTinNhan(), session.getMaPhienChat(),
                         sender.getMaTK(), sender.getHoTen(), msg.getNoiDung(), msg.getThoiGianGui())));
 
+        if (isStudent && "ChoTiepNhan".equals(session.getTrangThai())) triggerAutoReply(session, noiDung);
         return msg;
     }
 
     private void triggerAutoReply(PhienChat session, String text) {
-        // 1. Quét tìm câu hỏi FAQ phù hợp nhất từ database
-        CauHoiFAQ matchedFaq = findBestMatchingFaq(text);
-
-        if (matchedFaq != null) {
-            String autoReply = "[🤖 Trả lời tự động]\n" +
-                "📌 Thầy/Cô gợi ý thông tin liên quan đến câu hỏi của em:\n\n" +
-                "👉 " + matchedFaq.getCauHoi() + "\n" +
-                "💬 " + matchedFaq.getCauTraLoi() + "\n\n" +
-                "💡 Nếu câu trả lời trên chưa giải đáp trọn vẹn, em hãy nhắn thêm chi tiết để Thầy/Cô tư vấn thêm nhé!";
-
-            TinNhanChat botMsg = TinNhanChat.builder()
-                .phienChat(session)
-                .taiKhoanGui(session.getNguoiTuVan().getTaiKhoan())
-                .clientMessageId(UUID.randomUUID())
-                .loaiTinNhan("VanBan")
-                .noiDung(autoReply)
-                .thoiGianGui(LocalDateTime.now(clock).plusSeconds(1))
-                .build();
-            tinNhanRepo.save(botMsg);
+        CauHoiFAQ faq = findBestMatchingFaq(text);
+        String content;
+        if (faq != null) {
+            String answer = faq.getCauTraLoi().strip();
+            if (answer.length() > 450) answer = answer.substring(0, 447) + "…";
+            content = answer + "\nXem thêm trong FAQ. Cần hỗ trợ thêm, bạn cứ nhắn tại đây.";
         } else {
-            // Đếm số tin nhắn của sinh viên trong phiên chat này
-            long studentMsgCount = tinNhanRepo.findByPhienChat_MaPhienChatOrderByThoiGianGuiAsc(session.getMaPhienChat())
-                .stream()
-                .filter(m -> m.getTaiKhoanGui().getMaTK().equals(session.getSinhVien().getTaiKhoan().getMaTK()))
-                .count();
-
-            // Nếu là tin nhắn đầu tiên của sinh viên mà chưa khớp FAQ, gửi xác nhận tiếp nhận tự động
-            if (studentMsgCount <= 1) {
-                String ack = "[🤖 Trả lời tự động]\n" +
-                    "Thầy/Cô (" + session.getNguoiTuVan().getTaiKhoan().getHoTen() +
-                    ") đã nhận được tin nhắn của em. Thầy/Cô sẽ xem xét và phản hồi trực tiếp cho em sớm nhất có thể nhé!";
-
-                TinNhanChat ackMsg = TinNhanChat.builder()
-                    .phienChat(session)
-                    .taiKhoanGui(session.getNguoiTuVan().getTaiKhoan())
-                    .clientMessageId(UUID.randomUUID())
-                    .loaiTinNhan("VanBan")
-                    .noiDung(ack)
-                    .thoiGianGui(LocalDateTime.now(clock).plusSeconds(1))
-                    .build();
-                tinNhanRepo.save(ackMsg);
-            }
+            if (tinNhanRepo.countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(
+                    session.getMaPhienChat(), session.getSinhVien().getTaiKhoan().getMaTK()) > 1) return;
+            content = "Đã nhận tin nhắn. Cố vấn sẽ phản hồi trong giờ hành chính (thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00).";
         }
+        TinNhanChat reply = tinNhanRepo.save(TinNhanChat.builder().phienChat(session)
+                .taiKhoanGui(null).clientMessageId(UUID.randomUUID()).loaiTinNhan("VanBan")
+                .noiDung("[🤖 Trả lời tự động]\n" + content).thoiGianGui(LocalDateTime.now(clock)).build());
+        events.publishEvent(new ChatDeliveryEvent(session.getSinhVien().getTaiKhoan().getTenDangNhap(), null,
+                new ChatDeliveryEvent.Message(reply.getMaTinNhan(), session.getMaPhienChat(), null,
+                        "QAUTE tự động", reply.getNoiDung(), reply.getThoiGianGui())));
     }
 
     private CauHoiFAQ findBestMatchingFaq(String text) {

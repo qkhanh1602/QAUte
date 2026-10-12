@@ -53,15 +53,14 @@
                             <label class="form-label small fw-semibold">1. Chọn Đơn vị phụ trách *</label>
                             <select name="maDonVi" id="donViSelect" class="form-select" required onchange="loadLinhVuc(this.value)">
                                 <option value="" disabled selected>-- Chọn phòng/khoa --</option>
-                                <c:forEach var="dv" items="${donViList}"><option value="${dv.maDonVi}"><c:out value="${dv.tenDonVi}" /></option>
+                                <c:forEach var="dv" items="${donViList}"><option value="${dv.maDonVi}" ${selectedUnit == dv.maDonVi ? 'selected' : ''}><c:out value="${dv.tenDonVi}" /></option>
                             </c:forEach></select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">2. Chọn Lĩnh vực cụ thể *</label>
-                            <select name="maLinhVuc" id="linhVucSelect" class="form-select" required>
-                                <option value="" disabled selected>-- Chọn lĩnh vực --</option>
-                                <c:forEach var="lv" items="${linhVucList}"><option value="${lv.maLinhVuc}"><c:out value="${lv.tenLinhVuc}" /></option>
-                            </c:forEach></select>
+                            <label for="linhVucInput" class="form-label small fw-semibold">2. Lĩnh vực cụ thể *</label>
+                            <input name="tenLinhVuc" id="linhVucInput" list="linhVucSuggestions" class="form-control" required maxlength="100" autocomplete="off" placeholder="Nhập hoặc chọn lĩnh vực" value="<c:out value='${enteredField}' />">
+                            <datalist id="linhVucSuggestions"></datalist>
+                            <div class="form-text" id="fieldStatus" role="status">Chọn đơn vị để xem gợi ý. Bạn cũng có thể nhập lĩnh vực khác.</div>
                         </div>
                     </div>
 
@@ -71,7 +70,7 @@
                             <label class="form-label small fw-semibold">3. Tiêu đề câu hỏi / vấn đề cần tư vấn *</label>
                             <span id="titleCounter" class="text-muted small">0/10 ký tự tối thiểu</span>
                         </div>
-                        <input type="text" name="tieuDe" id="tieuDeInput" class="form-control" placeholder="Tóm tắt ngắn gọn vấn đề (tối thiểu 10 ký tự)..." required minlength="10" oninput="updateTitleCount()">
+                        <input type="text" name="tieuDe" id="tieuDeInput" value="<c:out value='${enteredTitle}' />" class="form-control" placeholder="Tóm tắt ngắn gọn vấn đề (tối thiểu 10 ký tự)..." required minlength="10" oninput="updateTitleCount()">
                     </div>
 
                     <!-- Body -->
@@ -80,7 +79,7 @@
                             <label class="form-label small fw-semibold">4. Nội dung chi tiết câu hỏi *</label>
                             <span id="bodyCounter" class="text-muted small">0/20 ký tự tối thiểu</span>
                         </div>
-                        <textarea name="noiDung" id="noiDungInput" rows="6" class="form-control" placeholder="Mô tả cụ thể hoàn cảnh, câu hỏi và mong muốn hỗ trợ từ cố vấn (tối thiểu 20 ký tự)..." required minlength="20" oninput="updateBodyCount()"></textarea>
+                        <textarea name="noiDung" id="noiDungInput" rows="6" class="form-control" placeholder="Mô tả cụ thể hoàn cảnh, câu hỏi và mong muốn hỗ trợ từ cố vấn (tối thiểu 20 ký tự)..." required minlength="20" oninput="updateBodyCount()"><c:out value="${enteredContent}" /></textarea>
                     </div>
 
                     <div class="mb-4">
@@ -93,7 +92,7 @@
                     <!-- Anonymous Checkbox -->
                     <div class="p-3 bg-light rounded-3 mb-4 border">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="baoMatDanhTinh" value="true" id="baoMatCheck">
+                            <input class="form-check-input" type="checkbox" name="baoMatDanhTinh" value="true" id="baoMatCheck" ${enteredAnonymous ? 'checked' : ''}>
                             <label class="form-check-label small fw-semibold text-dark" for="baoMatCheck">
                                 <i class="bi bi-shield-lock-fill text-primary me-1"></i>Bảo mật danh tính (Ẩn danh đối với sinh viên khác và màn hình chung)
                             </label>
@@ -139,22 +138,34 @@ function updateBodyCount() {
     }
 }
 
-function loadLinhVuc(maDonVi) {
+let fieldRequest;
+async function loadLinhVuc(maDonVi, preserve = false) {
+    fieldRequest?.abort();
+    const input = document.getElementById('linhVucInput');
+    const list = document.getElementById('linhVucSuggestions');
+    const status = document.getElementById('fieldStatus');
+    list.replaceChildren();
+    if (!preserve) input.value = '';
     if (!maDonVi) return;
-    fetch('/api/public/linh-vuc-by-don-vi?maDonVi=' + maDonVi)
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('linhVucSelect');
-            select.innerHTML = '<option value="" disabled selected>-- Chọn lĩnh vực --</option>';
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.maLinhVuc;
-                opt.textContent = item.tenLinhVuc;
-                select.appendChild(opt);
-            });
-        })
-        .catch(err => console.error(err));
+    fieldRequest = new AbortController();
+    status.textContent = 'Đang tải gợi ý…';
+    try {
+        const response = await fetch('${pageContext.request.contextPath}/api/public/linh-vuc-by-don-vi?maDonVi=' + encodeURIComponent(maDonVi), {signal: fieldRequest.signal});
+        if (!response.ok) throw new Error('load');
+        const data = await response.json();
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.tenLinhVuc;
+            list.appendChild(option);
+        });
+        status.textContent = 'Chọn gợi ý hoặc nhập lĩnh vực phù hợp với câu hỏi.';
+    } catch (error) {
+        if (error.name !== 'AbortError') status.textContent = 'Chưa tải được gợi ý. Bạn vẫn có thể nhập lĩnh vực.';
+    }
 }
+loadLinhVuc(document.getElementById('donViSelect').value, true);
+updateTitleCount();
+updateBodyCount();
 </script>
 
 <%@ include file="/WEB-INF/jsp/fragments/footer.jspf" %>

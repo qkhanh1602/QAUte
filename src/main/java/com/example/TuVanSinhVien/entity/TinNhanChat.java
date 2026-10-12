@@ -17,7 +17,8 @@ public class TinNhanChat {
     @JoinColumn(name = "MaPhienChat", nullable = false)
     private PhienChat phienChat;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaTK_Gui", nullable = false)
+    // Null denotes a system reply, never a message authored by an advisor.
+    @JoinColumn(name = "MaTK_Gui")
     private TaiKhoan taiKhoanGui;
     @Column(name = "ClientMessageId", nullable = false)
     private UUID clientMessageId;
