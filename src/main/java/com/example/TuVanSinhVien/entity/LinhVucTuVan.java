@@ -3,7 +3,6 @@ package com.example.TuVanSinhVien.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
 
 @Entity
 @Table(name = "LinhVucTuVan")
@@ -25,8 +24,6 @@ public class LinhVucTuVan {
     private String trangThai; // HoatDong, TamDung
     @Column(name = "NhayCam", nullable = false)
     private Boolean nhayCam;
-    @ManyToMany(mappedBy = "linhVucList")
-    private List<NguoiTuVan> nguoiTuVanList;
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
@@ -71,9 +68,6 @@ public class LinhVucTuVan {
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         private Boolean nhayCam$value;
-        @java.lang.SuppressWarnings("all")
-        @lombok.Generated
-        private List<NguoiTuVan> nguoiTuVanList;
 
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
@@ -152,16 +146,6 @@ public class LinhVucTuVan {
             return this;
         }
 
-        /**
-         * @return {@code this}.
-         */
-        @java.lang.SuppressWarnings("all")
-        @lombok.Generated
-        public LinhVucTuVan.LinhVucTuVanBuilder nguoiTuVanList(final List<NguoiTuVan> nguoiTuVanList) {
-            this.nguoiTuVanList = nguoiTuVanList;
-            return this;
-        }
-
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         public LinhVucTuVan build() {
@@ -169,14 +153,14 @@ public class LinhVucTuVan {
             if (!this.trangThai$set) trangThai$value = LinhVucTuVan.$default$trangThai();
             Boolean nhayCam$value = this.nhayCam$value;
             if (!this.nhayCam$set) nhayCam$value = LinhVucTuVan.$default$nhayCam();
-            return new LinhVucTuVan(this.maLinhVuc, this.maLinhVucCode, this.tenLinhVuc, this.moTa, this.donVi, trangThai$value, nhayCam$value, this.nguoiTuVanList);
+            return new LinhVucTuVan(this.maLinhVuc, this.maLinhVucCode, this.tenLinhVuc, this.moTa, this.donVi, trangThai$value, nhayCam$value);
         }
 
         @java.lang.Override
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         public java.lang.String toString() {
-            return "LinhVucTuVan.LinhVucTuVanBuilder(maLinhVuc=" + this.maLinhVuc + ", maLinhVucCode=" + this.maLinhVucCode + ", tenLinhVuc=" + this.tenLinhVuc + ", moTa=" + this.moTa + ", donVi=" + this.donVi + ", trangThai$value=" + this.trangThai$value + ", nhayCam$value=" + this.nhayCam$value + ", nguoiTuVanList=" + this.nguoiTuVanList + ")";
+            return "LinhVucTuVan.LinhVucTuVanBuilder(maLinhVuc=" + this.maLinhVuc + ", maLinhVucCode=" + this.maLinhVucCode + ", tenLinhVuc=" + this.tenLinhVuc + ", moTa=" + this.moTa + ", donVi=" + this.donVi + ", trangThai$value=" + this.trangThai$value + ", nhayCam$value=" + this.nhayCam$value + ")";
         }
     }
 
@@ -230,12 +214,6 @@ public class LinhVucTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public List<NguoiTuVan> getNguoiTuVanList() {
-        return this.nguoiTuVanList;
-    }
-
-    @java.lang.SuppressWarnings("all")
-    @lombok.Generated
     public void setMaLinhVuc(final Integer maLinhVuc) {
         this.maLinhVuc = maLinhVuc;
     }
@@ -278,12 +256,6 @@ public class LinhVucTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public void setNguoiTuVanList(final List<NguoiTuVan> nguoiTuVanList) {
-        this.nguoiTuVanList = nguoiTuVanList;
-    }
-
-    @java.lang.SuppressWarnings("all")
-    @lombok.Generated
     public LinhVucTuVan() {
         this.trangThai = LinhVucTuVan.$default$trangThai();
         this.nhayCam = LinhVucTuVan.$default$nhayCam();
@@ -291,7 +263,7 @@ public class LinhVucTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public LinhVucTuVan(final Integer maLinhVuc, final String maLinhVucCode, final String tenLinhVuc, final String moTa, final DonVi donVi, final String trangThai, final Boolean nhayCam, final List<NguoiTuVan> nguoiTuVanList) {
+    public LinhVucTuVan(final Integer maLinhVuc, final String maLinhVucCode, final String tenLinhVuc, final String moTa, final DonVi donVi, final String trangThai, final Boolean nhayCam) {
         this.maLinhVuc = maLinhVuc;
         this.maLinhVucCode = maLinhVucCode;
         this.tenLinhVuc = tenLinhVuc;
@@ -299,6 +271,5 @@ public class LinhVucTuVan {
         this.donVi = donVi;
         this.trangThai = trangThai;
         this.nhayCam = nhayCam;
-        this.nguoiTuVanList = nguoiTuVanList;
     }
 }

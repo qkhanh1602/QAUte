@@ -82,12 +82,6 @@ MaLinhVuc int IDENTITY PRIMARY KEY,
  UNIQUE (MaLinhVuc, MaDonVi)
 );
 
-CREATE TABLE dbo.CoVanLinhVuc (
-MaCV int NOT NULL REFERENCES dbo.NguoiTuVan(MaCV),
- MaLinhVuc int NOT NULL REFERENCES dbo.LinhVucTuVan(MaLinhVuc),
- PRIMARY KEY (MaCV, MaLinhVuc)
-);
-
 CREATE TABLE dbo.YeuCauTuVan (
 MaYeuCau int IDENTITY PRIMARY KEY,
  MaSV int NOT NULL REFERENCES dbo.SinhVien(MaSV),

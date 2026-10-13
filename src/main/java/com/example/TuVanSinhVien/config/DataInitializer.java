@@ -10,9 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 @Component
 @Profile("dev")
@@ -59,24 +57,17 @@ public class DataInitializer implements CommandLineRunner {
         // 3. Tạo Cố vấn CNTT
         TaiKhoan tkCvCntt = TaiKhoan.builder().tenDangNhap("covan.cntt").matKhau(passwordEncoder.encode("Covan@123")).hoTen("TS. Trần Minh Khoa").email("covan.cntt@ute.edu.vn").soDienThoai("0912345678").vaiTro("CoVan").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
         tkCvCntt = taiKhoanRepo.save(tkCvCntt);
-        List<LinhVucTuVan> lvListCntt = new ArrayList<>();
-        if (lvNgheNghiep != null) lvListCntt.add(lvNgheNghiep);
-        NguoiTuVan cvCntt = NguoiTuVan.builder().maCanBo("CB_CNTT_01").hocHamHocVi("Tiến sĩ").chucVu("Trưởng Bộ môn Kỹ thuật Phần mềm").chuyenMon("Kỹ thuật phần mềm, Đồ án tốt nghiệp, Hướng nghiệp IT").donVi(donViCntt).taiKhoan(tkCvCntt).nhanTuVan(true).hanNgachTiepNhan(20).linhVucList(lvListCntt).build();
+        NguoiTuVan cvCntt = NguoiTuVan.builder().maCanBo("CB_CNTT_01").hocHamHocVi("Tiến sĩ").chucVu("Trưởng Bộ môn Kỹ thuật Phần mềm").chuyenMon("Kỹ thuật phần mềm, Đồ án tốt nghiệp, Hướng nghiệp IT").donVi(donViCntt).taiKhoan(tkCvCntt).nhanTuVan(true).hanNgachTiepNhan(20).build();
         cvCntt = nguoiTuVanRepo.save(cvCntt);
         // 4. Tạo Cố vấn Đào tạo
         TaiKhoan tkCvDaoTao = TaiKhoan.builder().tenDangNhap("covan.daotao").matKhau(passwordEncoder.encode("Covan@123")).hoTen("ThS. Nguyễn Văn Bình").email("covan.daotao@ute.edu.vn").soDienThoai("0923456789").vaiTro("CoVan").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
         tkCvDaoTao = taiKhoanRepo.save(tkCvDaoTao);
-        List<LinhVucTuVan> lvListDaoTao = new ArrayList<>();
-        if (lvHocVu != null) lvListDaoTao.add(lvHocVu);
-        NguoiTuVan cvDaoTao = NguoiTuVan.builder().maCanBo("CB_DT_01").hocHamHocVi("Thạc sĩ").chucVu("Chuyên viên Tư vấn Học vụ").chuyenMon("Quy chế tín chỉ, Đăng ký học phần, Cảnh báo học vụ, Tốt nghiệp").donVi(donViDaoTao).taiKhoan(tkCvDaoTao).nhanTuVan(true).hanNgachTiepNhan(20).linhVucList(lvListDaoTao).build();
+        NguoiTuVan cvDaoTao = NguoiTuVan.builder().maCanBo("CB_DT_01").hocHamHocVi("Thạc sĩ").chucVu("Chuyên viên Tư vấn Học vụ").chuyenMon("Quy chế tín chỉ, Đăng ký học phần, Cảnh báo học vụ, Tốt nghiệp").donVi(donViDaoTao).taiKhoan(tkCvDaoTao).nhanTuVan(true).hanNgachTiepNhan(20).build();
         cvDaoTao = nguoiTuVanRepo.save(cvDaoTao);
         // 5. Tạo Cố vấn CTSV
         TaiKhoan tkCvCtsv = TaiKhoan.builder().tenDangNhap("covan.ctsv").matKhau(passwordEncoder.encode("Covan@123")).hoTen("ThS. Lê Thị Ánh Tuyết").email("covan.ctsv@ute.edu.vn").soDienThoai("0934567890").vaiTro("CoVan").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();
         tkCvCtsv = taiKhoanRepo.save(tkCvCtsv);
-        List<LinhVucTuVan> lvListCtsv = new ArrayList<>();
-        if (lvHocPhi != null) lvListCtsv.add(lvHocPhi);
-        if (lvThuTuc != null) lvListCtsv.add(lvThuTuc);
-        NguoiTuVan cvCtsv = NguoiTuVan.builder().maCanBo("CB_CTSV_01").hocHamHocVi("Thạc sĩ").chucVu("Phó Trưởng phòng Công tác Sinh viên").chuyenMon("Học bổng khuyến khích, Miễn giảm học phí, BHYT sinh viên, Vay vốn").donVi(donViCtsv).taiKhoan(tkCvCtsv).nhanTuVan(true).hanNgachTiepNhan(20).linhVucList(lvListCtsv).build();
+        NguoiTuVan cvCtsv = NguoiTuVan.builder().maCanBo("CB_CTSV_01").hocHamHocVi("Thạc sĩ").chucVu("Phó Trưởng phòng Công tác Sinh viên").chuyenMon("Học bổng khuyến khích, Miễn giảm học phí, BHYT sinh viên, Vay vốn").donVi(donViCtsv).taiKhoan(tkCvCtsv).nhanTuVan(true).hanNgachTiepNhan(20).build();
         cvCtsv = nguoiTuVanRepo.save(cvCtsv);
         // 6. Tạo Sinh viên 1
         TaiKhoan tkSv1 = TaiKhoan.builder().tenDangNhap("sinhvien1").matKhau(passwordEncoder.encode("Sinhvien@123")).hoTen("Nguyễn Văn An").email("21110001@student.ute.edu.vn").soDienThoai("0987654321").vaiTro("SinhVien").trangThai("HoatDong").batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build();

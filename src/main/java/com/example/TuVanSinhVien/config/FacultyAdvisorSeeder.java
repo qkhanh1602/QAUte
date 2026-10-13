@@ -50,7 +50,7 @@ public class FacultyAdvisorSeeder implements CommandLineRunner {
             if (covered) {
                 advisors.findByMaCanBo(staffCode).filter(a -> a.getDonVi().getMaDonVi().equals(unit.getMaDonVi()))
                         .ifPresent(a -> {
-                            if (a.getLinhVucList().isEmpty()) a.setLinhVucList(demoFields(unit));
+                            ensureDemoFields(unit);
                         });
                 continue;
             }
@@ -63,11 +63,11 @@ public class FacultyAdvisorSeeder implements CommandLineRunner {
                     .hoTen(advisorName(unit.getMaDonViCode()))
                     .email(username + "@example.com").vaiTro("CoVan").trangThai("HoatDong")
                     .batBuocDoiMatKhau(false).ngayTao(now).ngayCapNhat(now).build());
+            ensureDemoFields(unit);
             advisors.save(NguoiTuVan.builder().maCanBo(staffCode)
                     .chucVu("Cố vấn học tập")
                     .chuyenMon("Tư vấn học tập, chuyên ngành, đồ án và định hướng nghề nghiệp")
                     .donVi(unit).taiKhoan(account).nhanTuVan(true).hanNgachTiepNhan(20)
-                    .linhVucList(demoFields(unit))
                     .build());
         }
     }
@@ -93,15 +93,15 @@ public class FacultyAdvisorSeeder implements CommandLineRunner {
         };
     }
 
-    private java.util.List<LinhVucTuVan> demoFields(DonVi unit) {
+    private void ensureDemoFields(DonVi unit) {
         var active = fields.findByDonVi_MaDonViAndTrangThai(unit.getMaDonVi(), "HoatDong");
-        if (!active.isEmpty()) return active;
+        if (!active.isEmpty()) return;
         String fieldCode = "DEMO_" + unit.getMaDonViCode();
         // A suspended field is not automatically reactivated.
-        if (fields.findByMaLinhVucCode(fieldCode).isPresent()) return active;
-        return java.util.List.of(fields.save(LinhVucTuVan.builder()
+        if (fields.findByMaLinhVucCode(fieldCode).isPresent()) return;
+        fields.save(LinhVucTuVan.builder()
                 .maLinhVucCode(fieldCode).tenLinhVuc("Học tập và định hướng chuyên ngành - " + unit.getMaDonViCode())
                 .moTa("Lĩnh vực mẫu để kiểm thử tư vấn theo khoa")
-                .donVi(unit).trangThai("HoatDong").nhayCam(false).build()));
+                .donVi(unit).trangThai("HoatDong").nhayCam(false).build());
     }
 }

@@ -30,9 +30,6 @@ public class NguoiTuVan {
     private Boolean nhanTuVan;
     @Column(name = "HanNgachTiepNhan", nullable = false)
     private Integer hanNgachTiepNhan;
-    @ManyToMany
-    @JoinTable(name = "CoVanLinhVuc", joinColumns = @JoinColumn(name = "MaCV"), inverseJoinColumns = @JoinColumn(name = "MaLinhVuc"))
-    private List<LinhVucTuVan> linhVucList;
     @OneToMany(mappedBy = "nguoiTuVan", fetch = FetchType.LAZY)
     private List<KhungGioTuVan> khungGioList;
 
@@ -85,9 +82,6 @@ public class NguoiTuVan {
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         private Integer hanNgachTiepNhan$value;
-        @java.lang.SuppressWarnings("all")
-        @lombok.Generated
-        private List<LinhVucTuVan> linhVucList;
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         private List<KhungGioTuVan> khungGioList;
@@ -194,16 +188,6 @@ public class NguoiTuVan {
          */
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
-        public NguoiTuVan.NguoiTuVanBuilder linhVucList(final List<LinhVucTuVan> linhVucList) {
-            this.linhVucList = linhVucList;
-            return this;
-        }
-
-        /**
-         * @return {@code this}.
-         */
-        @java.lang.SuppressWarnings("all")
-        @lombok.Generated
         public NguoiTuVan.NguoiTuVanBuilder khungGioList(final List<KhungGioTuVan> khungGioList) {
             this.khungGioList = khungGioList;
             return this;
@@ -216,14 +200,14 @@ public class NguoiTuVan {
             if (!this.nhanTuVan$set) nhanTuVan$value = NguoiTuVan.$default$nhanTuVan();
             Integer hanNgachTiepNhan$value = this.hanNgachTiepNhan$value;
             if (!this.hanNgachTiepNhan$set) hanNgachTiepNhan$value = NguoiTuVan.$default$hanNgachTiepNhan();
-            return new NguoiTuVan(this.maCV, this.maCanBo, this.hocHamHocVi, this.chucVu, this.chuyenMon, this.donVi, this.taiKhoan, nhanTuVan$value, hanNgachTiepNhan$value, this.linhVucList, this.khungGioList);
+            return new NguoiTuVan(this.maCV, this.maCanBo, this.hocHamHocVi, this.chucVu, this.chuyenMon, this.donVi, this.taiKhoan, nhanTuVan$value, hanNgachTiepNhan$value, this.khungGioList);
         }
 
         @java.lang.Override
         @java.lang.SuppressWarnings("all")
         @lombok.Generated
         public java.lang.String toString() {
-            return "NguoiTuVan.NguoiTuVanBuilder(maCV=" + this.maCV + ", maCanBo=" + this.maCanBo + ", hocHamHocVi=" + this.hocHamHocVi + ", chucVu=" + this.chucVu + ", chuyenMon=" + this.chuyenMon + ", donVi=" + this.donVi + ", taiKhoan=" + this.taiKhoan + ", nhanTuVan$value=" + this.nhanTuVan$value + ", hanNgachTiepNhan$value=" + this.hanNgachTiepNhan$value + ", linhVucList=" + this.linhVucList + ", khungGioList=" + this.khungGioList + ")";
+            return "NguoiTuVan.NguoiTuVanBuilder(maCV=" + this.maCV + ", maCanBo=" + this.maCanBo + ", hocHamHocVi=" + this.hocHamHocVi + ", chucVu=" + this.chucVu + ", chuyenMon=" + this.chuyenMon + ", donVi=" + this.donVi + ", taiKhoan=" + this.taiKhoan + ", nhanTuVan$value=" + this.nhanTuVan$value + ", hanNgachTiepNhan$value=" + this.hanNgachTiepNhan$value + ", khungGioList=" + this.khungGioList + ")";
         }
     }
 
@@ -289,12 +273,6 @@ public class NguoiTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public List<LinhVucTuVan> getLinhVucList() {
-        return this.linhVucList;
-    }
-
-    @java.lang.SuppressWarnings("all")
-    @lombok.Generated
     public List<KhungGioTuVan> getKhungGioList() {
         return this.khungGioList;
     }
@@ -355,12 +333,6 @@ public class NguoiTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public void setLinhVucList(final List<LinhVucTuVan> linhVucList) {
-        this.linhVucList = linhVucList;
-    }
-
-    @java.lang.SuppressWarnings("all")
-    @lombok.Generated
     public void setKhungGioList(final List<KhungGioTuVan> khungGioList) {
         this.khungGioList = khungGioList;
     }
@@ -374,7 +346,7 @@ public class NguoiTuVan {
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
-    public NguoiTuVan(final Integer maCV, final String maCanBo, final String hocHamHocVi, final String chucVu, final String chuyenMon, final DonVi donVi, final TaiKhoan taiKhoan, final Boolean nhanTuVan, final Integer hanNgachTiepNhan, final List<LinhVucTuVan> linhVucList, final List<KhungGioTuVan> khungGioList) {
+    public NguoiTuVan(final Integer maCV, final String maCanBo, final String hocHamHocVi, final String chucVu, final String chuyenMon, final DonVi donVi, final TaiKhoan taiKhoan, final Boolean nhanTuVan, final Integer hanNgachTiepNhan, final List<KhungGioTuVan> khungGioList) {
         this.maCV = maCV;
         this.maCanBo = maCanBo;
         this.hocHamHocVi = hocHamHocVi;
@@ -384,7 +356,6 @@ public class NguoiTuVan {
         this.taiKhoan = taiKhoan;
         this.nhanTuVan = nhanTuVan;
         this.hanNgachTiepNhan = hanNgachTiepNhan;
-        this.linhVucList = linhVucList;
         this.khungGioList = khungGioList;
     }
 }

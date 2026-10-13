@@ -38,5 +38,9 @@ Chỉ chạy migration phù hợp với schema cũ. Không có Flyway tự chạ
 
 Chạy `V8__remove_unused_tables.sql`. V8 chạy thủ công sau khi triển khai bản code đã bỏ entity `LichLamViec`, `NgayNghi`, `NhatKyHeThong`; không tự chạy khi khởi động. Sao lưu cấu trúc và dữ liệu sáu bảng trước khi chạy. Script dùng transaction, dừng nếu có khóa ngoại trỏ vào bảng, năm bảng nghiệp vụ có dữ liệu hoặc lịch làm việc có giờ tùy chỉnh. Schema cài mới đã bỏ sáu bảng nên không cần chạy V8. Bản ứng dụng cũ có các entity này không tương thích với schema sau V8; khi rollback code phải khôi phục bảng trước.
 
-Quên mật khẩu vẫn dùng `YeuCauXacMinhOTP`; giờ hành chính do `SlaService` kiểm tra, ngày nghỉ dùng `SLA_HOLIDAYS`; tra cứu nhật ký dùng `NhatKyBaoMat` và lịch sử câu hỏi dùng `LichSuYeuCau`. Giữ `CauHinhHeThong` và `CoVanLinhVuc` vì các script hiện tại còn phụ thuộc.
+Quên mật khẩu vẫn dùng `YeuCauXacMinhOTP`; giờ hành chính do `SlaService` kiểm tra, ngày nghỉ dùng `SLA_HOLIDAYS`; tra cứu nhật ký dùng `NhatKyBaoMat` và lịch sử câu hỏi dùng `LichSuYeuCau`. Giữ `CauHinhHeThong` vì script chính sách hiện tại còn phụ thuộc. Cố vấn và lĩnh vực cùng thuộc `DonVi`; không có bảng nối chuyên môn cố vấn–lĩnh vực. Schema cài mới có 25 bảng.
 
+
+## Bỏ bảng nối cố vấn và lĩnh vực trên database đã có
+
+Triển khai bản code đã gỡ quan hệ JPA ở cả `NguoiTuVan` và `LinhVucTuVan` trước, sau đó sao lưu cấu trúc/dữ liệu bảng nối ra ngoài Git và chạy `V11__remove_advisor_field_mapping.sql`. Migration chạy thủ công, có transaction và khóa; kiểm tra phụ thuộc, dữ liệu liên đơn vị và yêu cầu xác nhận số dòng sao lưu trước khi xóa. Không thay đổi cố vấn, lĩnh vực, đơn vị hay dữ liệu tư vấn. Bản code mới chạy được cả trước lẫn sau V11; nếu quay về code cũ phải khôi phục bảng nối trước.
