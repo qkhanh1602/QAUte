@@ -1,4 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="q" uri="/WEB-INF/qaute-functions.tld" %>
 <div class="container py-4" data-appointment-live-root data-context-path="${pageContext.request.contextPath}">
     <p class="small text-muted">Giờ tư vấn thứ Hai–Sáu: <c:out value="${q:officeHoursLabel()}" /> (trừ ngày nghỉ). Buổi đề xuất kéo dài 60 phút, chọn theo mốc 30 phút.</p>
     <p class="visually-hidden" data-appointment-live-status role="status">Đang kết nối cập nhật lịch…</p>
