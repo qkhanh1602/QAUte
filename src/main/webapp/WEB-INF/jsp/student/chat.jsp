@@ -10,7 +10,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
 </head>
 <body>
-<div class="alert alert-info mx-3 mt-3 small">Cố vấn trực chat thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00 (trừ ngày nghỉ). Sinh viên có thể để lại tin nhắn chờ ngoài giờ.</div>
+<div class="alert alert-info mx-3 mt-3 small">Cố vấn trực chat thứ Hai–Sáu, <c:out value="${q:officeHoursLabel()}" /> (trừ ngày nghỉ). Sinh viên có thể để lại tin nhắn chờ ngoài giờ.</div>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4">
@@ -39,7 +39,7 @@
                 <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-1">
                     <i class="bi bi-shield-check text-primary"></i>Quy định tư vấn trực tuyến
                 </h6>
-                <p class="mb-1">• Khung giờ hỗ trợ: <strong>08:00 - 11:30</strong> và <strong>13:30 - 16:30</strong> (Thứ 2 - Thứ 6).</p>
+                <p class="mb-1">• Khung giờ hỗ trợ: <strong><c:out value="${q:officeHoursLabel()}" /></strong> (Thứ 2 - Thứ 6).</p>
                 <p class="mb-1">• Vui lòng chuẩn bị sẵn MSSV, thông tin chi tiết câu hỏi.</p>
                 <p class="mb-0">• Mọi phiên trao đổi được mã hóa và bảo mật thông tin sinh viên.</p>
             </div>

@@ -36,7 +36,7 @@
             <div class="qaute-card p-4 mb-4 border-0 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="text-muted small">Câu hỏi diễn đàn</span>
-                    <span class="${'status-badge status-' += ticket.trangThai}"><c:out value="${ticket.trangThai}" /></span>
+                    <span class="${'status-badge status-' += ticket.trangThai}"><c:out value="${q:statusLabel(ticket.trangThai)}" /></span>
                 </div>
 
                 <h3 class="fw-bold text-dark mb-3"><c:out value="${ticket.tieuDe}" /></h3>

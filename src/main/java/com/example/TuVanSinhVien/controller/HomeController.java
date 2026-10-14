@@ -60,7 +60,8 @@ public class HomeController {
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
         }
         model.addAttribute("article", article);
-        model.addAttribute("recentArticles", contentService.getPublicArticles(null, null));
+        model.addAttribute("recentArticles", article.getLinhVuc() == null ? java.util.List.of()
+                : contentService.getPublicArticles(article.getLinhVuc().getMaLinhVuc(), null));
         model.addAttribute("attachments", attachmentService.getArticleAttachments(id));
         return "public/article-detail";
     }

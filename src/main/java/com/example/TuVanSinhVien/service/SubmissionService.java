@@ -41,7 +41,7 @@ public class SubmissionService {
     @Transactional public TinNhanChat sendMessage(Integer id, TaiKhoan sender, String content, MultipartFile file) {
         attachments.validateOptional(file);
         boolean attached=present(file);
-        var message=chat.sendMessage(id,sender,content == null || content.isBlank() ? "Đã gửi một tệp đính kèm" : content, attached ? "Tep" : "VanBan");
+        var message=chat.sendMessage(id,sender,content == null || content.isBlank() ? "Đã gửi một tệp đính kèm" : content, attached ? "TepTin" : "VanBan");
         if (attached) attachments.attachToMessage(file,sender,message);
         return message;
     }

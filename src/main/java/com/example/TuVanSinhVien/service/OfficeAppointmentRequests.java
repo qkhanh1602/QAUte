@@ -34,8 +34,8 @@ public class OfficeAppointmentRequests {
         for(int day=0;day<=7;day++) {
             List<Map<String,Object>> times=new ArrayList<>();
             var date=now.toLocalDate().plusDays(day);
-            for(int hour:new int[]{8,9,10,11,13,14,15,16}) {
-                var start=date.atTime(hour,0); var end=start.plusHours(1);
+            for(var time=SlaService.MORNING_START; time.isBefore(SlaService.AFTERNOON_END); time=time.plusMinutes(30)) {
+                var start=date.atTime(time); var end=start.plusHours(1);
                 if(!valid(start,now)) continue;
                 boolean free=existing.stream().noneMatch(s->overlaps(s,start,end));
                 times.add(Map.of("start",start,"end",end,"available",free));
@@ -50,7 +50,7 @@ public class OfficeAppointmentRequests {
             String type,String topic,String detail) {
         var now=LocalDateTime.now(clock);
         if(start==null || !valid(start,now))
-            throw new IllegalArgumentException("Chọn giờ tròn trong giờ hành chính, cách hiện tại ít nhất 15 phút và trong 7 ngày tới.");
+            throw new IllegalArgumentException("Chọn mốc 30 phút trong giờ " + SlaService.OFFICE_HOURS_LABEL + ", cách hiện tại ít nhất 15 phút và trong 7 ngày tới.");
         if(!Set.of("TrucTiep","TrucTuyen").contains(type==null?"":type))
             throw new IllegalArgumentException("Chọn hình thức tư vấn hợp lệ.");
         // Same lock order as normal booking: student, advisor, slot. Serializes competing requests.
@@ -67,7 +67,7 @@ public class OfficeAppointmentRequests {
     }
 
     private boolean valid(LocalDateTime start,LocalDateTime now) {
-        return start.getMinute()==0 && start.getSecond()==0 && start.getNano()==0
+        return start.getMinute()%30==0 && start.getSecond()==0 && start.getNano()==0
                 && !start.isBefore(now.plusMinutes(15)) && !start.isAfter(now.plusDays(7))
                 && calendar.isOfficeInterval(start,start.plusHours(1));
     }

@@ -130,6 +130,7 @@ public class AppointmentService {
         if (!"ChoDuyet".equals(app.getTrangThai())) {
             throw new IllegalStateException("Chỉ có thể phê duyệt lịch hẹn đang chờ duyệt.");
         }
+        officeHours.requireOfficeInterval(app.getKhungGio().getBatDau(), app.getKhungGio().getKetThuc());
         linkHopPhong = MeetingLocation.require(app.getKhungGio().getHinhThuc(), linkHopPhong);
         LocalDateTime now = LocalDateTime.now(clock);
         if (!app.getHanDuyet().isAfter(now) || !app.getKhungGio().getBatDau().isAfter(now))

@@ -11,8 +11,8 @@ import static org.mockito.ArgumentMatchers.*;
 class WorkflowRulesTest {
     @Test void slaSkipsLunchWeekendHolidayAndPreservesSeconds() {
         SlaService sla=new SlaService("2026-10-05");
-        assertEquals(LocalDateTime.of(2026,10,6,9,30,15),sla.calculateBusinessDeadline(LocalDateTime.of(2026,10,2,16,30,15),2));
-        assertEquals(LocalDateTime.of(2026,10,2,13,30),sla.calculateBusinessDeadline(LocalDateTime.of(2026,10,2,11,30),1));
+        assertEquals(LocalDateTime.of(2026,10,6,9,30,15),sla.calculateBusinessDeadline(LocalDateTime.of(2026,10,2,16,0,15),2));
+        assertEquals(LocalDateTime.of(2026,10,2,14,30),sla.calculateBusinessDeadline(LocalDateTime.of(2026,10,2,11,30),1));
         assertThrows(IllegalArgumentException.class,()->sla.calculateBusinessDeadline(LocalDateTime.now(),-1));
     }
     @Test void smtpFailureDoesNotIssueUsableOtp() {

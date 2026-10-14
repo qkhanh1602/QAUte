@@ -29,5 +29,6 @@ public interface BaiVietHuongDanRepository extends JpaRepository<BaiVietHuongDan
     @Query("UPDATE BaiVietHuongDan e SET e.luotXem=e.luotXem+1 WHERE e.maBaiViet=:id AND e.trangThai='XuatBan'")
     int incrementPublicView(@Param("id") Integer id);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "linhVuc")
     java.util.Optional<BaiVietHuongDan> findByMaBaiVietAndTrangThai(Integer id, String status);
 }

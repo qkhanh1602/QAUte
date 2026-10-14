@@ -63,7 +63,7 @@ class BackendReviewRegressionTest {
         assertThrows(IllegalArgumentException.class,()->sla.requireOfficeInterval(LocalDateTime.of(2026,10,4,23,0),LocalDateTime.of(2026,10,5,0,0)));
         assertThrows(IllegalArgumentException.class,()->sla.requireOfficeInterval(LocalDateTime.of(2026,10,5,9,0),LocalDateTime.of(2026,10,5,10,0)));
         assertThrows(IllegalArgumentException.class,()->sla.requireOfficeInterval(LocalDateTime.of(2026,10,6,11,30),LocalDateTime.of(2026,10,6,12,30)));
-        assertDoesNotThrow(()->sla.requireOfficeInterval(LocalDateTime.of(2026,10,6,11,0),LocalDateTime.of(2026,10,6,12,0)));
+        assertDoesNotThrow(()->sla.requireOfficeInterval(LocalDateTime.of(2026,10,6,10,30),LocalDateTime.of(2026,10,6,11,30)));
     }
 
     @Test void adminCannotBeLockedOrCreatedAgain() {

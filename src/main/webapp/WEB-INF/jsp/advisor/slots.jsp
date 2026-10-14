@@ -54,6 +54,7 @@
         </div>
     </div>
 
+    <p class="small text-muted">Giờ tư vấn thứ Hai–Sáu: <c:out value="${q:officeHoursLabel()}" /> (trừ ngày nghỉ).</p>
     <!-- Slots Table -->
     <div class="qaute-card p-4 border-0 shadow-sm">
         <c:if test="${empty slots}"><div class="text-center py-5 text-muted">

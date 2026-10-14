@@ -76,7 +76,7 @@
                 </c:if><c:if test="${not (empty recentTickets)}"><div class="list-group list-group-flush">
                     <c:forEach var="t" items="${recentTickets}"><div class="list-group-item px-0 py-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${t.trangThai}" /></span>
+                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${q:statusLabel(t.trangThai)}" /></span>
                             <small class="text-muted"><i class="bi bi-clock me-1"></i><span><c:out value="${q:formatTemporal(t.ngayTao, 'dd/MM/yyyy HH:mm')}" /></span></small>
                         </div>
                         <h6 class="fw-bold mb-1">
@@ -109,7 +109,7 @@
                     <c:forEach var="a" items="${recentAppointments}"><div class="p-3 bg-light rounded-3 border-start border-4 border-success">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-dark"><c:out value="${a.chuDe}" /></span>
-                            <span class="${'status-badge status-' += a.trangThai}"><c:out value="${a.trangThai}" /></span>
+                            <span class="${'status-badge status-' += a.trangThai}"><c:out value="${q:appointmentStatusLabel(a.trangThai)}" /></span>
                         </div>
                         <div class="small text-secondary mb-1">
                             <i class="bi bi-person-badge me-1"></i><span><c:out value="${a.nguoiTuVan.taiKhoan.hoTen}" /></span>

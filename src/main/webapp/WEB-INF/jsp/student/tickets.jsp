@@ -71,7 +71,7 @@
                             </c:if><c:if test="${t.trangThai == 'Dong'}"><small class="text-success fw-semibold">Đã hoàn thành</small>
                         </c:if></td>
                         <td>
-                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${t.trangThai}" /></span>
+                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${q:statusLabel(t.trangThai)}" /></span>
                         </td>
                         <td>
                             <a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="${pageContext.request.contextPath}/forum/${t.maYeuCau}">

@@ -12,6 +12,28 @@ import java.util.List;
 import java.util.Map;
 
 public final class JspFunctions {
+    public static String officeHoursLabel() {
+        return com.example.TuVanSinhVien.service.SlaService.OFFICE_HOURS_LABEL;
+    }
+    public static String statusLabel(String value) {
+        if (value == null) return "";
+        return switch (value) {
+            case "ChoTiepNhan" -> "Chờ tiếp nhận";
+            case "DangXuLy" -> "Đang xử lý";
+            case "DaPhanHoi" -> "Đã phản hồi";
+            case "Dong" -> "Đã đóng";
+            default -> appointmentStatusLabel(value);
+        };
+    }
+    public static String unitTypeLabel(String value) {
+        if (value == null) return "";
+        return switch (value) {
+            case "Khoa" -> "Khoa";
+            case "PhongBan" -> "Phòng ban";
+            case "TrungTam" -> "Trung tâm";
+            default -> value;
+        };
+    }
     public static String appointmentStatusLabel(String value) {
         if(value==null) return "";
         return switch(value) {
@@ -45,7 +67,7 @@ public final class JspFunctions {
         if (value == null || pattern == null) {
             return "";
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, java.util.Locale.forLanguageTag("vi-VN"));
         if (value instanceof LocalDateTime dateTime) return formatter.format(dateTime);
         if (value instanceof LocalDate date) return formatter.format(date);
         if (value instanceof LocalTime time) return formatter.format(time);

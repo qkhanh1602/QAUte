@@ -48,7 +48,7 @@
                         <td><c:out value="${t.donVi.tenDonVi}" /></td>
                         <td><c:out value="${t.coVanPhuTrach != null ? t.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}" /></td>
                         <td><c:out value="${q:formatTemporal(t.ngayTao, 'dd/MM/yyyy')}" /></td>
-                        <td><span class="${'status-badge status-' += t.trangThai}"><c:out value="${t.trangThai}" /></span></td>
+                        <td><span class="${'status-badge status-' += t.trangThai}"><c:out value="${q:statusLabel(t.trangThai)}" /></span></td>
                         <td>
                             <c:if test="${t.danhGia != null}"><span class="text-warning fw-bold">
                                 ★ <span><c:out value="${t.danhGia.soSao}" /></span>/5
@@ -85,7 +85,7 @@
                         <td><c:out value="${a.nguoiTuVan.taiKhoan.hoTen}" /></td>
                         <td><c:out value="${q:formatTemporal(a.khungGio.batDau, 'dd/MM/yyyy HH:mm')}" /></td>
                         <td><c:out value="${a.linkHopPhong != null ? a.linkHopPhong : a.khungGio.diaDiemLink}" /></td>
-                        <td><span class="${'status-badge status-' += a.trangThai}"><c:out value="${a.trangThai}" /></span></td>
+                        <td><span class="${'status-badge status-' += a.trangThai}"><c:out value="${q:appointmentStatusLabel(a.trangThai)}" /></span></td>
                         <td><c:out value="${a.ketLuan != null ? a.ketLuan : '-'}" /></td>
                         <td>
                             <c:if test="${a.danhGia != null}"><span class="text-warning fw-bold">

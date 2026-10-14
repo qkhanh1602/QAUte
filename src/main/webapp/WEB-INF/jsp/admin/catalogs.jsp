@@ -48,7 +48,7 @@
                         <tbody>
                             <c:forEach var="d" items="${donViList}"><tr>
                                 <td class="fw-bold"><c:out value="${d.tenDonVi}" /></td>
-                                <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${d.loaiDonVi}" /></span></td>
+                                <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${q:unitTypeLabel(d.loaiDonVi)}" /></span></td>
                                 <td>
                                     <c:if test="${d.hoatDong}"><span class="badge bg-success-subtle text-success">Đang hoạt động</span>
                                     </c:if><c:if test="${not (d.hoatDong)}"><span class="badge bg-danger-subtle text-danger">Tạm dừng</span>
@@ -97,6 +97,10 @@
                                     </c:if><c:if test="${not (l.nhayCam)}"><span class="text-muted">Thông thường</span>
                                 </c:if></td>
                                 <td>
+                                    <c:if test="${l.trangThai == 'HoatDong'}"><span class="badge bg-success-subtle text-success">Hoạt động</span>
+                                    </c:if><c:if test="${not (l.trangThai == 'HoatDong')}"><span class="badge bg-secondary-subtle text-secondary">Tạm dừng</span>
+                                </c:if></td>
+                                <td>
                                     <button class="btn btn-light btn-sm border" data-bs-toggle="collapse" data-bs-target="${'#edit-field-' += l.maLinhVuc}">Sửa</button>
                                     <form method="post" class="d-inline" action="${pageContext.request.contextPath}/admin/catalogs/fields/${l.maLinhVuc}/toggle"><sec:csrfInput /><button class="btn btn-outline-warning btn-sm" type="submit"><c:out value="${l.trangThai == 'HoatDong' ? 'Ngưng' : 'Bật'}" /></button></form>
                                     <form class="collapse mt-2" method="post" style="min-width:260px" action="${pageContext.request.contextPath}/admin/catalogs/fields/save" id="${'edit-field-' += l.maLinhVuc}">
@@ -104,10 +108,6 @@
                                         <select class="form-select form-select-sm mb-1" name="unitId" required><c:forEach var="unit" items="${donViList}"><c:choose><c:when test="${unit.maDonVi == l.donVi.maDonVi}"><option value="${unit.maDonVi}" selected><c:out value="${unit.tenDonVi}" /></option></c:when><c:otherwise><option value="${unit.maDonVi}"><c:out value="${unit.tenDonVi}" /></option></c:otherwise></c:choose></c:forEach></select><label class="small"><c:choose><c:when test="${l.nhayCam}"><input type="checkbox" name="sensitive" value="true" checked></c:when><c:otherwise><input type="checkbox" name="sensitive" value="true"></c:otherwise></c:choose> Nội dung nhạy cảm</label><button class="btn btn-primary btn-sm w-100 mt-1">Lưu</button>
                                     </form>
                                 </td>
-                                <td>
-                                    <c:if test="${l.trangThai == 'HoatDong'}"><span class="badge bg-success-subtle text-success">Hoạt động</span>
-                                    </c:if><c:if test="${not (l.trangThai == 'HoatDong')}"><span class="badge bg-secondary-subtle text-secondary">Tạm dừng</span>
-                                </c:if></td>
                             </tr>
                         </c:forEach></tbody>
                     </table>

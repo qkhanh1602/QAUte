@@ -99,7 +99,7 @@
                                     <small class="text-danger fw-semibold"><c:out value="${q:formatTemporal(t.hanSLA, 'dd/MM HH:mm')}" /></small>
                                 </td>
                                 <td>
-                                    <span class="${'status-badge status-' += t.trangThai}"><c:out value="${t.trangThai}" /></span>
+                                    <span class="${'status-badge status-' += t.trangThai}"><c:out value="${q:statusLabel(t.trangThai)}" /></span>
                                 </td>
                                 <td>
                                     <a class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/tickets/${t.maYeuCau}">

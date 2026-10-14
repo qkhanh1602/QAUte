@@ -26,7 +26,7 @@
                 <c:forEach var="ticket" items="${tickets}"><tr>
                     <td><strong><c:out value="${ticket.tieuDe}" /></strong><div class="small text-muted"><c:out value="${q:formatTemporal(ticket.ngayTao, 'dd/MM/yyyy HH:mm')}" /></div></td>
                     <td><c:out value="${ticket.donVi.tenDonVi}" /></td>
-                    <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${ticket.trangThai}" /></span></td>
+                    <td><span class="badge bg-secondary-subtle text-secondary"><c:out value="${q:statusLabel(ticket.trangThai)}" /></span></td>
                     <td><c:out value="${ticket.coVanPhuTrach != null ? ticket.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}" /></td>
                     <td>
                         <c:if test="${ticket.trangThai == 'ChoTiepNhan'}"><form method="post" class="d-flex flex-column gap-2" style="min-width:260px" action="${pageContext.request.contextPath}/admin/tickets/${ticket.maYeuCau}/assign">

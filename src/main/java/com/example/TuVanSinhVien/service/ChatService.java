@@ -210,7 +210,7 @@ public class ChatService {
 
     private void requireAdvisorOfficeHours() {
         if (!officeHours.isOfficeTime(LocalDateTime.now(clock)))
-            throw new IllegalStateException("Cố vấn tiếp nhận và trả lời chat trong giờ hành chính: thứ Hai–Sáu, 08:00–12:00 và 13:00–17:00.");
+            throw new IllegalStateException("Cố vấn tiếp nhận và trả lời chat trong giờ hành chính: thứ Hai–Sáu, " + SlaService.OFFICE_HOURS_LABEL + ".");
     }
 
     private PhienChat getRequiredSession(Integer maPhienChat) {

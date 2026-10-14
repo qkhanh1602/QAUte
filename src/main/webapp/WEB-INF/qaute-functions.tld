@@ -36,4 +36,19 @@
         <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
         <function-signature>java.lang.String toJson(java.lang.Object)</function-signature>
     </function>
+    <function>
+        <name>officeHoursLabel</name>
+        <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
+        <function-signature>java.lang.String officeHoursLabel()</function-signature>
+    </function>
+    <function>
+        <name>statusLabel</name>
+        <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
+        <function-signature>java.lang.String statusLabel(java.lang.String)</function-signature>
+    </function>
+    <function>
+        <name>unitTypeLabel</name>
+        <function-class>com.example.TuVanSinhVien.web.JspFunctions</function-class>
+        <function-signature>java.lang.String unitTypeLabel(java.lang.String)</function-signature>
+    </function>
 </taglib>

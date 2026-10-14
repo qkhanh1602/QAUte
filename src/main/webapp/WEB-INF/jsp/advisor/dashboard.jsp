@@ -81,7 +81,7 @@
                 </c:if><c:if test="${not (empty assignedTickets)}"><div class="list-group list-group-flush">
                     <c:forEach var="t" items="${assignedTickets}"><div class="list-group-item px-0 py-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${t.trangThai}" /></span>
+                            <span class="${'status-badge status-' += t.trangThai}"><c:out value="${q:statusLabel(t.trangThai)}" /></span>
                             <small class="text-muted"><i class="bi bi-alarm me-1"></i>Hạn SLA: <span><c:out value="${q:formatTemporal(t.hanSLA, 'dd/MM HH:mm')}" /></span></small>
                         </div>
                         <h6 class="fw-bold mb-1">
@@ -143,7 +143,7 @@
                     <c:forEach var="a" items="${appointments}"><div class="p-2 border-bottom small">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong class="text-dark"><c:out value="${a.chuDe}" /></strong>
-                            <span class="${'status-badge status-' += a.trangThai}"><c:out value="${a.trangThai}" /></span>
+                            <span class="${'status-badge status-' += a.trangThai}"><c:out value="${q:appointmentStatusLabel(a.trangThai)}" /></span>
                         </div>
                         <div class="text-muted">
                             <i class="bi bi-clock me-1"></i><span><c:out value="${q:formatTemporal(a.khungGio.batDau, 'dd/MM HH:mm')}" /></span> - SV: <span><c:out value="${a.sinhVien.taiKhoan.hoTen}" /></span>
