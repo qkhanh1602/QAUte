@@ -36,4 +36,9 @@ public interface KhungGioTuVanRepository extends JpaRepository<KhungGioTuVan, In
     @Query("select count(k) > 0 from KhungGioTuVan k where k.nguoiTuVan.maCV=:advisorId and k.maKhungGio<>:slotId and k.trangThai='Mo' and k.batDau<:end and k.ketThuc>:start")
     boolean overlapsOther(@Param("advisorId") Integer advisorId, @Param("slotId") Integer slotId,
                           @Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+    @Query("SELECT DISTINCT k FROM KhungGioTuVan k JOIN k.lichHenList l WHERE k.nguoiTuVan.maCV=:maCV "
+            + "AND k.batDau<:end AND k.ketThuc>:start "
+            + "AND (l.trangThai IN ('DaXacNhan','HoanThanh') OR (l.trangThai='ChoDuyet' AND l.hanDuyet>:now AND k.batDau>:now))")
+    List<KhungGioTuVan> findReservedAdvisorSlotsInRange(@Param("maCV") Integer maCV,
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("now") LocalDateTime now);
 }

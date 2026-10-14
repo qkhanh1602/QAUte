@@ -29,7 +29,7 @@
                 </span>
                 <h2 class="fw-bold mb-1">Báo Cáo Thống Kê &amp; Giám Sát SLA</h2>
                 <p class="text-white-50 mb-3 small">
-                    Hệ thống đo lường hiệu suất tư vấn, chỉ số hoàn tất theo chuẩn QĐ22 và kiểm soát an toàn vận hành
+                    Hệ thống đo lường hiệu suất tư vấn, chỉ số hoàn tất và kiểm soát an toàn vận hành
                 </p>
                 <div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-light text-dark fw-semibold btn-sm rounded-pill px-3" href="${pageContext.request.contextPath}/admin/users">
@@ -56,7 +56,7 @@
 
             <div class="col-md-4 text-md-end mt-4 mt-md-0">
                 <div class="bg-white bg-opacity-10 p-3 rounded-4 text-center border border-white border-opacity-10 d-inline-block" style="min-width: 220px;">
-                    <small class="text-white-50 d-block mb-1">Tỷ lệ hoàn tất (QĐ22)</small>
+                    <small class="text-white-50 d-block mb-1">Tỷ lệ hoàn tất</small>
                     <span class="fs-1 fw-extrabold text-success"><c:out value="${forumSummary.completionRate += '%'}" /></span>
                     <div class="text-white-50 small mt-1">(Đã trả lời + Đã đóng) / Câu hỏi hiển thị</div>
                 </div>

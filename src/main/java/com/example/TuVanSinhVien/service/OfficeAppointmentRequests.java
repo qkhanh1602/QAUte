@@ -29,7 +29,7 @@ public class OfficeAppointmentRequests {
         var advisor=advisors.findById(advisorId).orElseThrow(()->new IllegalArgumentException("Không tìm thấy cố vấn."));
         eligible(advisor,advisor.getTaiKhoan());
         var now=LocalDateTime.now(clock);
-        var existing=slots.findAdvisorSlotsInRange(advisorId,now.toLocalDate().atStartOfDay(),now.plusDays(7));
+        var existing=slots.findReservedAdvisorSlotsInRange(advisorId,now.toLocalDate().atStartOfDay(),now.plusDays(7).plusHours(1),now);
         List<Map<String,Object>> days=new ArrayList<>();
         for(int day=0;day<=7;day++) {
             List<Map<String,Object>> times=new ArrayList<>();
@@ -59,10 +59,12 @@ public class OfficeAppointmentRequests {
         var account=accounts.findLockedById(advisor.getTaiKhoan().getMaTK()).orElseThrow();
         eligible(advisor,account);
         var end=start.plusHours(1);
-        var existing=slots.findAdvisorSlotsInRange(advisorId,start.toLocalDate().atStartOfDay(),end.plusDays(1));
+        var existing=slots.findReservedAdvisorSlotsInRange(advisorId,start,end,now);
         if(existing.stream().anyMatch(s->overlaps(s,start,end)))
-            throw new IllegalStateException("Giờ này đã có lịch hoặc đã khóa. Vui lòng chọn giờ khác hoặc khung giờ cố vấn đã mở bên dưới.");
-        var slot=appointments.createSlot(advisor,start,end,type,"Địa điểm/link sẽ được cố vấn xác nhận khi duyệt");
+            throw new IllegalStateException("Giờ này vừa có người đặt lịch. Vui lòng chọn giờ khác.");
+        // Each proposal owns its time record: canceled/rejected history stays immutable.
+        var slot=slots.save(KhungGioTuVan.builder().nguoiTuVan(advisor).batDau(start).ketThuc(end)
+                .hinhThuc(type).diaDiemLink("Địa điểm/link sẽ được cố vấn xác nhận khi duyệt").trangThai("Mo").build());
         return appointments.bookAppointment(student,slot.getMaKhungGio(),topic,detail);
     }
 

@@ -76,11 +76,11 @@ public class AppointmentService {
 
     @Transactional
     public LichHenTuVan bookAppointment(SinhVien sv, Integer maKhungGio, String chuDe, String noiDungHen) {
-        if (chuDe == null || chuDe.trim().isEmpty()) {
-            throw new IllegalArgumentException("Chủ đề hẹn tư vấn không được để trống.");
+        if (chuDe == null || chuDe.trim().isEmpty() || chuDe.trim().length() > 200) {
+            throw new IllegalArgumentException("Chủ đề hẹn tư vấn phải có từ 1 đến 200 ký tự.");
         }
-        if (noiDungHen == null || noiDungHen.trim().isEmpty()) {
-            throw new IllegalArgumentException("Nội dung chi tiết buổi hẹn không được để trống.");
+        if (noiDungHen == null || noiDungHen.trim().isEmpty() || noiDungHen.trim().length() > 1000) {
+            throw new IllegalArgumentException("Nội dung buổi hẹn phải có từ 1 đến 1000 ký tự.");
         }
         // Quy tắc: tối đa 2 lịch chờ duyệt trên mỗi sinh viên
         accountRepo.findLockedById(sv.getTaiKhoan().getMaTK()).orElseThrow();
@@ -107,8 +107,10 @@ public class AppointmentService {
         if (appointmentRepo.isSlotOccupied(maKhungGio)) {
             throw new IllegalStateException("Khung giờ này vừa có người đặt trước. Vui lòng chọn khung giờ khác.");
         }
+        if (appointmentRepo.existsReservedAdvisorAppointment(slot.getNguoiTuVan().getMaCV(), slot.getBatDau(), slot.getKetThuc(), now))
+            throw new IllegalStateException("Cố vấn đã có lịch hẹn trong khoảng thời gian này. Vui lòng chọn giờ khác.");
         // Kiểm tra sinh viên có bị trùng lịch hẹn khác cùng thời gian không
-        if (appointmentRepo.existsOverlappingStudentAppointment(sv.getMaSV(), slot.getBatDau(), slot.getKetThuc())) {
+        if (appointmentRepo.existsReservedStudentAppointment(sv.getMaSV(), slot.getBatDau(), slot.getKetThuc(), now)) {
             throw new IllegalStateException("Bạn đã có một lịch hẹn khác trong khoảng thời gian này.");
         }
         LocalDateTime deadline = now.plusHours(24).isBefore(slot.getBatDau()) ? now.plusHours(24) : slot.getBatDau();

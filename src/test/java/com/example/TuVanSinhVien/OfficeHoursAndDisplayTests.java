@@ -28,7 +28,7 @@ class OfficeHoursAndDisplayTests {
             .donVi(DonVi.builder().maDonVi(3).hoatDong(true).build()).build();
     OfficeAppointmentRequests proposals() {
         when(advisors.findById(2)).thenReturn(Optional.of(advisor));
-        when(slots.findAdvisorSlotsInRange(eq(2),any(),any())).thenReturn(List.of());
+        when(slots.findReservedAdvisorSlotsInRange(eq(2),any(),any(),any())).thenReturn(List.of());
         return new OfficeAppointmentRequests(advisors,accounts,slots,appointments,hours,clock);
     }
 
@@ -68,9 +68,10 @@ class OfficeHoursAndDisplayTests {
         var service=proposals();var student=SinhVien.builder().taiKhoan(TaiKhoan.builder().maTK(1).build()).build();
         when(accounts.findLockedById(1)).thenReturn(Optional.of(student.getTaiKhoan()));
         when(accounts.findLockedById(2)).thenReturn(Optional.of(advisorAccount));
-        when(appointments.createSlot(eq(advisor),any(),any(),eq("TrucTiep"),anyString())).thenReturn(KhungGioTuVan.builder().maKhungGio(5).build());
+        when(slots.save(any())).thenAnswer(call -> { KhungGioTuVan saved=call.getArgument(0); saved.setMaKhungGio(5); return saved; });
         service.request(student,2,monday.atTime(13,30),"TrucTiep","Chủ đề","Nội dung");
-        verify(appointments).createSlot(eq(advisor),eq(monday.atTime(13,30)),eq(monday.atTime(14,30)),eq("TrucTiep"),anyString());
+        verify(slots).save(argThat(s -> s.getBatDau().equals(monday.atTime(13,30)) && s.getKetThuc().equals(monday.atTime(14,30)) && "TrucTiep".equals(s.getHinhThuc())));
+        verify(appointments,never()).createSlot(any(),any(),any(),any(),any());
         verify(appointments).bookAppointment(student,5,"Chủ đề","Nội dung");
     }
     @ParameterizedTest @ValueSource(strings={"11:00","13:00","16:00","14:15"})

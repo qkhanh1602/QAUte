@@ -37,9 +37,6 @@
                     <a class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-3 shadow-sm" href="${pageContext.request.contextPath}/advisor/tickets">
                         <i class="bi bi-inbox-fill me-1"></i>Hàng đợi tiếp nhận câu hỏi
                     </a>
-                    <a class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/slots">
-                        <i class="bi bi-calendar-plus me-1"></i>Mở khung giờ tư vấn
-                    </a>
                     <a class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/appointments">
                         <i class="bi bi-calendar-check me-1"></i>Duyệt lịch hẹn sinh viên
                     </a>

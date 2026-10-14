@@ -180,7 +180,7 @@ MaKhungGio int IDENTITY PRIMARY KEY,
  PhienBan bigint NOT NULL DEFAULT 0,
  CHECK (KetThuc > BatDau),
  CHECK (DATEDIFF(MINUTE, BatDau, KetThuc) IN (45,60)),
- UNIQUE (MaCV, BatDau), UNIQUE (MaKhungGio, MaCV)
+ UNIQUE (MaKhungGio, MaCV)
 );
 
 CREATE TABLE dbo.LichHenTuVan (
@@ -384,7 +384,6 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('booking.cancel_before_hours',N'3',N'Hủy trước ít nhất 3 giờ cho cả hai hình thức'),
  ('booking.approve_hours',N'24',N'Hạn duyệt lịch theo giờ thực'),
  ('booking.allowed_slot_minutes',N'45,60',N'Ưu tiên QĐ24; sửa CHECK nếu đổi thời lượng'),
- ('booking.min_weekly_slots',N'2',N'Tối thiểu hai slot mỗi tuần'),
  ('booking.remind_business_hours',N'2',N'Nhắc trước 2 giờ làm việc'),
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),

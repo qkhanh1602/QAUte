@@ -17,7 +17,7 @@
         <c:if test="${empty appointments}"><div class="text-center py-5 text-muted">
             <i class="bi bi-calendar-check fs-1 text-secondary mb-2"></i>
             <h5>Chưa có lịch hẹn nào được đăng ký</h5>
-            <p class="small text-muted mb-0">Khi sinh viên đặt khung giờ tư vấn của bạn, yêu cầu sẽ xuất hiện tại đây.</p>
+            <p class="small text-muted mb-0">Khi sinh viên chọn giờ và gửi đề xuất lịch hẹn, yêu cầu sẽ xuất hiện tại đây để bạn duyệt hoặc từ chối.</p>
         </div>
 
         </c:if><c:if test="${not (empty appointments)}"><div class="table-responsive">

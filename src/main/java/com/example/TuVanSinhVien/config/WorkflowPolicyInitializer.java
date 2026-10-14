@@ -19,5 +19,6 @@ public class WorkflowPolicyInitializer implements ApplicationRunner {
         jdbc.execute(new ClassPathResource("db/forum-20261006.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
         jdbc.execute(new ClassPathResource("db/advisor-display-names-20261008.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
         jdbc.execute(new ClassPathResource("db/remove-demo-appointment-slots-20261008.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
+        jdbc.execute(new ClassPathResource("db/student-appointment-proposals-20261014.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
     }
 }

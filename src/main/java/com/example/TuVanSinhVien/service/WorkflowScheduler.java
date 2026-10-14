@@ -1,6 +1,5 @@
 package com.example.TuVanSinhVien.service;
 
-import com.example.TuVanSinhVien.entity.NguoiTuVan;
 import com.example.TuVanSinhVien.entity.TaiKhoan;
 import com.example.TuVanSinhVien.entity.YeuCauTuVan;
 import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
@@ -12,9 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.WeekFields;
 import java.util.List;
 
 @Service
@@ -86,20 +83,4 @@ public class WorkflowScheduler {
         }
     }
 
-    @Scheduled(cron = "0 0 8 * * FRI,SAT", zone = "Asia/Ho_Chi_Minh")
-    @Transactional
-    public void remindAdvisorWeeklySlots() {
-        if (!enabled) return;
-        int week = LocalDate.now(clock).get(WeekFields.ISO.weekOfWeekBasedYear());
-        for (NguoiTuVan advisor : advisorRepo.findByNhanTuVanTrue()) {
-            long count = appointmentService.countNextWeekOpenSlots(advisor.getMaCV());
-            if (count < 2) {
-                notificationService.sendNotificationOnce(advisor.getTaiKhoan(),
-                        "SLOT_REMINDER_" + LocalDate.now(clock).getYear() + "_" + week + "_" + advisor.getMaCV(),
-                        "Nhắc đăng ký lịch tư vấn tuần tới",
-                        "Bạn mới có " + count + "/2 khung giờ. Vui lòng bổ sung trước Chủ nhật.",
-                        "HeThong", "/advisor/slots");
-            }
-        }
-    }
 }

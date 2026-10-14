@@ -125,39 +125,19 @@ public class AdvisorController {
         }
     }
 
+    // Keep old bookmarks/forms harmless after retiring advisor-created availability.
     @GetMapping("/slots")
     public String slots(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-        model.addAttribute("advisor", cv);
-        model.addAttribute("slots", appointmentService.getAdvisorSlots(cv.getMaCV()));
-        model.addAttribute("nextWeekSlotCount", appointmentService.countNextWeekOpenSlots(cv.getMaCV()));
-        return "advisor/slots";
+        getAdvisorOrThrow(userDetails);
+        return "redirect:/advisor/appointments";
     }
 
-    @PostMapping("/slots/copy-previous-week")
-    public String copyPreviousWeekSlots(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                        RedirectAttributes redirectAttributes) {
-        NguoiTuVan advisor = getAdvisorOrThrow(userDetails);
-        int copied = appointmentService.copyPreviousWeekSlots(advisor);
-        if (copied == 0) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không có khung giờ phù hợp để sao chép hoặc các khung giờ tuần này đã tồn tại.");
-        } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Đã sao chép " + copied + " khung giờ từ tuần trước.");
-        }
-        return "redirect:/advisor/slots";
-    }
-
-    @PostMapping("/slots/new")
-    public String createSlot(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime batDau, @RequestParam Integer thoiLuongPhut, @RequestParam String hinhThuc, @RequestParam String diaDiemLink, RedirectAttributes redirectAttributes) {
-        try {
-            NguoiTuVan cv = getAdvisorOrThrow(userDetails);
-            LocalDateTime ketThuc = batDau.plusMinutes(thoiLuongPhut);
-            appointmentService.createSlot(cv, batDau, ketThuc, hinhThuc, diaDiemLink);
-            redirectAttributes.addFlashAttribute("successMessage", "Mở khung giờ tư vấn mới thành công!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/advisor/slots";
+    @PostMapping({"/slots/copy-previous-week", "/slots/new", "/slots/{id}/update"})
+    public String retiredAvailability(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                      RedirectAttributes flash) {
+        getAdvisorOrThrow(userDetails);
+        flash.addFlashAttribute("successMessage", "Sinh viên chọn giờ và gửi đề xuất; bạn chỉ cần duyệt hoặc từ chối lịch hẹn.");
+        return "redirect:/advisor/appointments";
     }
 
     @GetMapping("/appointments/live")
@@ -309,16 +289,5 @@ public class AdvisorController {
         this.notificationService = notificationService;
         this.attachmentService = attachmentService;
         this.recordPdfService = recordPdfService;
-    }
-    @PostMapping("/slots/{id}/update")
-    public String updateSlot(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails user,
-                             @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-                             @RequestParam(required=false) Integer minutes, @RequestParam(required=false) String type,
-                             @RequestParam(required=false) String location, @RequestParam(defaultValue="false") boolean close,
-                             RedirectAttributes flash) {
-        try { appointmentService.updateSlot(id, getAdvisorOrThrow(user), start, minutes, type, location, close);
-            flash.addFlashAttribute("successMessage", close ? "Đã ngưng khung giờ." : "Đã cập nhật khung giờ.");
-        } catch (RuntimeException ex) { flash.addFlashAttribute("errorMessage", ex.getMessage()); }
-        return "redirect:/advisor/slots";
     }
 }

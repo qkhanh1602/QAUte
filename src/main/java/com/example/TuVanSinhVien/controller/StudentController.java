@@ -156,7 +156,6 @@ public class StudentController {
                 LichHenTuVan::getMaLichHen, appointmentService::cancellationBlockReason)));
         model.addAttribute("cancellationDeadlines", studentAppointments.stream().collect(Collectors.toMap(
                 LichHenTuVan::getMaLichHen, appointmentService::cancellationDeadline)));
-        model.addAttribute("availableSlots", appointmentService.getAvailableSlots(maCV));
         model.addAttribute("advisors", activeAdvisors);
         model.addAttribute("selectedCv", maCV);
         model.addAttribute("officeDays", officeRequests.getCalendar(maCV));
@@ -177,15 +176,10 @@ public class StudentController {
     }
 
     @PostMapping("/appointments/book")
-    public String bookAppointment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Integer maKhungGio, @RequestParam String chuDe, @RequestParam String noiDungHen, RedirectAttributes redirectAttributes) {
-        try {
-            SinhVien sv = getStudentOrThrow(userDetails);
-            appointmentService.bookAppointment(sv, maKhungGio, chuDe, noiDungHen);
-            redirectAttributes.addFlashAttribute("successMessage", "Đặt lịch hẹn tư vấn thành công! Vui lòng chờ cố vấn xét duyệt.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/student/appointments";
+    public String retiredBooking(@AuthenticationPrincipal CustomUserDetails userDetails, RedirectAttributes flash) {
+        getStudentOrThrow(userDetails);
+        flash.addFlashAttribute("errorMessage", "Vui lòng chọn giờ và gửi đề xuất lịch hẹn trên lịch mới.");
+        return "redirect:/student/appointments?tab=book";
     }
 
     @PostMapping("/appointments/{id}/cancel")

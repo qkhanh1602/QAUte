@@ -37,4 +37,13 @@ public interface LichHenTuVanRepository extends org.springframework.data.jpa.rep
     java.util.Optional<LichHenTuVan> findLockedById(@Param("id") Integer id);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     List<LichHenTuVan> findByTrangThaiAndHanDuyetLessThanEqual(String status, LocalDateTime time);
+    @Query("SELECT COUNT(l)>0 FROM LichHenTuVan l WHERE l.nguoiTuVan.maCV=:maCV AND l.khungGio.batDau<:end AND l.khungGio.ketThuc>:start "
+            + "AND (l.trangThai IN ('DaXacNhan','HoanThanh') OR (l.trangThai='ChoDuyet' AND l.hanDuyet>:now AND l.khungGio.batDau>:now))")
+    boolean existsReservedAdvisorAppointment(@Param("maCV") Integer maCV, @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end, @Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(l)>0 FROM LichHenTuVan l WHERE l.sinhVien.maSV=:maSV AND l.khungGio.batDau<:end AND l.khungGio.ketThuc>:start "
+            + "AND (l.trangThai IN ('DaXacNhan','HoanThanh') OR (l.trangThai='ChoDuyet' AND l.hanDuyet>:now AND l.khungGio.batDau>:now))")
+    boolean existsReservedStudentAppointment(@Param("maSV") Integer maSV, @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end, @Param("now") LocalDateTime now);
 }

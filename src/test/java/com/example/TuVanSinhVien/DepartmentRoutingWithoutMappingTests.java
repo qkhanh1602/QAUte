@@ -51,6 +51,10 @@ class DepartmentRoutingWithoutMappingTests {
     @Autowired LinhVucTuVanRepository fields;
     @Autowired TicketService tickets;
     @Autowired AppointmentService appointments;
+    @Autowired OfficeAppointmentRequests proposals;
+    @Autowired KhungGioTuVanRepository timeRecords;
+    @Autowired LichHenTuVanRepository bookings;
+    @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
     @Autowired ChatService chat;
     @Autowired org.springframework.beans.factory.config.AutowireCapableBeanFactory beanFactory;
     @Autowired org.springframework.security.crypto.password.PasswordEncoder encoder;
@@ -58,18 +62,19 @@ class DepartmentRoutingWithoutMappingTests {
 
     record Fixture(DonVi unit,NguoiTuVan advisor,SinhVien student) {}
     Fixture fixture() {
+        String suffix=java.util.UUID.randomUUID().toString().substring(0,8);
         assertNull(jdbc.queryForObject("SELECT OBJECT_ID(N'dbo.CoVanLinhVuc',N'U')",Integer.class));
-        var unit=units.saveAndFlush(DonVi.builder().maDonViCode("ROUTING_TEST")
+        var unit=units.saveAndFlush(DonVi.builder().maDonViCode("ROUTING_"+suffix)
                 .tenDonVi("Khoa kiểm thử").loaiDonVi("Khoa").hoatDong(true).build());
-        var staff=accounts.saveAndFlush(TaiKhoan.builder().tenDangNhap("routing.staff")
-                .hoTen("Cố vấn kiểm thử").email("routing.staff@example.invalid").matKhau("unused")
+        var staff=accounts.saveAndFlush(TaiKhoan.builder().tenDangNhap("staff."+suffix)
+                .hoTen("Cố vấn kiểm thử").email("staff."+suffix+"@example.invalid").matKhau("unused")
                 .vaiTro("CoVan").trangThai("HoatDong").batBuocDoiMatKhau(false).build());
-        var advisor=advisors.saveAndFlush(NguoiTuVan.builder().maCanBo("ROUTING_STAFF")
+        var advisor=advisors.saveAndFlush(NguoiTuVan.builder().maCanBo("STAFF_"+suffix)
                 .chucVu("Cố vấn").chuyenMon("Tư vấn theo đơn vị").donVi(unit).taiKhoan(staff).build());
-        var account=accounts.saveAndFlush(TaiKhoan.builder().tenDangNhap("routing.student")
-                .hoTen("Sinh viên kiểm thử").email("routing.student@example.invalid").matKhau("unused")
+        var account=accounts.saveAndFlush(TaiKhoan.builder().tenDangNhap("student."+suffix)
+                .hoTen("Sinh viên kiểm thử").email("student."+suffix+"@example.invalid").matKhau("unused")
                 .vaiTro("SinhVien").trangThai("HoatDong").batBuocDoiMatKhau(false).build());
-        var student=students.saveAndFlush(SinhVien.builder().mssv("ROUTING_STUDENT")
+        var student=students.saveAndFlush(SinhVien.builder().mssv("SV_"+suffix)
                 .khoa("Khoa kiểm thử").nganh("Kiểm thử").lop("TEST").khoaHoc("2026")
                 .taiKhoan(account).build());
         assertEquals(advisor.getMaCV(),advisors.findAvailableAdvisors().stream()
@@ -150,5 +155,95 @@ class DepartmentRoutingWithoutMappingTests {
         assertFalse(fields.findAll().isEmpty());
         facultySeeder.run();
         assertNull(jdbc.queryForObject("SELECT OBJECT_ID(N'dbo.CoVanLinhVuc',N'U')",Integer.class));
+    }
+
+    final LocalDateTime proposedStart=LocalDateTime.of(2026,10,13,13,30);
+
+    boolean available(Integer advisorId,LocalDateTime start) {
+        return proposals.getCalendar(advisorId).stream().flatMap(day ->
+                ((java.util.List<java.util.Map<String,Object>>)day.get("times")).stream())
+                .filter(time -> start.equals(time.get("start"))).findFirst().orElseThrow().get("available").equals(true);
+    }
+
+    @Test @Transactional void studentProposesWithoutAdvisorOpeningHoursAndAdvisorDecides() {
+        var f=fixture();
+        assertTrue(available(f.advisor.getMaCV(),proposedStart));
+        var app=proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTuyen","Tư vấn","Nội dung");
+        entityManager.flush();
+        assertEquals("ChoDuyet",app.getTrangThai());
+        assertFalse(available(f.advisor.getMaCV(),proposedStart));
+        appointments.approveAppointment(app.getMaLichHen(),f.advisor.getMaCV(),"https://meet.google.com/abc-defg-hij");
+        assertEquals("DaXacNhan",app.getTrangThai());
+        assertEquals(proposedStart.plusHours(1),app.getKhungGio().getKetThuc());
+    }
+
+    @Test @Transactional void canceledProposalCanBeReplacedAtSameStartWithoutChangingHistory() {
+        var f=fixture();
+        var old=proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTiep","Cũ","Nội dung cũ");
+        appointments.cancelAppointment(old.getMaLichHen(),f.student.getMaSV(),"Đổi hình thức");
+        entityManager.flush();
+        assertTrue(available(f.advisor.getMaCV(),proposedStart));
+        var next=proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTuyen","Mới","Nội dung mới");
+        entityManager.flush();
+        assertNotEquals(old.getKhungGio().getMaKhungGio(),next.getKhungGio().getMaKhungGio());
+        assertEquals("Huy",old.getTrangThai());
+        assertEquals("TrucTiep",old.getKhungGio().getHinhThuc());
+        assertEquals("TrucTuyen",next.getKhungGio().getHinhThuc());
+    }
+
+    @Test @Transactional void unusedClosedHoursAndExpiredOrRejectedAppointmentsDoNotReserveTime() {
+        var f=fixture();
+        var unused=appointments.createSlot(f.advisor,proposedStart,proposedStart.plusHours(1),"TrucTiep","Phòng cũ");
+        unused.setTrangThai("Khoa");entityManager.flush();
+        assertTrue(available(f.advisor.getMaCV(),proposedStart));
+        var expired=proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTiep","Hết hạn","Nội dung");
+        expired.setHanDuyet(LocalDateTime.now(clock));entityManager.flush();
+        assertTrue(available(f.advisor.getMaCV(),proposedStart));
+        var rejected=proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTuyen","Từ chối","Nội dung");
+        appointments.rejectAppointment(rejected.getMaLichHen(),f.advisor.getMaCV(),"Bận");entityManager.flush();
+        assertTrue(available(f.advisor.getMaCV(),proposedStart));
+        assertEquals("Khoa",unused.getTrangThai());
+        assertThrows(IllegalStateException.class,()->appointments.approveAppointment(expired.getMaLichHen(),f.advisor.getMaCV(),"Phòng A"));
+    }
+
+    @Test @Transactional void overlappingRequestsAreRejectedButAdjacentTimesAreAllowed() {
+        var f=fixture();var other=fixture();
+        proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTiep","A","Nội dung");
+        assertThrows(IllegalStateException.class,()->proposals.request(other.student,f.advisor.getMaCV(),proposedStart.plusMinutes(30),"TrucTiep","B","Nội dung"));
+        var adjacent=proposals.request(other.student,f.advisor.getMaCV(),proposedStart.plusHours(1),"TrucTiep","C","Nội dung");
+        assertEquals("ChoDuyet",adjacent.getTrangThai());
+    }
+
+    @Test @Transactional void proposalMigrationIsRepeatableAndPreservesRowsAndForeignKeys() throws Exception {
+        var f=fixture();
+        appointments.createSlot(f.advisor,proposedStart,proposedStart.plusHours(1),"TrucTiep","Phòng cũ");entityManager.flush();
+        long rows=timeRecords.count();
+        Integer foreignKeys=jdbc.queryForObject("SELECT COUNT(*) FROM sys.foreign_keys",Integer.class);
+        jdbc.execute("ALTER TABLE dbo.KhungGioTuVan ADD CONSTRAINT UQ_Test_AdvisorStart UNIQUE(MaCV,BatDau)");
+        String migration=new org.springframework.core.io.ClassPathResource("db/student-appointment-proposals-20261014.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        jdbc.execute(migration);jdbc.execute(migration);
+        assertEquals(rows,timeRecords.count());
+        assertEquals(foreignKeys,jdbc.queryForObject("SELECT COUNT(*) FROM sys.foreign_keys",Integer.class));
+        proposals.request(f.student,f.advisor.getMaCV(),proposedStart,"TrucTuyen","Đề xuất mới","Nội dung");entityManager.flush();
+    }
+
+    @Test void competingStudentsCannotReserveTheSameAdvisorTime() throws Exception {
+        var tx=new org.springframework.transaction.support.TransactionTemplate(transactions);
+        var first=tx.execute(status->fixture());var second=tx.execute(status->fixture());
+        // IDs and account references needed by the service are already initialized in fixture().
+        var gate=new java.util.concurrent.CountDownLatch(1);
+        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            java.util.List<java.util.concurrent.Future<Boolean>> results=new java.util.ArrayList<>();
+            for(var student:java.util.List.of(first.student,second.student)) results.add(executor.submit(()->{
+                gate.await();
+                try { proposals.request(student,first.advisor.getMaCV(),proposedStart,"TrucTiep","Đồng thời","Nội dung");return true; }
+                catch(IllegalStateException conflict) { return false; }
+            }));
+            gate.countDown();int succeeded=0;
+            for(var result:results) if(result.get(30,java.util.concurrent.TimeUnit.SECONDS)) succeeded++;
+            assertEquals(1,succeeded);
+            int count=tx.execute(status -> bookings.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(first.advisor.getMaCV()).size());
+            assertEquals(1,count);
+        }
     }
 }

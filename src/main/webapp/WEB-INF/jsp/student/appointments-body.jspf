@@ -34,7 +34,7 @@
                 <c:if test="${empty appointments}"><div class="text-center py-5 text-muted">
                     <i class="bi bi-calendar-x fs-1 text-secondary mb-2"></i>
                     <h5>Bạn chưa có lịch hẹn nào</h5>
-                    <p class="small text-muted mb-3">Chuyển sang tab "Đặt lịch hẹn mới" để xem các khung giờ trống của Cố vấn.</p>
+                    <p class="small text-muted mb-3">Chọn "Chọn giờ và gửi lịch hẹn" để đề xuất thời gian tư vấn.</p>
                 </div>
 
                 </c:if><c:if test="${not (empty appointments)}"><div class="table-responsive">
@@ -167,21 +167,21 @@
             </c:if></div>
         </div>
 
-        <!-- TAB 2: Book Appointment (Available Slots) -->
+        <!-- TAB 2: Request Appointment -->
         <div class="tab-pane fade" id="book-appointment" role="tabpanel">
             <div class="qaute-card p-4 border-0 shadow-sm">
                 <!-- Rules Alert -->
                 <div class="alert alert-info py-2 small mb-4 d-flex align-items-center gap-2 border-0 bg-info bg-opacity-10 text-info-emphasis">
                     <i class="bi bi-info-circle-fill fs-5 text-info"></i>
                     <div>
-                        <strong>Quy tắc đặt lịch QAUTE:</strong> Mỗi sinh viên được giữ tối đa <strong>2 lịch chờ duyệt</strong>; các khung giờ có thời lượng chuẩn <strong>45 hoặc 60 phút</strong> trong vòng <strong>7 ngày tới</strong>.
+                        <strong>Quy tắc đặt lịch QAUTE:</strong> Mỗi sinh viên được giữ tối đa <strong>2 lịch chờ duyệt</strong>; các khung giờ có thời lượng chuẩn <strong>60 phút</strong> trong vòng <strong>7 ngày tới</strong>.
                     </div>
                 </div>
 
                 <!-- Advisor filter -->
                 <form method="get" class="row g-3 align-items-center mb-4" action="${pageContext.request.contextPath}/student/appointments"><input type="hidden" name="tab" value="book">
                     <div class="col-md-5">
-                        <label class="form-label small fw-semibold">Lọc theo Cố vấn học tập:</label>
+                        <label class="form-label small fw-semibold">Chọn cố vấn:</label>
                         <select name="maCV" class="form-select form-select-sm" onchange="this.form.submit()">
                             <c:if test="${empty advisors}"><option value="">-- Chưa có cố vấn nhận lịch --</option></c:if>
                             <c:forEach var="cv" items="${advisors}">
@@ -205,7 +205,7 @@
                                     <c:choose><c:when test="${time.available}">
                                         <button type="button" class="btn btn-outline-primary btn-sm" data-office-start="${time.start}" data-office-label="${q:formatTemporal(time.start, 'dd/MM/yyyy HH:mm')} - ${q:formatTemporal(time.end, 'HH:mm')}" data-bs-toggle="modal" data-bs-target="#officeRequestModal"><c:out value="${q:formatTemporal(time.start, 'HH:mm')}" /></button>
                                     </c:when><c:otherwise>
-                                        <span class="btn btn-light btn-sm text-secondary disabled" title="Đã có khung giờ hoặc đã khóa"><c:out value="${q:formatTemporal(time.start, 'HH:mm')}" /> · Đã có lịch</span>
+                                        <span class="btn btn-light btn-sm text-secondary disabled" title="Đã có lịch hẹn đang chờ duyệt hoặc được xác nhận"><c:out value="${q:formatTemporal(time.start, 'HH:mm')}" /> · Đã có lịch</span>
                                     </c:otherwise></c:choose>
                                 </c:forEach>
                             </div>
@@ -222,89 +222,14 @@
                                 <p class="fw-semibold" data-office-selected-time></p>
                                 <p class="small text-muted">Đây là giờ bạn đề xuất; vui lòng chờ cố vấn duyệt trước khi đến tư vấn.</p>
                                 <label class="form-label">Hình thức</label><select name="hinhThuc" class="form-select mb-3" required><option value="TrucTiep">Trực tiếp</option><option value="TrucTuyen">Trực tuyến</option></select>
-                                <label class="form-label">Chủ đề *</label><input name="chuDe" class="form-control mb-3" maxlength="255" required>
-                                <label class="form-label">Nội dung cần tư vấn *</label><textarea name="noiDungHen" class="form-control" rows="3" required></textarea>
+                                <label class="form-label">Chủ đề *</label><input name="chuDe" class="form-control mb-3" maxlength="200" required>
+                                <label class="form-label">Nội dung cần tư vấn *</label><textarea name="noiDungHen" class="form-control" rows="3" maxlength="1000" required></textarea>
                             </div>
                             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button><button class="btn btn-primary" type="submit">Gửi chờ duyệt</button></div>
                         </form>
                     </div></div>
                 </div>
-                <h5 class="fw-bold mt-4">Khung giờ cố vấn đã mở</h5>
-
-                <c:if test="${empty availableSlots}"><div class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-x fs-1 text-secondary mb-2"></i>
-                    <h5>Cố vấn chưa mở khung giờ riêng</h5>
-                    <p class="small text-muted">Bạn vẫn có thể chọn giờ trong bảng giờ hành chính phía trên và gửi đề xuất để cố vấn duyệt.</p>
-                </div>
-
-                </c:if><!-- Available Slots Grid -->
-                <c:if test="${not (empty availableSlots)}"><div class="row g-3">
-                    <c:forEach var="slot" items="${availableSlots}"><div class="col-md-6 col-lg-4">
-                        <div class="qaute-card p-3 border h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <c:if test="${slot.hinhThuc == 'TrucTiep'}"><span class="badge bg-secondary-subtle text-secondary">
-                                        <i class="bi bi-geo-alt me-1"></i>Trực tiếp
-                                    </span>
-                                    </c:if><c:if test="${slot.hinhThuc == 'TrucTuyen'}"><span class="badge bg-info-subtle text-info">
-                                        <i class="bi bi-camera-video me-1"></i>Trực tuyến
-                                    </span>
-                                    </c:if><span class="badge bg-success-subtle text-success">Còn trống</span>
-                                </div>
-
-                                <h6 class="fw-bold text-dark mb-1"><c:out value="${slot.nguoiTuVan.taiKhoan.hoTen}" /></h6>
-                                <p class="text-muted small mb-2"><c:out value="${slot.nguoiTuVan.donVi.tenDonVi}" /></p>
-
-                                <div class="p-2 bg-light rounded-3 small mb-2">
-                                    <div><i class="bi bi-calendar3 me-1 text-primary"></i><span><c:out value="${q:formatTemporal(slot.batDau, 'EEEE, dd/MM/yyyy')}" /></span></div>
-                                    <div><i class="bi bi-clock me-1 text-primary"></i><span class="fw-bold text-dark"><c:out value="${q:formatTemporal(slot.batDau, 'HH:mm') += ' - ' += q:formatTemporal(slot.ketThuc, 'HH:mm')}" /></span></div>
-                                </div>
-                                <small class="text-muted d-block mb-3"><c:out value="${slot.diaDiemLink}" /></small>
-                            </div>
-
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-semibold" data-bs-toggle="modal" data-bs-target="${'#bookModal' += slot.maKhungGio}">
-                                <i class="bi bi-calendar-plus me-1"></i>Đặt khung giờ này
-                            </button>
-
-                            <!-- Booking Modal -->
-                            <div class="modal fade" tabindex="-1" id="${'bookModal' += slot.maKhungGio}">
-                                <div class="modal-dialog">
-                                    <div class="modal-content border-0 shadow">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title fw-bold text-dark">Đăng ký lịch hẹn tư vấn</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <form method="post" action="${pageContext.request.contextPath}/student/appointments/book">
-                                            <sec:csrfInput /><input type="hidden" name="maKhungGio" value="${slot.maKhungGio}">
-                                            <div class="modal-body text-start">
-                                                <div class="p-3 bg-light rounded-3 mb-3 small">
-                                                    <div><strong>Cố vấn:</strong> <span><c:out value="${slot.nguoiTuVan.taiKhoan.hoTen}" /></span></div>
-                                                    <div><strong>Thời gian:</strong> <span><c:out value="${q:formatTemporal(slot.batDau, 'dd/MM/yyyy HH:mm') += ' - ' += q:formatTemporal(slot.ketThuc, 'HH:mm')}" /></span></div>
-                                                    <div><strong>Hình thức:</strong> <span><c:out value="${slot.hinhThuc}" /></span></div>
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold">Chủ đề cần tư vấn *</label>
-                                                    <input type="text" name="chuDe" class="form-control form-control-sm" placeholder="VD: Tư vấn chọn hướng đồ án tốt nghiệp" required>
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold">Nội dung chi tiết / Câu hỏi chuẩn bị trước *</label>
-                                                    <textarea name="noiDungHen" rows="3" class="form-control form-control-sm" placeholder="Mô tả tóm tắt nội dung bạn muốn trao đổi cùng cố vấn..." required></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Đóng</button>
-                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold">Xác nhận đặt lịch</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </c:forEach></div>
-            </c:if></div>
+            </div>
         </div>
     </div>
 </div>
