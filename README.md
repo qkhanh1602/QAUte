@@ -17,7 +17,7 @@ Cần JDK **25** và SQL Server 2022 (hoặc Azure SQL Database) kết nối TCP
 
 ### 2. Tạo database local
 
-Trong SSMS bật **Query → SQLCMD Mode**, chạy `database/QAUTE.sql`, sau đó `database/V3__add_faculties.sql`. Script tạo mới dừng nếu QAUTE đã tồn tại; không chạy lên database đang có dữ liệu. Schema mới đã tích hợp V2/V4/V5/V7.
+Trong SSMS bật **Query → SQLCMD Mode**, chạy duy nhất `database/QAUTE.sql`. File đã gồm cấu trúc hiện tại và danh sách khoa, không cần chạy thêm V3 hoặc các migration cũ khi cài mới. Script dừng nếu QAUTE đã tồn tại; không chạy lên database đang có dữ liệu. Tài khoản và nội dung mẫu được tạo khi chạy ứng dụng với profile `dev` trên máy cá nhân.
 
 Tạo SQL login/user riêng, bật SQL Server Authentication và TCP/IP. Ví dụ phát triển, thay mật khẩu trước khi chạy:
 

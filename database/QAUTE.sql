@@ -1,9 +1,15 @@
 :ON ERROR EXIT
--- Enable Query > SQLCMD Mode when running this script in SSMS.
--- QAUTE - SQL Server 2022 / Azure SQL compatible schema (body only for Azure).
--- Source: CNPM C1C2C3.docx; design decisions: PLAN_QAUTE.md.
--- Run with sqlcmd -b -f 65001 -S localhost -E -C -i QAUTE.sql
--- Fresh installation only. NEVER drops or overwrites an existing database.
+-- QAUTE - FILE CAI MOI DAY DU CHO THANH VIEN NHOM
+-- Cap nhat 14/10/2026. SQL Server 2022, 25 bang nghiep vu.
+-- Trong SSMS: ket noi SQL Server LOCAL, bat Query > SQLCMD Mode, nhan F5.
+-- File nay tao database, bang, PK/FK/CHECK, index, view, trigger va danh muc.
+-- Da gom danh sach khoa; KHONG can chay them V3 hay cac migration cu.
+-- Chi dung khi CHUA CO database QAUTE. Neu da co, script dung va khong xoa du lieu.
+-- KHONG chay file nay tren database Azure/Render dang su dung.
+-- Tai khoan va noi dung mau duoc tao khi chay ung dung voi profile dev.
+-- Mat khau va du lieu giao dich that khong nam trong file nay.
+-- Gio tu van: Thu Hai-Sau 08:00-11:30 va 13:30-16:30, tru ngay nghi.
+-- Sinh vien de xuat lich; co van duyet/tu choi, khong can mo gio truoc.
 USE master;
 GO
 IF DB_ID(N'QAUTE') IS NOT NULL
@@ -378,12 +384,52 @@ INSERT dbo.LinhVucTuVan(MaLinhVucCode, TenLinhVuc, MaDonVi, NhayCam)
  ('TAMLY',N'Tư vấn tâm lý','HOTRO',1),
  ('NGHENGHIEP',N'Định hướng nghề nghiệp','CNTT',0)
  ) v(Code,Ten,DonVi,NhayCam) JOIN dbo.DonVi d ON d.MaDonViCode = v.DonVi;
+-- Danh sach khoa day du, duoc tao cung schema.
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CKCTM')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CKCTM', N'Khoa Cơ khí Chế tạo máy', 'Khoa', 1, N'Khoa Cơ khí Chế tạo máy - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'GTNL')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('GTNL', N'Khoa Giao thông và năng lượng', 'Khoa', 1, N'Khoa Giao thông và Năng lượng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CNHHTP')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CNHHTP', N'Khoa Công nghệ Hóa học và Thực phẩm', 'Khoa', 1, N'Khoa Công nghệ Hóa học và Thực phẩm - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'DDT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('DDT', N'Khoa Điện - Điện tử', 'Khoa', 1, N'Khoa Điện - Điện tử - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'INTT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('INTT', N'Khoa In và Truyền thông', 'Khoa', 1, N'Khoa In và Truyền thông - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'KHUD')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('KHUD', N'Khoa Khoa học Ứng dụng', 'Khoa', 1, N'Khoa Khoa học Ứng dụng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'KINHTE')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('KINHTE', N'Khoa Kinh tế', 'Khoa', 1, N'Khoa Kinh tế - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'NGOAINGU')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('NGOAINGU', N'Khoa Ngoại ngữ', 'Khoa', 1, N'Khoa Ngoại ngữ - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'TTDL')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('TTDL', N'Khoa Thời trang và Du lịch', 'Khoa', 1, N'Khoa Thời trang và Du lịch - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'XAYDUNG')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('XAYDUNG', N'Khoa Xây dựng', 'Khoa', 1, N'Khoa Xây dựng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CTLUAT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CTLUAT', N'Khoa Chính trị và Luật', 'Khoa', 1, N'Khoa Chính trị và Luật - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'VSPKT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('VSPKT', N'Viện Sư phạm Kỹ thuật', 'Khoa', 1, N'Viện Sư phạm Kỹ thuật - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'DTTT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('DTTT', N'Khoa Đào tạo Tiên tiến', 'Khoa', 1, N'Khoa Đào tạo Tiên tiến (Chương trình dạy bằng Tiếng Anh) - HCMUTE');
+
 INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('booking.window_days',N'7',N'Cho phép đặt trong 7 ngày tới'),
  ('booking.max_pending',N'2',N'Tối đa 2 lịch chờ duyệt trên mỗi sinh viên'),
  ('booking.cancel_before_hours',N'3',N'Hủy trước ít nhất 3 giờ cho cả hai hình thức'),
  ('booking.approve_hours',N'24',N'Hạn duyệt lịch theo giờ thực'),
- ('booking.allowed_slot_minutes',N'45,60',N'Ưu tiên QĐ24; sửa CHECK nếu đổi thời lượng'),
+ ('booking.allowed_slot_minutes',N'45,60',N'Bản ghi lịch sử hỗ trợ 45/60 phút; đề xuất mới trên web dùng 60 phút'),
  ('booking.remind_business_hours',N'2',N'Nhắc trước 2 giờ làm việc'),
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),
@@ -448,10 +494,6 @@ BEGIN
   THROW 51005, 'Sender must be a participant of this chat.', 1;
 END;
 GO
-PRINT N'QAUTE schema and reference data created successfully.';
-GO
-
-GO
 -- Public forum: existing and new tickets are public; chat and attachments stay private.
 IF OBJECT_ID(N'dbo.CauHoiDienDan', N'U') IS NULL
 BEGIN
@@ -464,3 +506,22 @@ BEGIN
  INSERT INTO dbo.CauHoiDienDan(MaYeuCau) SELECT MaYeuCau FROM dbo.YeuCauTuVan;
 END;
 GO
+
+-- Kiem tra nhanh sau cai moi: 25 bang, day du khoa va linh vuc nen.
+SELECT COUNT(*) AS SoBang FROM sys.tables WHERE is_ms_shipped=0;
+SELECT MaDonViCode, TenDonVi, LoaiDonVi FROM dbo.DonVi ORDER BY MaDonViCode;
+PRINT N'QAUTE created successfully. No extra migration files are required for a fresh local installation.';
+GO
+
+/* GOI Y HOC DATABASE
+1. Doc CREATE TABLE de xac dinh khoa chinh, khoa ngoai, UNIQUE va CHECK.
+2. Doc entity/Repository/Service trong source de hieu tung bang duoc su dung.
+3. Sau khi ung dung chay profile dev, thu truy van co van theo don vi:
+
+SELECT cv.MaCV, tk.HoTen, dv.TenDonVi
+FROM dbo.NguoiTuVan cv
+JOIN dbo.TaiKhoan tk ON tk.MaTK=cv.MaTK
+JOIN dbo.DonVi dv ON dv.MaDonVi=cv.MaDonVi;
+
+4. Tu viet JOIN cho SinhVien, YeuCauTuVan va LichHenTuVan tren database rieng.
+*/
