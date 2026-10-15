@@ -48,10 +48,8 @@ public class WorkflowScheduler {
         if (!enabled) return;
         LocalDateTime now = LocalDateTime.now(clock);
         int autoClosed = ticketService.autoCloseExpiredTickets(now);
-        notifyOverdue(ticketRepo.findByTrangThaiOrderByNgayTaoDesc("ChoTiepNhan").stream()
-                .filter(t -> !slaService.calculateDeadline(t.getNgayTao(), 24).isAfter(now)).toList(), false);
         appointmentService.expirePendingAppointments(now);
-        notifyOverdue(ticketRepo.findOverdueSla(now), true);
+        notifyOverdue(ticketRepo.findOverdueSla(now));
         if (autoClosed > 0) {
             log.info("[WORKFLOW] Đã tự động đóng {} câu hỏi hết hạn.", autoClosed);
         }
@@ -63,19 +61,19 @@ public class WorkflowScheduler {
         if (enabled) appointmentService.expirePendingAppointments(LocalDateTime.now(clock));
     }
 
-    private void notifyOverdue(List<YeuCauTuVan> tickets, boolean redAlert) {
+    private void notifyOverdue(List<YeuCauTuVan> tickets) {
         for (YeuCauTuVan ticket : tickets) {
             TaiKhoan manager = ticket.getDonVi().getTaiKhoanTruongDonVi();
             List<TaiKhoan> recipients = manager == null ? accountRepo.findByVaiTro("Admin") : List.of(manager);
-            String level = redAlert ? "đỏ" : "vàng";
-            String keyPrefix = redAlert ? "SLA_RED_" : "SLA_YELLOW_";
-            String title = redAlert ? "Cảnh báo đỏ: câu hỏi quá hạn phản hồi" : "Cảnh báo vàng: câu hỏi chưa được tiếp nhận";
+            String level = "đỏ";
+            String keyPrefix = "SLA_RED_";
+            String title = "Cảnh báo SLA: câu hỏi quá hạn phản hồi 48 giờ";
             String content = "Câu hỏi: " + ticket.getTieuDe()
                     + " thuộc " + ticket.getDonVi().getTenDonVi() + " đang ở mức cảnh báo " + level + ".";
             for (TaiKhoan recipient : recipients) {
                 notificationService.sendNotificationOnce(recipient,
                         keyPrefix + ticket.getMaYeuCau(), title, content, "SLA", "/admin/tickets");
-                if (redAlert) {
+                {
                     outbox.queue(keyPrefix + ticket.getMaYeuCau() + "_" + recipient.getMaTK(), recipient.getEmail(), "[QAUTE] " + title,
                             "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(content) + "</p><p>Vui lòng điều phối xử lý trên hệ thống QAUTE.</p>");
                 }

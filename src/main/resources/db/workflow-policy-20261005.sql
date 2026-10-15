@@ -8,7 +8,7 @@ WHERE TrangThai IN ('ChoTiepNhan','DangXuLy','DaPhanHoi')
 UPDATE l SET HanDuyet=k.BatDau FROM dbo.LichHenTuVan l JOIN dbo.KhungGioTuVan k ON k.MaKhungGio=l.MaKhungGio
 WHERE l.TrangThai='ChoDuyet' AND l.HanDuyet>k.BatDau;
 UPDATE dbo.CauHinhHeThong SET GiaTri=N'ELAPSED', MoTa=N'SLA tính giờ liên tục kể từ khi gửi; giờ trực cố vấn cấu hình riêng' WHERE Khoa='sla.clock';
-UPDATE dbo.CauHinhHeThong SET GiaTri=N'48', MoTa=N'Hạn tiếp nhận 48 giờ liên tục; cảnh báo vàng sau 24 giờ liên tục' WHERE Khoa='sla.accept_hours';
+UPDATE dbo.CauHinhHeThong SET GiaTri=N'48', MoTa=N'Hạn tiếp nhận và phản hồi 48 giờ liên tục; cảnh báo khi quá hạn' WHERE Khoa='sla.accept_hours';
 UPDATE dbo.CauHinhHeThong SET MoTa=N'Datetime2 lưu giờ Việt Nam Asia/Ho_Chi_Minh, không tự cộng thêm 7 giờ khi hiển thị' WHERE Khoa='app.timezone';
 DECLARE @table nvarchar(258), @column nvarchar(128), @constraint nvarchar(128), @command nvarchar(max);
 DECLARE defaults_cursor CURSOR LOCAL FAST_FORWARD FOR

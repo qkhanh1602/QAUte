@@ -171,7 +171,7 @@
                         <div class="fw-bold text-primary"><c:out value="${ticket.coVanPhuTrach != null ? ticket.coVanPhuTrach.taiKhoan.hoTen : 'Chưa phân công'}" /></div>
                     </div>
                     <div>
-                        <div class="text-muted">Hạn tiếp nhận (24h làm việc):</div>
+                        <div class="text-muted">Hạn tiếp nhận (48 giờ liên tục):</div>
                         <div class="fw-semibold text-dark"><c:out value="${q:formatTemporal(ticket.hanTiepNhan, 'dd/MM/yyyy HH:mm')}" /></div>
                     </div>
                     <div>

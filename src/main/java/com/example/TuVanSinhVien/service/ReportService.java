@@ -31,7 +31,7 @@ public class ReportService {
         private long henHoanThanh;
         private long tongSinhVien;
         private long tongCoVan;
-        private long canhbSoTiepNhan; // Quá hạn 24h
+        private long canhbSoTiepNhan; // Quá hạn tiếp nhận 48 giờ liên tục
         private long canhbSla; // Quá hạn 48h
         private Map<String, Long> thongKeTheoDonVi;
         private Map<String, Long> thongKeTheoTrangThai;
@@ -590,7 +590,7 @@ public class ReportService {
         long tongSinhVien = taiKhoanRepo.countByVaiTro("SinhVien");
         long tongCoVan = taiKhoanRepo.countByVaiTro("CoVan");
         LocalDateTime now = LocalDateTime.now(clock);
-        long canhbSoTiepNhan = ticketRepo.findOverdueAcceptance(now.minusHours(24)).size();
+        long canhbSoTiepNhan = ticketRepo.findOverdueAcceptance(now).size();
         long canhbSla = ticketRepo.findOverdueSla(now).size();
         Map<String, Long> theoDonVi = new HashMap<>();
         List<Object[]> dvList = ticketRepo.countGroupByDonVi();

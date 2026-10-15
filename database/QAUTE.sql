@@ -434,7 +434,7 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),
  ('ticket.auto_close_days',N'7',N'Đóng sau 7 ngày không có hỏi thêm kể từ phản hồi cuối'),
- ('sla.accept_hours',N'48',N'Hạn tiếp nhận 48 giờ liên tục; cảnh báo vàng sau 24 giờ liên tục'),
+ ('sla.accept_hours',N'48',N'Hạn tiếp nhận và phản hồi 48 giờ liên tục; cảnh báo khi quá hạn'),
  ('sla.reply_hours',N'48',N'Cảnh báo chưa phản hồi lần đầu'),
  ('sla.clock',N'ELAPSED',N'SLA tính giờ liên tục kể từ khi gửi; giờ trực cố vấn cấu hình riêng'),
  ('session.idle_minutes',N'30',N'Hết phiên sau 30 phút không hoạt động'),

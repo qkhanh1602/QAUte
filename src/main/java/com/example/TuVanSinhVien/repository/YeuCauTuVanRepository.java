@@ -41,8 +41,8 @@ public interface YeuCauTuVanRepository extends org.springframework.data.jpa.repo
     @Query("SELECT COUNT(y) FROM YeuCauTuVan y WHERE y.trangThai IN ('DaPhanHoi', 'Dong')")
     long countCompleted();
 
-    @Query("SELECT y FROM YeuCauTuVan y WHERE y.trangThai = 'ChoTiepNhan' AND y.ngayTao <= :yellowCutoff")
-    List<YeuCauTuVan> findOverdueAcceptance(@Param("yellowCutoff") LocalDateTime yellowCutoff);
+    @Query("SELECT y FROM YeuCauTuVan y WHERE y.trangThai = 'ChoTiepNhan' AND y.hanTiepNhan < :now")
+    List<YeuCauTuVan> findOverdueAcceptance(@Param("now") LocalDateTime now);
 
     @Query("SELECT y FROM YeuCauTuVan y WHERE y.trangThai IN ('ChoTiepNhan', 'DangXuLy') AND y.ngayPhanHoiDau IS NULL AND y.hanSLA < :now")
     List<YeuCauTuVan> findOverdueSla(@Param("now") LocalDateTime now);

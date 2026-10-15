@@ -129,7 +129,7 @@
                                 <th>Tiêu đề yêu cầu</th>
                                 <th>Lĩnh vực</th>
                                 <th>Thời gian gửi</th>
-                                <th>Hạn tiếp nhận (24h)</th>
+                                <th>Hạn tiếp nhận (48h)</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>

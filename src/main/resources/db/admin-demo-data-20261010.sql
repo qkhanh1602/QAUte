@@ -61,7 +61,7 @@ BEGIN TRY
   VALUES(@student,@field,@unit,@advisor,
    CONCAT(N'[Mẫu] ',CASE @i%6 WHEN 0 THEN N'Lập kế hoạch học tập' WHEN 1 THEN N'Chuẩn bị hồ sơ thực tập' WHEN 2 THEN N'Định hướng kỹ năng nghề nghiệp' WHEN 3 THEN N'Tham gia hoạt động học thuật' WHEN 4 THEN N'Tìm hiểu điều kiện tốt nghiệp' ELSE N'Chuẩn bị đề tài nghiên cứu' END,N' — ',@unitName,N' #',@i),
    CONCAT(N'Dữ liệu minh họa cho báo cáo QAUTE. Em muốn được hướng dẫn về ',@fieldName,N'. Em đang sắp xếp kế hoạch học kỳ và cần biết các bước chuẩn bị, hồ sơ cần thiết cùng đầu mối hỗ trợ. Nhờ cố vấn tư vấn cách xây dựng kế hoạch phù hợp.'),
-   @status,@created,CASE WHEN @status='Dong' THEN DATEADD(day,3,@created) ELSE DATEADD(hour,8,@created) END,DATEADD(hour,24,@created),DATEADD(hour,48,@created),DATEADD(hour,2,@created),DATEADD(hour,8,@created),DATEADD(hour,8,@created),
+   @status,@created,CASE WHEN @status='Dong' THEN DATEADD(day,3,@created) ELSE DATEADD(hour,8,@created) END,DATEADD(hour,48,@created),DATEADD(hour,48,@created),DATEADD(hour,2,@created),DATEADD(hour,8,@created),DATEADD(hour,8,@created),
    CASE WHEN @status='DaPhanHoi' THEN DATEADD(day,7,DATEADD(hour,12,@created)) END,
    CASE WHEN @status='Dong' THEN DATEADD(day,3,@created) END,
    CASE WHEN @status='Dong' THEN N'[Mẫu] Đã trao đổi kế hoạch học tập và thống nhất các bước tiếp theo.' END);

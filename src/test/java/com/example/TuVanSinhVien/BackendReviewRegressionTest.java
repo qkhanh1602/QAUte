@@ -155,11 +155,11 @@ class BackendReviewRegressionTest {
         verify(events,times(2)).publishEvent(any(ChatDeliveryEvent.class));
     }
 
-    @Test void dashboardUsesSame24HourCutoffWithVietnamClock() {
+    @Test void dashboardUsesStoredAcceptanceDeadlineWithVietnamClock() {
         var tickets=mock(YeuCauTuVanRepository.class);
         var reports=new ReportService(tickets,mock(LichHenTuVanRepository.class),accounts,mock(DonViRepository.class));
         org.springframework.test.util.ReflectionTestUtils.setField(reports,"clock",clock);
         reports.getDashboardSummary();
-        verify(tickets).findOverdueAcceptance(LocalDateTime.of(2026,10,4,9,0));
+        verify(tickets).findOverdueAcceptance(LocalDateTime.now(clock));
     }
 }
