@@ -1,15 +1,5 @@
 :ON ERROR EXIT
--- QAUTE - FILE CAI MOI DAY DU CHO THANH VIEN NHOM
--- Cap nhat 14/10/2026. SQL Server 2022, 25 bang nghiep vu.
--- Trong SSMS: ket noi SQL Server LOCAL, bat Query > SQLCMD Mode, nhan F5.
--- File nay tao database, bang, PK/FK/CHECK, index, view, trigger va danh muc.
--- Da gom danh sach khoa; KHONG can chay them V3 hay cac migration cu.
--- Chi dung khi CHUA CO database QAUTE. Neu da co, script dung va khong xoa du lieu.
--- KHONG chay file nay tren database Azure/Render dang su dung.
--- Tai khoan va noi dung mau duoc tao khi chay ung dung voi profile dev.
--- Mat khau va du lieu giao dich that khong nam trong file nay.
--- Gio tu van: Thu Hai-Sau 08:00-11:30 va 13:30-16:30, tru ngay nghi.
--- Sinh vien de xuat lich; co van duyet/tu choi, khong can mo gio truoc.
+
 USE master;
 GO
 IF DB_ID(N'QAUTE') IS NOT NULL
@@ -513,15 +503,4 @@ SELECT MaDonViCode, TenDonVi, LoaiDonVi FROM dbo.DonVi ORDER BY MaDonViCode;
 PRINT N'QAUTE created successfully. No extra migration files are required for a fresh local installation.';
 GO
 
-/* GOI Y HOC DATABASE
-1. Doc CREATE TABLE de xac dinh khoa chinh, khoa ngoai, UNIQUE va CHECK.
-2. Doc entity/Repository/Service trong source de hieu tung bang duoc su dung.
-3. Sau khi ung dung chay profile dev, thu truy van co van theo don vi:
 
-SELECT cv.MaCV, tk.HoTen, dv.TenDonVi
-FROM dbo.NguoiTuVan cv
-JOIN dbo.TaiKhoan tk ON tk.MaTK=cv.MaTK
-JOIN dbo.DonVi dv ON dv.MaDonVi=cv.MaDonVi;
-
-4. Tu viet JOIN cho SinhVien, YeuCauTuVan va LichHenTuVan tren database rieng.
-*/
