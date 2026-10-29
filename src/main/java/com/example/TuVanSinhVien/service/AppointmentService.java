@@ -21,6 +21,9 @@ public class AppointmentService {
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.context.ApplicationEventPublisher events;
     private void changed() { if (events != null) events.publishEvent(new AppointmentChanged()); }
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
+    public void setEmailService(EmailService emailService) { this.emailService = emailService; }
     private final java.time.Clock clock;
     private final KhungGioTuVanRepository slotRepo;
     private final LichHenTuVanRepository appointmentRepo;
@@ -118,6 +121,26 @@ public class AppointmentService {
         appointment = appointmentRepo.save(appointment);
         // Báo cho cố vấn
         notificationService.sendNotification(slot.getNguoiTuVan().getTaiKhoan(), "Có yêu cầu đặt lịch hẹn mới", "Sinh viên " + sv.getTaiKhoan().getHoTen() + " vừa đặt lịch hẹn: \'" + chuDe + "\'.", "LichHen", "/advisor/appointments");
+        if (emailService != null && slot.getNguoiTuVan() != null && slot.getNguoiTuVan().getTaiKhoan() != null) {
+            TaiKhoan cvTk = slot.getNguoiTuVan().getTaiKhoan();
+            if (cvTk.getEmail() != null && !cvTk.getEmail().isBlank()) {
+                String svName = sv.getTaiKhoan().getHoTen();
+                String mssv = sv.getMssv() != null ? " (" + sv.getMssv() + ")" : "";
+                java.time.format.DateTimeFormatter timeFmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+                java.time.format.DateTimeFormatter dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                String timeStr = slot.getBatDau().format(timeFmt) + " - " + slot.getKetThuc().format(timeFmt)
+                        + " (ngày " + slot.getBatDau().format(dateFmt) + ")";
+                String sub = "[QAUTE] Có yêu cầu đặt lịch hẹn tư vấn mới";
+                String title = "Sinh viên đã gửi yêu cầu đặt lịch hẹn tư vấn";
+                String body = "Sinh viên <strong>" + svName + mssv + "</strong> đã gửi yêu cầu đặt lịch hẹn với bạn:<br><br>"
+                        + "<strong>Chủ đề:</strong> " + chuDe + "<br>"
+                        + "<strong>Thời gian đề xuất:</strong> " + timeStr + "<br>"
+                        + "<strong>Hình thức:</strong> " + ("TrucTuyen".equals(slot.getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại trường)") + "<br>"
+                        + (noiDungHen != null && !noiDungHen.isBlank() ? "<strong>Nội dung:</strong> " + noiDungHen.trim() + "<br>" : "")
+                        + "<br><em>Vui lòng đăng nhập hệ thống để duyệt và cung cấp link họp / phòng tư vấn trước hạn duyệt.</em>";
+                emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/appointments", "Duyệt lịch hẹn");
+            }
+        }
         changed();
         return appointment;
     }
@@ -143,6 +166,7 @@ public class AppointmentService {
         appointmentRepo.save(app); changed();
         // Báo cho sinh viên
         notificationService.sendNotification(app.getSinhVien().getTaiKhoan(), "Lịch hẹn tư vấn đã được xác nhận!", "Buổi tư vấn \'" + app.getChuDe() + "\' đã được xác nhận. Phòng/Link: " + linkHopPhong, "LichHen", "/student/appointments");
+        sendAppointmentEmailNotification(app, linkHopPhong.trim(), false);
     }
 
     @Transactional
@@ -157,6 +181,7 @@ public class AppointmentService {
         notificationService.sendNotification(app.getSinhVien().getTaiKhoan(),"Thông tin tham gia buổi tư vấn đã thay đổi",
                 "Buổi tư vấn '"+app.getChuDe()+"': "+checked,"LichHen","/student/appointments");
         changed();
+        sendAppointmentEmailNotification(app, checked, true);
     }
 
     @Transactional
@@ -176,6 +201,20 @@ public class AppointmentService {
         appointmentRepo.save(app); changed();
         // Báo cho sinh viên
         notificationService.sendNotification(app.getSinhVien().getTaiKhoan(), "Lịch hẹn tư vấn bị từ chối", "Buổi tư vấn \'" + app.getChuDe() + "\' không được duyệt. Lý do: " + lyDo, "LichHen", "/student/appointments");
+        if (emailService != null && app.getSinhVien() != null && app.getSinhVien().getTaiKhoan() != null) {
+            TaiKhoan svTk = app.getSinhVien().getTaiKhoan();
+            if (svTk.getEmail() != null && !svTk.getEmail().isBlank()) {
+                String advisorName = (app.getNguoiTuVan() != null && app.getNguoiTuVan().getTaiKhoan() != null)
+                        ? app.getNguoiTuVan().getTaiKhoan().getHoTen() : "Cố vấn học tập";
+                String sub = "[QAUTE] Lịch hẹn tư vấn không được phê duyệt";
+                String title = "Cố vấn học tập không thể tiếp nhận lịch hẹn của bạn";
+                String body = "Cố vấn <strong>" + advisorName + "</strong> đã từ chối lịch hẹn tư vấn:<br><br>"
+                        + "<strong>Chủ đề:</strong> " + app.getChuDe() + "<br>"
+                        + "<strong>Lý do từ chối:</strong> " + lyDo.trim() + "<br><br>"
+                        + "<em>Bạn có thể chọn một khung giờ khác phù hợp hoặc gửi câu hỏi qua diễn đàn tư vấn.</em>";
+                emailService.sendAsyncNotification(svTk.getEmail(), sub, svTk.getHoTen(), title, body, "/student/appointments", "Xem danh sách lịch hẹn");
+            }
+        }
     }
 
     @Transactional
@@ -216,6 +255,18 @@ public class AppointmentService {
         appointmentRepo.save(app); changed();
         // Báo cho cố vấn
         notificationService.sendNotification(app.getNguoiTuVan().getTaiKhoan(), "Sinh viên đã hủy lịch hẹn", "Sinh viên " + app.getSinhVien().getTaiKhoan().getHoTen() + " đã hủy lịch hẹn \'" + app.getChuDe() + "\'.", "LichHen", "/advisor/appointments");
+        if (emailService != null && app.getNguoiTuVan() != null && app.getNguoiTuVan().getTaiKhoan() != null) {
+            TaiKhoan cvTk = app.getNguoiTuVan().getTaiKhoan();
+            if (cvTk.getEmail() != null && !cvTk.getEmail().isBlank()) {
+                String svName = app.getSinhVien().getTaiKhoan().getHoTen();
+                String sub = "[QAUTE] Sinh viên đã hủy lịch hẹn tư vấn";
+                String title = "Lịch hẹn tư vấn đã được sinh viên hủy";
+                String body = "Sinh viên <strong>" + svName + "</strong> đã hủy lịch hẹn tư vấn:<br><br>"
+                        + "<strong>Chủ đề:</strong> " + app.getChuDe() + "<br>"
+                        + "<strong>Lý do hủy:</strong> " + lyDo.trim() + "<br>";
+                emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/appointments", "Xem danh sách lịch hẹn");
+            }
+        }
     }
 
     public String cancellationBlockReason(LichHenTuVan app) {
@@ -265,6 +316,9 @@ public class AppointmentService {
         if (maCV == null || !appointment.getNguoiTuVan().getMaCV().equals(maCV)) {
             throw new SecurityException("Bạn không có quyền xử lý lịch hẹn của cố vấn khác.");
         }
+        if (!Boolean.TRUE.equals(appointment.getNguoiTuVan().getNhanTuVan())) {
+            throw new IllegalStateException("Cố vấn này không phụ trách chức năng hẹn lịch tư vấn.");
+        }
     }
 
     public List<KhungGioTuVan> getAdvisorSlots(Integer maCV) {
@@ -276,6 +330,9 @@ public class AppointmentService {
         LocalDate monday = LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDateTime previousStart = monday.minusWeeks(1).atStartOfDay();
         LocalDateTime previousEnd = monday.atStartOfDay();
+        if (!Boolean.TRUE.equals(advisor.getNhanTuVan())) {
+            throw new IllegalStateException("Cố vấn này không phụ trách chức năng hẹn lịch tư vấn.");
+        }
         accountRepo.findLockedById(advisor.getTaiKhoan().getMaTK()).orElseThrow();
         int copied = 0;
         for (KhungGioTuVan source : slotRepo.findAdvisorSlotsInRange(advisor.getMaCV(), previousStart, previousEnd)) {
@@ -344,4 +401,52 @@ public class AppointmentService {
                 || !Boolean.TRUE.equals(advisor.getNhanTuVan()) || !Boolean.TRUE.equals(advisor.getDonVi().getHoatDong()))
             throw new IllegalStateException("Cố vấn hoặc đơn vị hiện không tiếp nhận lịch tư vấn.");
     }
+
+    private void sendAppointmentEmailNotification(LichHenTuVan app, String locationOrLink, boolean isUpdate) {
+        if (emailService == null || app.getSinhVien() == null || app.getSinhVien().getTaiKhoan() == null) {
+            return;
+        }
+        TaiKhoan svTk = app.getSinhVien().getTaiKhoan();
+        if (svTk.getEmail() == null || svTk.getEmail().isBlank()) {
+            return;
+        }
+
+        String advisorName = (app.getNguoiTuVan() != null && app.getNguoiTuVan().getTaiKhoan() != null)
+                ? app.getNguoiTuVan().getTaiKhoan().getHoTen() : "Cố vấn học tập";
+        String hinhThucLabel = "TrucTuyen".equals(app.getKhungGio().getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại trường)";
+
+        java.time.format.DateTimeFormatter timeFmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+        java.time.format.DateTimeFormatter dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String timeStr = app.getKhungGio().getBatDau().format(timeFmt) + " - " + app.getKhungGio().getKetThuc().format(timeFmt)
+                + " (ngày " + app.getKhungGio().getBatDau().format(dateFmt) + ")";
+
+        String subject = isUpdate ? "[QAUTE] Cập nhật phòng / link Google Meet cho buổi tư vấn"
+                                  : "[QAUTE] Lịch hẹn tư vấn đã được xác nhận";
+        String title = isUpdate ? "Cố vấn đã cập nhật thông tin phòng / link buổi tư vấn"
+                                : "Cố vấn đã duyệt và chốt lịch hẹn tư vấn với bạn";
+
+        boolean isMeet = MeetingLocation.isMeetingUrl(locationOrLink);
+        String locationDisplay = isMeet
+                ? "<a href=\"" + locationOrLink + "\" style=\"color: #2563eb; font-weight: bold; word-break: break-all;\" target=\"_blank\" rel=\"noopener\">" + locationOrLink + "</a>"
+                : "<strong>" + locationOrLink + "</strong>";
+
+        String meetButton = isMeet ?
+                "<div style=\"text-align: center; margin: 15px 0;\">"
+                + "<a href=\"" + locationOrLink + "\" style=\"display: inline-block; font-size: 14px; font-weight: bold; color: #ffffff; background-color: #16a34a; padding: 10px 20px; border-radius: 6px; text-decoration: none;\">"
+                + "Tham gia Google Meet ngay"
+                + "</a></div>" : "";
+
+        String body = "Cố vấn <strong>" + advisorName + "</strong> "
+                + (isUpdate ? "vừa cập nhật thông tin địa điểm / link phòng họp cho buổi tư vấn của bạn:" : "đã xác nhận lịch hẹn tư vấn:")
+                + "<br><br>"
+                + "<strong>Chủ đề:</strong> " + app.getChuDe() + "<br>"
+                + "<strong>Thời gian:</strong> " + timeStr + "<br>"
+                + "<strong>Hình thức:</strong> " + hinhThucLabel + "<br>"
+                + "<strong>" + (isMeet ? "Link Google Meet" : "Phòng / Địa điểm") + ":</strong> " + locationDisplay + "<br>"
+                + meetButton
+                + "<br><em>Vui lòng lưu ý thời gian và chuẩn bị nội dung để buổi tư vấn diễn ra hiệu quả nhất.</em>";
+
+        emailService.sendAsyncNotification(svTk.getEmail(), subject, svTk.getHoTen(), title, body, "/student/appointments", "Xem lịch hẹn trên QAUTE");
+    }
+
 }

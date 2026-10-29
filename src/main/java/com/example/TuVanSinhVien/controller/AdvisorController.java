@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/advisor")
 public class AdvisorController {
     @org.springframework.beans.factory.annotation.Autowired private com.example.TuVanSinhVien.service.SubmissionService submissions;
+    @org.springframework.beans.factory.annotation.Autowired(required = false) private com.example.TuVanSinhVien.repository.SinhVienRepository sinhVienRepo;
     private final NguoiTuVanRepository nguoiTuVanRepo;
     private final TicketService ticketService;
     private final AppointmentService appointmentService;
@@ -40,14 +41,21 @@ public class AdvisorController {
         return nguoiTuVanRepo.findByTaiKhoan_MaTK(userDetails.getMaTK()).orElseThrow(() -> new IllegalStateException("Không tìm thấy thông tin cố vấn cho tài khoản này."));
     }
 
+    private boolean isStudentAdvisor(NguoiTuVan cv) {
+        if (cv == null || cv.getTaiKhoan() == null || sinhVienRepo == null) return false;
+        return sinhVienRepo.findByTaiKhoan_MaTK(cv.getTaiKhoan().getMaTK()).isPresent();
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+        boolean isStudent = isStudentAdvisor(cv);
         List<YeuCauTuVan> myTickets = ticketService.getAdvisorAssignedTickets(cv.getMaCV());
         List<YeuCauTuVan> queue = ticketService.getDepartmentQueue(cv.getDonVi().getMaDonVi());
-        List<LichHenTuVan> appointments = appointmentService.getAdvisorAppointments(cv.getMaCV());
+        List<LichHenTuVan> appointments = isStudent ? List.of() : appointmentService.getAdvisorAppointments(cv.getMaCV());
         long pendingAppointments = appointments.stream().filter(a -> "ChoDuyet".equals(a.getTrangThai())).count();
         model.addAttribute("advisor", cv);
+        model.addAttribute("isStudentAdvisor", isStudent);
         model.addAttribute("assignedTickets", myTickets);
         model.addAttribute("queueTickets", queue);
         model.addAttribute("pendingAppointmentsCount", pendingAppointments);
@@ -128,14 +136,21 @@ public class AdvisorController {
     // Keep old bookmarks/forms harmless after retiring advisor-created availability.
     @GetMapping("/slots")
     public String slots(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        getAdvisorOrThrow(userDetails);
+        NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+        if (isStudentAdvisor(cv)) {
+            return "redirect:/advisor/dashboard";
+        }
         return "redirect:/advisor/appointments";
     }
 
     @PostMapping({"/slots/copy-previous-week", "/slots/new", "/slots/{id}/update"})
     public String retiredAvailability(@AuthenticationPrincipal CustomUserDetails userDetails,
                                       RedirectAttributes flash) {
-        getAdvisorOrThrow(userDetails);
+        NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+        if (isStudentAdvisor(cv)) {
+            flash.addFlashAttribute("errorMessage", "Tài khoản cố vấn sinh viên không phụ trách chức năng hẹn lịch tư vấn.");
+            return "redirect:/advisor/dashboard";
+        }
         flash.addFlashAttribute("successMessage", "Sinh viên chọn giờ và gửi đề xuất; bạn chỉ cần duyệt hoặc từ chối lịch hẹn.");
         return "redirect:/advisor/appointments";
     }
@@ -143,6 +158,11 @@ public class AdvisorController {
     @GetMapping("/appointments/live")
     public org.springframework.web.servlet.ModelAndView liveAppointments(@AuthenticationPrincipal CustomUserDetails user,
              Model model) {
+        NguoiTuVan cv = getAdvisorOrThrow(user);
+        if (isStudentAdvisor(cv)) {
+            var redirectView = new org.springframework.web.servlet.view.RedirectView("/advisor/dashboard");
+            return new org.springframework.web.servlet.ModelAndView(redirectView);
+        }
         appointments(user, model);
         // A direct View bypasses page decoration and returns only the calendar fragment.
         var view=new org.springframework.web.servlet.view.JstlView("/WEB-INF/jsp/advisor/appointments-live.jsp");
@@ -153,6 +173,9 @@ public class AdvisorController {
     @GetMapping("/appointments")
     public String appointments(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+        if (isStudentAdvisor(cv)) {
+            return "redirect:/advisor/dashboard";
+        }
         model.addAttribute("advisor", cv);
         model.addAttribute("appointments", appointmentService.getAdvisorAppointments(cv.getMaCV()));
         return "advisor/appointments";
@@ -162,6 +185,10 @@ public class AdvisorController {
     public String approveAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String linkHopPhong, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            if (isStudentAdvisor(cv)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Tài khoản cố vấn sinh viên không phụ trách chức năng hẹn lịch tư vấn.");
+                return "redirect:/advisor/dashboard";
+            }
             appointmentService.approveAppointment(id, cv.getMaCV(), linkHopPhong);
             redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt lịch hẹn tư vấn!");
         } catch (Exception e) {
@@ -174,7 +201,12 @@ public class AdvisorController {
     public String updateMeetingLocation(@PathVariable Integer id,@AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String linkHopPhong,RedirectAttributes flash) {
         try {
-            appointmentService.updateMeetingLocation(id,getAdvisorOrThrow(userDetails).getMaCV(),linkHopPhong);
+            NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            if (isStudentAdvisor(cv)) {
+                flash.addFlashAttribute("errorMessage", "Tài khoản cố vấn sinh viên không phụ trách chức năng hẹn lịch tư vấn.");
+                return "redirect:/advisor/dashboard";
+            }
+            appointmentService.updateMeetingLocation(id,cv.getMaCV(),linkHopPhong);
             flash.addFlashAttribute("successMessage","Đã cập nhật link/địa điểm và thông báo cho sinh viên.");
         } catch(RuntimeException ex) { flash.addFlashAttribute("errorMessage",ex.getMessage()); }
         return "redirect:/advisor/appointments";
@@ -184,6 +216,10 @@ public class AdvisorController {
     public String rejectAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String lyDo, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            if (isStudentAdvisor(cv)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Tài khoản cố vấn sinh viên không phụ trách chức năng hẹn lịch tư vấn.");
+                return "redirect:/advisor/dashboard";
+            }
             appointmentService.rejectAppointment(id, cv.getMaCV(), lyDo);
             redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối lịch hẹn.");
         } catch (Exception e) {
@@ -196,6 +232,10 @@ public class AdvisorController {
     public String completeAppointment(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String ketLuan, RedirectAttributes redirectAttributes) {
         try {
             NguoiTuVan cv = getAdvisorOrThrow(userDetails);
+            if (isStudentAdvisor(cv)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Tài khoản cố vấn sinh viên không phụ trách chức năng hẹn lịch tư vấn.");
+                return "redirect:/advisor/dashboard";
+            }
             appointmentService.completeAppointment(id, cv.getMaCV(), ketLuan);
             redirectAttributes.addFlashAttribute("successMessage", "Đã ghi nhận hoàn tất buổi tư vấn.");
         } catch (Exception e) {

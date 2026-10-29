@@ -85,4 +85,30 @@ class MeetingLocationRulesTests {
   assertThrows(IllegalStateException.class,()->service.cancelAppointment(1,2,"Trùng lịch học"));
   assertEquals("DaXacNhan",app.getTrangThai()); verify(repo,never()).save(any());
  }
+
+ @Test void approvingAppointmentWithMeetLinkSendsEmailToStudent() {
+  var app=fixture("ChoDuyet");
+  app.getSinhVien().getTaiKhoan().setEmail("student@example.com");
+  app.getSinhVien().getTaiKhoan().setHoTen("Nguyen Van A");
+  app.getNguoiTuVan().setTaiKhoan(TaiKhoan.builder().maTK(1).hoTen("TS. Tran Minh Khoa").build());
+  var emailService=mock(EmailService.class);
+  service.setEmailService(emailService);
+  service.approveAppointment(1,1,"https://meet.google.com/abc-defg-hij");
+  verify(emailService).sendAsyncNotification(eq("student@example.com"), contains("xác nhận"),
+          eq("Nguyen Van A"), contains("duyệt và chốt"), contains("meet.google.com/abc-defg-hij"),
+          eq("/student/appointments"), anyString());
+ }
+
+ @Test void updatingMeetingLocationSendsEmailNotificationToStudent() {
+  var app=fixture("DaXacNhan");
+  app.getSinhVien().getTaiKhoan().setEmail("student@example.com");
+  app.getSinhVien().getTaiKhoan().setHoTen("Nguyen Van A");
+  app.getNguoiTuVan().setTaiKhoan(TaiKhoan.builder().maTK(1).hoTen("TS. Tran Minh Khoa").build());
+  var emailService=mock(EmailService.class);
+  service.setEmailService(emailService);
+  service.updateMeetingLocation(1,1,"https://meet.google.com/xyz-uvw-rst");
+  verify(emailService).sendAsyncNotification(eq("student@example.com"), contains("Cập nhật"),
+          eq("Nguyen Van A"), contains("cập nhật"), contains("meet.google.com/xyz-uvw-rst"),
+          eq("/student/appointments"), anyString());
+ }
 }

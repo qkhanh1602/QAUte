@@ -19,6 +19,9 @@ public class EmailService {
     private final String provider;
     private final String from;
 
+    @Value("${app.base-url:${RENDER_EXTERNAL_URL:http://localhost:8080}}")
+    private String baseUrl = "http://localhost:8080";
+
     public EmailService(@Autowired(required = false) JavaMailSender mailSender, BrevoEmailClient brevo,
             @Value("${app.email.provider:smtp}") String provider,
             @Value("${app.email.from:qaute.edu@gmail.com}") String from) {
@@ -75,6 +78,47 @@ public class EmailService {
             log.warn("[EMAIL-SERVICE] Gửi email qua {} thất bại ({}).", provider, ex.getClass().getSimpleName());
             return false;
         }
+    }
+
+    public void sendAsyncNotification(String toEmail, String subject, String recipientName, String title, String content, String linkUrl, String linkText) {
+        if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@")) return;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                String safeName = recipientName != null && !recipientName.isBlank() ? recipientName.trim() : "bạn";
+                String fullUrl = linkUrl;
+                if (fullUrl != null && fullUrl.startsWith("/")) {
+                    fullUrl = (baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl) + fullUrl;
+                }
+                String buttonHtml = (fullUrl != null && !fullUrl.isBlank()) ?
+                        "<div style=\"text-align: center; margin: 25px 0;\">"
+                        + "<a href=\"" + fullUrl + "\" style=\"display: inline-block; font-size: 14px; font-weight: bold; color: #ffffff; background-color: #2563eb; padding: 12px 24px; border-radius: 6px; text-decoration: none;\">"
+                        + (linkText != null && !linkText.isBlank() ? linkText : "Xem chi tiết trên hệ thống")
+                        + "</a></div>" : "";
+
+                String htmlContent = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;\">"
+                        + "<div style=\"text-align: center; margin-bottom: 20px;\">"
+                        + "<h2 style=\"color: #1e3a8a; margin: 0;\">HỆ THỐNG TƯ VẤN SINH VIÊN QAUTE</h2>"
+                        + "<p style=\"color: #64748b; font-size: 14px;\">Trường Đại học Sư phạm Kỹ thuật TP.HCM</p>"
+                        + "</div>"
+                        + "<div style=\"padding: 20px; background-color: #f8fafc; border-radius: 6px;\">"
+                        + "<p style=\"font-size: 15px; color: #334155;\">Xin chào <strong>" + safeName + "</strong>,</p>"
+                        + "<p style=\"font-size: 15px; color: #1e293b; font-weight: 600;\">" + title + "</p>"
+                        + "<div style=\"font-size: 14px; color: #475569; line-height: 1.6; margin: 15px 0; padding: 12px; background: #ffffff; border-left: 4px solid #2563eb; border-radius: 4px;\">"
+                        + content
+                        + "</div>"
+                        + buttonHtml
+                        + "<p style=\"font-size: 13px; color: #94a3b8; margin-top: 20px;\">Email này được gửi tự động từ Hệ thống tư vấn sinh viên QAUTE. Vui lòng không trả lời trực tiếp email này.</p>"
+                        + "</div>"
+                        + "<div style=\"text-align: center; margin-top: 20px; font-size: 12px; color: #94a3b8;\">"
+                        + "&copy; 2026 QAUTE - Trường Đại học Sư phạm Kỹ thuật TP.HCM. All rights reserved."
+                        + "</div>"
+                        + "</div>";
+
+                sendNotificationEmail(toEmail, subject, htmlContent);
+            } catch (Exception e) {
+                log.warn("[EMAIL-SERVICE] Lỗi gửi email thông báo ngầm: {}", e.getMessage());
+            }
+        });
     }
 
 }

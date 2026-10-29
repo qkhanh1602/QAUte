@@ -37,9 +37,16 @@
                     <a class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-3 shadow-sm" href="${pageContext.request.contextPath}/advisor/tickets">
                         <i class="bi bi-inbox-fill me-1"></i>Hàng đợi tiếp nhận câu hỏi
                     </a>
+                    <c:if test="${!isStudentAdvisor}">
                     <a class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/appointments">
                         <i class="bi bi-calendar-check me-1"></i>Duyệt lịch hẹn sinh viên
                     </a>
+                    </c:if>
+                    <c:if test="${isStudentAdvisor}">
+                    <a class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold" href="${pageContext.request.contextPath}/advisor/chat">
+                        <i class="bi bi-headset me-1"></i>Tư vấn trực tuyến (Chat)
+                    </a>
+                    </c:if>
                 </div>
             </div>
 
@@ -125,6 +132,7 @@
                 </c:forEach></div>
             </c:if></div>
 
+            <c:if test="${!isStudentAdvisor}">
             <!-- Appointments summary -->
             <div class="qaute-card p-4 border-0 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -148,6 +156,24 @@
                     </div>
                 </c:forEach></div>
             </c:if></div>
+            </c:if>
+            <c:if test="${isStudentAdvisor}">
+            <!-- Peer Advisor Live Chat Summary -->
+            <div class="qaute-card p-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-headset text-primary me-2"></i>Tư vấn trực tuyến (Live Chat)</h5>
+                    <a class="text-primary text-decoration-none small fw-semibold" href="${pageContext.request.contextPath}/advisor/chat">Vào phòng chat</a>
+                </div>
+                <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                    <div class="small text-muted mb-2">
+                        Tài khoản <strong>Cố vấn sinh viên</strong> phụ trách hỗ trợ trả lời câu hỏi diễn đàn và tư vấn qua chat trực tuyến 24/7. Không áp dụng chức năng đặt lịch hẹn gặp mặt.
+                    </div>
+                    <a class="btn btn-primary btn-sm rounded-pill fw-semibold w-100" href="${pageContext.request.contextPath}/advisor/chat">
+                        <i class="bi bi-chat-dots me-1"></i>Mở danh sách phiên chat
+                    </a>
+                </div>
+            </div>
+            </c:if>
         </div>
     </div>
 </div>
