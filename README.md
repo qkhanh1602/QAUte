@@ -17,7 +17,8 @@ Cần JDK **25** và SQL Server 2022 (hoặc Azure SQL Database) kết nối TCP
 
 ### 2. Tạo database local
 
-Trong SSMS bật **Query → SQLCMD Mode**, chạy duy nhất `database/QAUTE.sql`. File đã gồm cấu trúc hiện tại và danh sách khoa, không cần chạy thêm V3 hoặc các migration cũ khi cài mới. Script dừng nếu QAUTE đã tồn tại; không chạy lên database đang có dữ liệu. Tài khoản và nội dung mẫu được tạo khi chạy ứng dụng với profile `dev` trên máy cá nhân.
+1. Trong SSMS, mở và chạy file `database/databaseQAUTE.sql` để khởi tạo cơ sở dữ liệu `QAUTE` và toàn bộ cấu trúc 25 bảng nghiệp vụ (DDL).
+2. Sau khi tạo cấu trúc xong, mở và chạy file `database/datasheetAI.sql` để nạp toàn bộ 2.865 bản ghi dữ liệu thực tế (DML).
 
 Tạo SQL login/user riêng, bật SQL Server Authentication và TCP/IP. Ví dụ phát triển, thay mật khẩu trước khi chạy:
 
@@ -34,7 +35,7 @@ GO
 
 Lần khởi động đầu còn cập nhật cấu trúc diễn đàn và chính sách trong `src/main/resources/db`; tài khoản chạy bước này cần quyền DDL phù hợp (ví dụ `db_ddladmin` cho database phát triển). Sau khi cập nhật xong có thể đặt `app.workflow.policy-migration.enabled=false`, thu hồi quyền DDL và dùng tài khoản vận hành chỉ có quyền đọc/ghi. Không dùng `sa` cho ứng dụng công khai.
 
-Với database cũ/Azure, xem [hướng dẫn database](database/DATABASE_README.md).
+Hai tệp SQL trên đã được trích xuất trực tiếp từ cơ sở dữ liệu Azure SQL thực tế của hệ thống QAUTE.
 
 ### 3. Cấu hình riêng
 
