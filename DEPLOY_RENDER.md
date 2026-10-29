@@ -61,6 +61,6 @@ Tài liệu: [Render Free](https://render.com/docs/free),
 [Brevo API](https://developers.brevo.com/docs/send-a-transactional-email).
 
 
-## Cập nhật luồng lịch hẹn ngày 14/10/2026
+## Cập nhật luồng lịch hẹn
 
-Trước khi triển khai bản sinh viên đề xuất lịch, chạy `database/V12__student_appointment_proposals.sql` trên database hiện có bằng tài khoản quản trị nếu `WORKFLOW_POLICY_MIGRATION_ENABLED=false`. V12 giữ nguyên dữ liệu lịch hẹn và khóa ngoại, bỏ ràng buộc giờ bắt đầu duy nhất để lưu riêng lịch sử và đề xuất mới cùng giờ. Nếu bật cập nhật chính sách tự động, resource V12 tương đương sẽ được chạy khi khởi động. Không yêu cầu cố vấn mở lịch hoặc đăng ký đủ hai khung giờ mỗi tuần nữa.
+Cấu trúc đề xuất lịch hẹn từ sinh viên và các ràng buộc toàn vẹn đã được tích hợp đầy đủ trong `database/databaseQAUTE.sql` (bỏ ràng buộc giờ bắt đầu duy nhất để lưu riêng lịch sử và đề xuất mới cùng giờ). Nếu bật cập nhật chính sách tự động (`WORKFLOW_POLICY_MIGRATION_ENABLED=true`), ứng dụng sẽ tự động rà soát tài nguyên tương ứng khi khởi động. Không yêu cầu cố vấn mở lịch hoặc đăng ký đủ hai khung giờ mỗi tuần nữa.

@@ -1,6 +1,6 @@
-# QAUTE – Hệ thống hỗ trợ và tư vấn sinh viên
+﻿# QAUTE – Hệ thống hỗ trợ và tư vấn sinh viên
 
-Spring Boot 4.1.1 / Java 25 / JSP-JSTL / SiteMesh / SQL Server. Chức năng: diễn đàn, FAQ/cẩm nang, lịch hẹn, chat STOMP, hồ sơ, OTP email, quản trị và báo cáo.
+Spring Boot 4.1.1 / Java 25 / JSP-JSTL / SiteMesh / SQL Server. Chức năng: diễn đàn hỏi đáp, FAQ/cẩm nang học tập, đặt lịch tư vấn, chat trực tuyến STOMP WebSocket, hồ sơ sinh viên/cố vấn, xác thực OTP email, quản trị hệ thống và báo cáo thống kê.
 
 ## Chạy trên máy khác
 
@@ -17,8 +17,8 @@ Cần JDK **25** và SQL Server 2022 (hoặc Azure SQL Database) kết nối TCP
 
 ### 2. Tạo database local
 
-1. Trong SSMS, mở và chạy file `database/databaseQAUTE.sql` để khởi tạo cơ sở dữ liệu `QAUTE` và toàn bộ cấu trúc 25 bảng nghiệp vụ (DDL).
-2. Sau khi tạo cấu trúc xong, mở và chạy file `database/datasheetAI.sql` để nạp toàn bộ 2.865 bản ghi dữ liệu thực tế (DML).
+1. Trong SSMS, mở và chạy file `database/databaseQAUTE.sql` để khởi tạo cơ sở dữ liệu `QAUTE` và toàn bộ cấu trúc 25 bảng nghiệp vụ, ràng buộc khóa chính/ngoại, CHECK, UNIQUE, Index và Views (DDL).
+2. Sau khi tạo cấu trúc xong, mở và chạy file `database/datasheetAI.sql` để nạp toàn bộ 2.865 bản ghi dữ liệu thực tế (DML). Tệp đã tích hợp sẵn cơ chế vô hiệu hóa kiểm tra ràng buộc tạm thời (`NOCHECK CONSTRAINT ALL`) để nạp an toàn 100%.
 
 Tạo SQL login/user riêng, bật SQL Server Authentication và TCP/IP. Ví dụ phát triển, thay mật khẩu trước khi chạy:
 
@@ -35,7 +35,7 @@ GO
 
 Lần khởi động đầu còn cập nhật cấu trúc diễn đàn và chính sách trong `src/main/resources/db`; tài khoản chạy bước này cần quyền DDL phù hợp (ví dụ `db_ddladmin` cho database phát triển). Sau khi cập nhật xong có thể đặt `app.workflow.policy-migration.enabled=false`, thu hồi quyền DDL và dùng tài khoản vận hành chỉ có quyền đọc/ghi. Không dùng `sa` cho ứng dụng công khai.
 
-Hai tệp SQL trên đã được trích xuất trực tiếp từ cơ sở dữ liệu Azure SQL thực tế của hệ thống QAUTE.
+Hai tệp SQL trong thư mục `database/` đã được trích xuất trực tiếp từ cơ sở dữ liệu Azure SQL thực tế của hệ thống QAUTE, đảm bảo tính đồng nhất 100%.
 
 ### 3. Cấu hình riêng
 
@@ -55,7 +55,7 @@ $rng.Dispose()
 
 SMTP cần Gmail/App Password riêng để đăng ký và gửi OTP. Upload cần `cloudinary.url=cloudinary://API_KEY:API_SECRET@CLOUD_NAME`. Chưa cấu hình hai dịch vụ này vẫn có thể chạy/đăng nhập tài khoản mẫu local, nhưng OTP và upload chưa hoạt động.
 
-File mẫu bật profile `dev` để tạo tài khoản mẫu trên database phát triển. **Không bật dev khi dùng database/website công khai.** File local được Git ignore và không đóng gói trong WAR. `.env.example` mô tả biến môi trường, Spring Boot không tự đọc `.env`; khai báo biến qua terminal/IDE/hosting hoặc dùng file local ở trên. Không commit mật khẩu/API key thật.
+File mẫu bật profile `dev` để tạo tài khoản mẫu trên database phát triển nếu CSDL chưa có dữ liệu. **Không bật dev khi dùng database/website công khai.** File local được Git ignore và không đóng gói trong WAR. `.env.example` mô tả biến môi trường, Spring Boot không tự đọc `.env`; khai báo biến qua terminal/IDE/hosting hoặc dùng file local ở trên. Không commit mật khẩu/API key thật.
 
 ### 4. Build và chạy
 
@@ -68,40 +68,41 @@ Mở `http://localhost:8080`. Chạy từ thư mục repo để đọc file cấ
 
 Trong STS/IntelliJ: import Maven project, chọn JDK 25 và chạy `TuVanSinhVienApplication`. Chỉ chạy một instance trên 8080 hoặc đổi biến `PORT`. Sau khi pull, build/chạy lại và Ctrl+F5 để tải JS/CSS mới.
 
-### 5. Tài khoản mẫu local
+### 5. Tài khoản thử nghiệm
 
-Profile `dev` trên database chưa có tài khoản tạo:
+Khi đã nạp dữ liệu từ `datasheetAI.sql` (hoặc khởi chạy lần đầu với profile `dev`), hệ thống có sẵn các tài khoản đăng nhập sau:
 
-| Vai trò | Tên đăng nhập | Mật khẩu |
-| --- | --- | --- |
-| Admin | `admin` | `Admin@123` |
-| Sinh viên | `sinhvien1`, `sinhvien2` | `Sinhvien@123` |
-| Cố vấn | `covan.cntt`, `covan.daotao`, `covan.ctsv` | `Covan@123` |
+| Vai trò | Tên đăng nhập | Mật khẩu | Ghi chú |
+| --- | --- | --- | --- |
+| Admin | `admin` | `Admin@123` | Quản trị viên hệ thống |
+| Sinh viên | `sinhvien1`, `sinhvien2` | `Sinhvien@123` | Sinh viên tiêu chuẩn |
+| Cố vấn | `covan.cntt`, `covan.daotao`, `covan.ctsv` | `Covan@123` | Cố vấn các khoa / phòng ban |
 
 Các khoa bổ sung có tài khoản `covan.<mã khoa>` do `FacultyAdvisorSeeder` tạo. Seed không reset mật khẩu tài khoản cũ. Đăng ký mới cần email gửi OTP hoạt động.
 
 ## Luồng sử dụng
 
-- Khách đọc diễn đàn, FAQ/cẩm nang và danh sách cố vấn.
-- Sinh viên đăng ký/OTP, đăng câu hỏi, theo dõi phản hồi, đặt lịch, chat và đánh giá. Username/email/MSSV được kiểm tra trùng; form giữ thông tin không nhạy cảm khi lỗi.
-- Cố vấn tiếp nhận/trả lời theo quyền, duyệt lịch, sửa phòng/link trước khi kết thúc buổi hẹn, ghi kết luận và chat.
-- Admin quản lý tài khoản/danh mục/nội dung, điều phối câu hỏi, ẩn/khôi phục câu hỏi trên diễn đàn, xem báo cáo và thử lại email thông báo lỗi. Form quản lý không tự tạo thêm tài khoản Admin.
+- **Khách vãng lai**: Xem danh sách bài viết hướng dẫn, tra cứu FAQ, xem diễn đàn công khai và thông tin danh sách cố vấn khoa/phòng ban.
+- **Sinh viên**: Đăng ký tài khoản kèm xác thực OTP email, đặt câu hỏi tư vấn, theo dõi tiến trình phản hồi, chủ động đề xuất lịch hẹn tư vấn, chat thời gian thực và đánh giá mức độ hài lòng. Thông tin tài khoản được xác thực chống trùng lặp; form giữ lại thông tin an toàn khi có lỗi nhập liệu.
+- **Cố vấn học tập**: Tiếp nhận và trả lời câu hỏi thuộc chuyên môn đơn vị, duyệt/từ chối lịch hẹn của sinh viên. Khi duyệt lịch, cố vấn cung cấp số phòng hoặc liên kết Google Meet; hệ thống tự động gửi email thông báo xác nhận lịch hẹn (kèm địa điểm/link) đến sinh viên. Cố vấn ghi biên bản tư vấn và chat trực tiếp với sinh viên.
+- **Phân quyền cố vấn chuyển đổi**: Trường hợp Admin chuyển đổi vai trò của tài khoản Sinh viên thành Cố vấn, cố vấn mới này được phân quyền chuyên trách chat và giải đáp câu hỏi trên diễn đàn, không có chức năng duyệt lịch hẹn tư vấn.
+- **Quản trị viên (Admin)**: Quản lý người dùng, phân quyền vai trò, quản lý danh mục (khoa/đơn vị, lĩnh vực tư vấn), kiểm duyệt nội dung (bài viết, FAQ, ẩn/khôi phục câu hỏi diễn đàn), điều phối câu hỏi chưa xử lý, theo dõi hàng đợi email thông báo và xem báo cáo thống kê.
 
-Câu hỏi: Chờ tiếp nhận → Đang xử lý → Đã phản hồi → Đã đóng. Hỏi thêm có thể đưa về Đang xử lý. FAQ/cẩm nang là nội dung biên tập riêng. Có phân trang và lượt xem theo truy cập; hiển thị trong danh sách không tự tăng lượt xem.
+**Quy trình xử lý câu hỏi**: Chờ tiếp nhận → Đang xử lý → Đã phản hồi → Đã đóng. Sinh viên có thể đặt câu hỏi làm rõ để đưa phiếu về trạng thái Đang xử lý. FAQ/cẩm nang là nội dung biên tập riêng, có phân trang và ghi nhận lượt xem chính xác.
 
-Lịch gợi ý trong 7 ngày tới, thứ Hai–thứ Sáu 08:00–12:00/13:00–17:00, loại ngày nghỉ và giờ còn dưới 15 phút. Tối đa 2 lịch chờ; cố vấn duyệt/từ chối. Cả lịch trực tuyến và trực tiếp đều được hủy trước giờ bắt đầu ít nhất 3 giờ. Lịch cập nhật WebSocket với truy vấn nền dự phòng, tránh thay form khi đang chỉnh sửa.
+**Quy định lịch hẹn**: Sinh viên đề xuất khung giờ trong 7 ngày tới theo giờ làm việc (thứ Hai – thứ Sáu 08:00–12:00 và 13:00–17:00, trừ ngày nghỉ). Tối đa 2 lịch chờ duyệt cùng thời điểm. Cả hai bên đều có quyền hủy lịch trước giờ bắt đầu ít nhất 3 giờ. Trạng thái lịch được cập nhật realtime qua WebSocket STOMP.
 
-Chat lưu SQL Server trước khi phát qua STOMP, có kiểm tra quyền và đồng bộ lịch sử. Upload JPG/PNG/PDF tối đa 10 MiB theo quyền đối tượng. Mật khẩu 8–72 ký tự có chữ ASCII và số, không vượt 72 byte UTF-8. Quên mật khẩu sử dụng OTP email.
+**Tin nhắn & Bảo mật**: Chat lưu trữ SQL Server trước khi truyền phát qua STOMP WebSocket, có kiểm tra quyền và đồng bộ lịch sử. Cho phép gửi tệp đính kèm (JPG, PNG, PDF tối đa 10 MB). Mật khẩu yêu cầu 8–72 ký tự có chữ và số. Đổi mật khẩu hoặc đăng xuất sẽ thu hồi phiên token JWT tương ứng.
 
 ## Kiểm thử
 
-Nhóm test không cần database/email bên ngoài:
+Nhóm kiểm thử ngoại tuyến (không cần database hoặc email bên ngoài):
 
 ```powershell
-.\mvnw.cmd "-Dtest=AttachmentDeliveryTests,BackendReviewRegressionTest,ForumDashboardTests,ForumModerationTests,ForumQuestionControllerTests,MeetingLocationRulesTests,PdfUnicodeTest,RegistrationFormTests,SecurityServicesTest,WorkflowRulesTest,EmailDeliveryTests,ReviewFixTests" test
+.\mvnw.cmd "-Dtest=AttachmentDeliveryTests,BackendReviewRegressionTest,ForumDashboardTests,ForumModerationTests,ForumQuestionControllerTests,MeetingLocationRulesTests,PdfUnicodeTest,RegistrationFormTests,SecurityServicesTest,WorkflowRulesTest,ReviewFixTests,StudentProposalControllerTests" test
 ```
 
-`./mvnw test` còn chạy integration test cần database đã tạo schema/tài khoản mẫu. Chỉ dùng database thử riêng, **không chạy toàn bộ test vào database chung/production**. `ReviewDatabaseTests` là opt-in dành cho database rỗng riêng, nhận cấu hình qua `-Dreview.isolated.properties=<file>`.
+Lệnh `./mvnw test` đầy đủ sẽ chạy thêm integration test cần database đã tạo schema/tài khoản mẫu. Chỉ dùng database thử riêng, **không chạy toàn bộ test vào database chung/production**. `ReviewDatabaseTests` là opt-in dành cho database rỗng riêng, nhận cấu hình qua `-Dreview.isolated.properties=<file>`.
 
 ## Triển khai và chia sẻ
 
@@ -111,4 +112,4 @@ Pull Git lấy code/script, **không tự lấy dữ liệu người dùng từ 
 
 Giao diện dùng session/CSRF; API JWT cấp token tại `POST /api/auth/token`. Đổi/reset mật khẩu hoặc đăng xuất thu hồi token; token hết hạn cần đăng nhập lại.
 
-Repo không chứa target, file IDE, cấu hình bí mật, backup/dump dữ liệu hoặc tài liệu thao tác tạm. SQL schema/migration, font PDF, ảnh, JSP, JS/CSS, test và Maven Wrapper được giữ để máy khác build/chạy đầy đủ.
+Repo không chứa target, file IDE, cấu hình bí mật, backup/dump dữ liệu hoặc tài liệu thao tác tạm. Bộ script CSDL chuẩn (`database/databaseQAUTE.sql` và `database/datasheetAI.sql`), font PDF, ảnh giao diện, JSP, JS/CSS, test và Maven Wrapper được lưu giữ để các thành viên hoặc người chấm bài build/chạy đầy đủ.
