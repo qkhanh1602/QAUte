@@ -33,7 +33,14 @@
                     </c:if><c:if test="${not (cv.taiKhoan.avatarUrl != null and not empty cv.taiKhoan.avatarUrl)}"><span><c:out value="${cv.taiKhoan.avatarInitial}" /></span>
                 </c:if></div>
                 <h5 class="fw-bold mb-1 text-dark"><c:out value="${cv.taiKhoan.hoTen}" /></h5>
-                <div class="text-primary small fw-semibold mb-1"><c:out value="${cv.hocHamHocVi += ' - ' += cv.chucVu}" /></div>
+                <c:choose>
+                    <c:when test="${not empty cv.hocHamHocVi}">
+                        <div class="text-primary small fw-semibold mb-1"><c:out value="${cv.hocHamHocVi}" /> - <c:out value="${cv.chucVu}" /></div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="text-primary small fw-semibold mb-1"><c:out value="${cv.chucVu}" /></div>
+                    </c:otherwise>
+                </c:choose>
                 <div class="text-muted small mb-3"><i class="bi bi-building me-1"></i><span><c:out value="${cv.donVi.tenDonVi}" /></span></div>
 
                 <div class="bg-light p-3 rounded-3 text-start small mb-3 flex-grow-1">
@@ -45,9 +52,18 @@
                 </div>
 
                 <div class="pt-2 border-top">
-                    <a class="btn btn-qaute-primary w-100 py-2 rounded-pill fw-semibold" href="${pageContext.request.contextPath}/student/appointments?maCV=${cv.maCV}">
-                        <i class="bi bi-calendar-check me-1"></i>Đặt lịch hẹn tư vấn
-                    </a>
+                    <c:choose>
+                        <c:when test="${cv.chucVu eq 'Cố vấn sinh viên'}">
+                            <a class="btn btn-outline-primary w-100 py-2 rounded-pill fw-semibold" href="${pageContext.request.contextPath}/student/chat?maDonVi=${cv.donVi.maDonVi}">
+                                <i class="bi bi-chat-dots me-1"></i>Chat tư vấn trực tuyến
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a class="btn btn-qaute-primary w-100 py-2 rounded-pill fw-semibold" href="${pageContext.request.contextPath}/student/appointments?maCV=${cv.maCV}">
+                                <i class="bi bi-calendar-check me-1"></i>Đặt lịch hẹn tư vấn
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </div>

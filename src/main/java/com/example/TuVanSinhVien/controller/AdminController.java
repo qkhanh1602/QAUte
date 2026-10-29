@@ -37,6 +37,8 @@ import java.time.LocalDate;
 public class AdminController {
     @org.springframework.beans.factory.annotation.Autowired
     private com.example.TuVanSinhVien.service.ForumService forumService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.example.TuVanSinhVien.repository.SinhVienRepository sinhVienRepo;
     private final ReportService reportService;
     private final TaiKhoanRepository taiKhoanRepo;
     private final CatalogService catalogService;
@@ -171,8 +173,11 @@ public class AdminController {
         model.addAttribute("pageData", result);
         model.addAttribute("paginationPath", "/admin/users");
         Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
-                .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity()));
+                .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
         model.addAttribute("advisorProfiles", advisorProfiles);
+        Map<Integer, com.example.TuVanSinhVien.entity.SinhVien> studentProfiles = (sinhVienRepo != null ? sinhVienRepo.findAll() : java.util.List.<com.example.TuVanSinhVien.entity.SinhVien>of()).stream()
+                .collect(Collectors.toMap(s -> s.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
+        model.addAttribute("studentProfiles", studentProfiles);
         model.addAttribute("units", catalogService.getAllActiveDonVi());
         model.addAttribute("selectedRole", filter);
         model.addAttribute("kw", keyword);

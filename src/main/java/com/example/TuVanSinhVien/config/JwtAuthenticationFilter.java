@@ -1,6 +1,7 @@
 package com.example.TuVanSinhVien.config;
 
 import com.example.TuVanSinhVien.entity.TaiKhoan;
+import com.example.TuVanSinhVien.repository.NguoiTuVanRepository;
 import com.example.TuVanSinhVien.repository.SinhVienRepository;
 import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.service.JwtService;
@@ -21,7 +22,9 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TaiKhoanRepository accountRepository;
-    private final SinhVienRepository studentRepository;
+    private SinhVienRepository studentRepository;
+    @Autowired(required = false)
+    private NguoiTuVanRepository advisorRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService, TaiKhoanRepository accountRepository) {
         this(jwtService, accountRepository, null);
@@ -71,7 +74,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
                 boolean alsoStudent = "CoVan".equals(account.getVaiTro()) && studentRepository != null
                         && studentRepository.findByTaiKhoan_MaTK(account.getMaTK()).isPresent();
-                CustomUserDetails principal = new CustomUserDetails(account, alsoStudent);
+                boolean alsoAdvisor = "SinhVien".equals(account.getVaiTro()) && advisorRepository != null
+                        && advisorRepository.findByTaiKhoan_MaTK(account.getMaTK()).filter(a -> Boolean.TRUE.equals(a.getNhanTuVan())).isPresent();
+                CustomUserDetails principal = new CustomUserDetails(account, alsoStudent, alsoAdvisor);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                 authentication.setDetails(claims.getExpiration().toInstant());

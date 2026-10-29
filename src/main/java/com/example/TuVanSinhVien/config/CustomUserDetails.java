@@ -12,14 +12,20 @@ import java.util.List;
 public class CustomUserDetails implements UserDetails {
     private final TaiKhoan taiKhoan;
     private final boolean alsoStudent;
+    private final boolean alsoAdvisor;
 
     public CustomUserDetails(TaiKhoan taiKhoan) {
-        this(taiKhoan, false);
+        this(taiKhoan, false, false);
     }
 
     public CustomUserDetails(TaiKhoan taiKhoan, boolean alsoStudent) {
+        this(taiKhoan, alsoStudent, false);
+    }
+
+    public CustomUserDetails(TaiKhoan taiKhoan, boolean alsoStudent, boolean alsoAdvisor) {
         this.taiKhoan = taiKhoan;
         this.alsoStudent = alsoStudent;
+        this.alsoAdvisor = alsoAdvisor;
     }
 
     @Override
@@ -29,11 +35,18 @@ public class CustomUserDetails implements UserDetails {
         if ("CoVan".equals(taiKhoan.getVaiTro()) && alsoStudent) {
             authorities.add(new SimpleGrantedAuthority("ROLE_SinhVien"));
         }
+        if ("SinhVien".equals(taiKhoan.getVaiTro()) && alsoAdvisor) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_CoVan"));
+        }
         return authorities;
     }
 
     public boolean isAlsoStudent() {
         return alsoStudent;
+    }
+
+    public boolean isAlsoAdvisor() {
+        return alsoAdvisor;
     }
 
     @Override

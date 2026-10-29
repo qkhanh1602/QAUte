@@ -15,9 +15,21 @@ public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Integer> {
     Optional<TaiKhoan> findByEmail(String email);
     boolean existsByTenDangNhap(String tenDangNhap);
     boolean existsByEmail(String email);
-    org.springframework.data.domain.Page<TaiKhoan> findByVaiTro(String role, org.springframework.data.domain.Pageable pageable);
 
-    @Query("select t from TaiKhoan t where (:role is null or t.vaiTro = :role) and ("
+    @Query("select t from TaiKhoan t where ("
+            + "(:role is null) or "
+            + "(:role = 'Admin' and t.vaiTro = 'Admin') or "
+            + "(:role = 'CoVan' and (t.vaiTro = 'CoVan' or exists (select 1 from NguoiTuVan n where n.taiKhoan.maTK = t.maTK and n.nhanTuVan = true))) or "
+            + "(:role = 'SinhVien' and (t.vaiTro = 'SinhVien' or exists (select 1 from SinhVien s where s.taiKhoan.maTK = t.maTK)))"
+            + ")")
+    org.springframework.data.domain.Page<TaiKhoan> findByVaiTro(@Param("role") String role, org.springframework.data.domain.Pageable pageable);
+
+    @Query("select t from TaiKhoan t where ("
+            + "(:role is null) or "
+            + "(:role = 'Admin' and t.vaiTro = 'Admin') or "
+            + "(:role = 'CoVan' and (t.vaiTro = 'CoVan' or exists (select 1 from NguoiTuVan n where n.taiKhoan.maTK = t.maTK and n.nhanTuVan = true))) or "
+            + "(:role = 'SinhVien' and (t.vaiTro = 'SinhVien' or exists (select 1 from SinhVien s where s.taiKhoan.maTK = t.maTK)))"
+            + ") and ("
             + "lower(t.hoTen) like lower(concat('%', :kw, '%')) or "
             + "lower(t.tenDangNhap) like lower(concat('%', :kw, '%')) or "
             + "lower(t.email) like lower(concat('%', :kw, '%')) or "

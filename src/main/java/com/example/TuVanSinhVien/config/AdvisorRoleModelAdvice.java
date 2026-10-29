@@ -15,9 +15,10 @@ public class AdvisorRoleModelAdvice {
 
     @ModelAttribute("isStudentAdvisor")
     public boolean isStudentAdvisor(@AuthenticationPrincipal CustomUserDetails user) {
-        if (user == null || !"CoVan".equals(user.getVaiTro())) {
+        if (user == null) {
             return false;
         }
-        return sinhVienRepo.findByTaiKhoan_MaTK(user.getMaTK()).isPresent();
+        boolean hasAdvisorRole = user.getAuthorities().stream().anyMatch(a -> "ROLE_CoVan".equals(a.getAuthority()));
+        return hasAdvisorRole && sinhVienRepo.findByTaiKhoan_MaTK(user.getMaTK()).isPresent();
     }
 }

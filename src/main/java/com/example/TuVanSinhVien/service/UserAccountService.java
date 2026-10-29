@@ -220,7 +220,17 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
             }
             advisorRepo.save(advisor);
         }
-        if(advisor!=null && !"CoVan".equals(role)) { requireNoActiveWork(advisor); advisor.setNhanTuVan(false); advisorRepo.save(advisor); }
+        if(advisor != null && !"CoVan".equals(role)) {
+            requireNoActiveWork(advisor);
+            try {
+                advisorRepo.delete(advisor);
+                advisorRepo.flush();
+                advisor = null;
+            } catch (Exception ex) {
+                advisor.setNhanTuVan(false);
+                advisorRepo.save(advisor);
+            }
+        }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
         account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
         account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now(clock));

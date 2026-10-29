@@ -20,7 +20,7 @@ public interface NguoiTuVanRepository extends JpaRepository<NguoiTuVan, Integer>
     List<NguoiTuVan> findByNhanTuVanTrue();
 
     @Query("select n from NguoiTuVan n join fetch n.taiKhoan t join fetch n.donVi d "
-            + "where n.nhanTuVan=true and t.trangThai='HoatDong' and t.vaiTro='CoVan' and d.hoatDong=true "
+            + "where n.nhanTuVan=true and t.trangThai='HoatDong' and d.hoatDong=true "
             + "order by d.tenDonVi, t.hoTen")
     List<NguoiTuVan> findAvailableAdvisors();
 
