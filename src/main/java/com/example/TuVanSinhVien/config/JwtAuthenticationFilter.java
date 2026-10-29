@@ -21,15 +21,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TaiKhoanRepository accountRepository;
-    @Autowired(required = false)
-    private SinhVienRepository studentRepository;
+    private final SinhVienRepository studentRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService, TaiKhoanRepository accountRepository) {
-        this.jwtService = jwtService;
-        this.accountRepository = accountRepository;
+        this(jwtService, accountRepository, null);
     }
 
-    public JwtAuthenticationFilter(JwtService jwtService, TaiKhoanRepository accountRepository, SinhVienRepository studentRepository) {
+    @Autowired
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   TaiKhoanRepository accountRepository,
+                                   SinhVienRepository studentRepository) {
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
         this.studentRepository = studentRepository;
