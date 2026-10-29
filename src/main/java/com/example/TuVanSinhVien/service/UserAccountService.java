@@ -175,13 +175,41 @@ public class UserAccountService {
         if("SinhVien".equals(role) && studentRepo.findByTaiKhoan_MaTK(id).isEmpty()) throw new IllegalArgumentException("Cần hồ sơ sinh viên trước khi phân vai trò Sinh viên.");
         NguoiTuVan advisor=advisorRepo.findByTaiKhoan_MaTK(id).orElse(null);
         if("CoVan".equals(role)) {
-            if(advisor==null) throw new IllegalArgumentException("Cần tạo/duyệt hồ sơ cố vấn trước khi phân vai trò Cố vấn.");
-            if(unitId==null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
-            DonVi unit=unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại."));
+            if(unitId==null && advisor==null) {
+                var studentOpt = studentRepo.findByTaiKhoan_MaTK(id);
+                if (studentOpt.isPresent() && studentOpt.get().getKhoa() != null) {
+                    String studentKhoa = studentOpt.get().getKhoa().trim();
+                    unitId = unitRepo.findAll().stream()
+                        .filter(u -> Boolean.TRUE.equals(u.getHoatDong()) &&
+                            (u.getTenDonVi().equalsIgnoreCase(studentKhoa) || studentKhoa.toLowerCase().contains(u.getTenDonVi().toLowerCase()) || u.getTenDonVi().toLowerCase().contains(studentKhoa.toLowerCase())))
+                        .map(DonVi::getMaDonVi)
+                        .findFirst().orElse(null);
+                }
+            }
+            if(unitId==null && advisor==null) throw new IllegalArgumentException("Vui lòng chọn đơn vị phụ trách khi phân vai trò Cố vấn.");
+            DonVi unit = unitId != null ? unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại.")) : (advisor != null ? advisor.getDonVi() : null);
+            if(unit == null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
             if(!Boolean.TRUE.equals(unit.getHoatDong())) throw new IllegalArgumentException("Đơn vị đã ngưng hoạt động.");
-            // Reassignment of an advisor with active work must be handled through ticket/appointment workflows first.
-            if(!unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
-            advisor.setDonVi(unit); advisorRepo.save(advisor);
+            if(advisor==null) {
+                var studentOpt = studentRepo.findByTaiKhoan_MaTK(id);
+                String maCanBo = studentOpt.map(SinhVien::getMssv).filter(m -> !m.isBlank()).orElse("CB" + id);
+                if (advisorRepo.findByMaCanBo(maCanBo).isPresent()) {
+                    maCanBo = "CB" + id;
+                }
+                advisor = NguoiTuVan.builder()
+                    .taiKhoan(account)
+                    .donVi(unit)
+                    .maCanBo(maCanBo)
+                    .chucVu("Cố vấn sinh viên")
+                    .chuyenMon("Tư vấn học tập và giải đáp câu hỏi")
+                    .nhanTuVan(false)
+                    .hanNgachTiepNhan(20)
+                    .build();
+            } else {
+                if(advisor.getDonVi() != null && !unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
+                advisor.setDonVi(unit);
+            }
+            advisorRepo.save(advisor);
         }
         if(advisor!=null && !"CoVan".equals(role)) { requireNoActiveWork(advisor); advisor.setNhanTuVan(false); advisorRepo.save(advisor); }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
