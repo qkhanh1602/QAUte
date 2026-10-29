@@ -61,18 +61,45 @@ public class AdminController {
 
     @GetMapping("/reports/export")
     public ResponseEntity<byte[]> exportReport(@RequestParam(defaultValue = "xlsx") String format,
-                                               @RequestParam(required = false) LocalDate from,
-                                               @RequestParam(required = false) LocalDate to,
+                                               @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
+                                               @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
                                                @RequestParam(required = false) Integer unitId) {
         if (from != null && to != null && from.isAfter(to)) {
-            throw new IllegalArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+            throw new InvalidReportRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
         }
+        if (!"pdf".equalsIgnoreCase(format) && !"xlsx".equalsIgnoreCase(format))
+            throw new InvalidReportRequest("Vui lòng chọn định dạng Excel hoặc PDF.");
+        if (LocalDate.MAX.equals(to)) throw new InvalidReportRequest("Ngày kết thúc không hợp lệ.");
+        if (unitId != null && unitId <= 0) throw new InvalidReportRequest("Vui lòng chọn đơn vị hợp lệ.");
         boolean pdf = "pdf".equalsIgnoreCase(format);
         byte[] body = pdf ? reportExportService.exportPdf(from, to, unitId) : reportExportService.exportExcel(from, to, unitId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=QAUTE_BaoCao." + (pdf ? "pdf" : "xlsx"))
                 .contentType(MediaType.parseMediaType(pdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(body);
+    }
+
+    private static class InvalidReportRequest extends RuntimeException {
+        InvalidReportRequest(String message) { super(message); }
+    }
+
+    @ExceptionHandler(InvalidReportRequest.class)
+    public org.springframework.web.servlet.ModelAndView invalidReport(InvalidReportRequest exception) {
+        return badRequest(exception.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public org.springframework.web.servlet.ModelAndView invalidParameter() {
+        return badRequest("Thông tin lọc không hợp lệ. Vui lòng kiểm tra ngày và mã đơn vị.");
+    }
+
+    private org.springframework.web.servlet.ModelAndView badRequest(String message) {
+        var view = new org.springframework.web.servlet.ModelAndView("error");
+        view.setStatus(org.springframework.http.HttpStatus.BAD_REQUEST);
+        view.addObject("errorTitle", "Vui lòng kiểm tra thông tin");
+        view.addObject("errorMessage", message);
+        view.addObject("backLink", "/admin/dashboard");
+        return view;
     }
 
     @GetMapping("/tickets")
@@ -119,21 +146,36 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public String users(@RequestParam(required = false) String role, @RequestParam(defaultValue="0") int page, Model model) {
-        String filter=role!=null && java.util.Set.of("Admin","CoVan","SinhVien").contains(role)?role:null;
-        var pageable=org.springframework.data.domain.PageRequest.of(Math.max(0,page),20,org.springframework.data.domain.Sort.by("maTK").descending());
-        var result=filter==null?taiKhoanRepo.findAll(pageable):taiKhoanRepo.findByVaiTro(filter,pageable);
-        if(result.getTotalPages()>0 && page>=result.getTotalPages()) {
-            pageable=org.springframework.data.domain.PageRequest.of(result.getTotalPages()-1,20,org.springframework.data.domain.Sort.by("maTK").descending());
-            result=filter==null?taiKhoanRepo.findAll(pageable):taiKhoanRepo.findByVaiTro(filter,pageable);
+    public String users(@RequestParam(required = false) String role,
+                        @RequestParam(required = false) String kw,
+                        @RequestParam(defaultValue = "0") int page,
+                        Model model) {
+        String filter = role != null && java.util.Set.of("Admin", "CoVan", "SinhVien").contains(role) ? role : null;
+        String keyword = kw != null ? kw.trim() : "";
+        var pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), 20, org.springframework.data.domain.Sort.by("maTK").descending());
+        org.springframework.data.domain.Page<TaiKhoan> result;
+        if (!keyword.isEmpty()) {
+            result = taiKhoanRepo.searchUsers(filter, keyword, pageable);
+            if (result.getTotalPages() > 0 && page >= result.getTotalPages()) {
+                pageable = org.springframework.data.domain.PageRequest.of(result.getTotalPages() - 1, 20, org.springframework.data.domain.Sort.by("maTK").descending());
+                result = taiKhoanRepo.searchUsers(filter, keyword, pageable);
+            }
+        } else {
+            result = filter == null ? taiKhoanRepo.findAll(pageable) : taiKhoanRepo.findByVaiTro(filter, pageable);
+            if (result.getTotalPages() > 0 && page >= result.getTotalPages()) {
+                pageable = org.springframework.data.domain.PageRequest.of(result.getTotalPages() - 1, 20, org.springframework.data.domain.Sort.by("maTK").descending());
+                result = filter == null ? taiKhoanRepo.findAll(pageable) : taiKhoanRepo.findByVaiTro(filter, pageable);
+            }
         }
-        model.addAttribute("users",result.getContent()); model.addAttribute("pageData",result);
-        model.addAttribute("paginationPath","/admin/users");
+        model.addAttribute("users", result.getContent());
+        model.addAttribute("pageData", result);
+        model.addAttribute("paginationPath", "/admin/users");
         Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
                 .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity()));
         model.addAttribute("advisorProfiles", advisorProfiles);
         model.addAttribute("units", catalogService.getAllActiveDonVi());
         model.addAttribute("selectedRole", filter);
+        model.addAttribute("kw", keyword);
         return "admin/users";
     }
 

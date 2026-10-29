@@ -36,12 +36,27 @@
         <i class="bi bi-exclamation-triangle-fill me-1"></i><span><c:out value="${errorMessage}" /></span>
     </div>
 
-    </c:if><!-- Role Filter -->
-    <div class="d-flex gap-2 mb-4">
-        <a href="${pageContext.request.contextPath}/admin/users" class="${selectedRole == null ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Tất cả</a>
-        <a href="${pageContext.request.contextPath}/admin/users?role=SinhVien" class="${selectedRole == 'SinhVien' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Sinh viên</a>
-        <a href="${pageContext.request.contextPath}/admin/users?role=CoVan" class="${selectedRole == 'CoVan' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Cố vấn học tập</a>
-        <a href="${pageContext.request.contextPath}/admin/users?role=Admin" class="${selectedRole == 'Admin' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Quản trị viên</a>
+    </c:if><!-- Role Filter & Search -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="${pageContext.request.contextPath}/admin/users<c:if test='${not empty kw}'>?kw=${kw}</c:if>" class="${selectedRole == null ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Tất cả</a>
+            <a href="${pageContext.request.contextPath}/admin/users?role=SinhVien<c:if test='${not empty kw}'>&kw=${kw}</c:if>" class="${selectedRole == 'SinhVien' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Sinh viên</a>
+            <a href="${pageContext.request.contextPath}/admin/users?role=CoVan<c:if test='${not empty kw}'>&kw=${kw}</c:if>" class="${selectedRole == 'CoVan' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Cố vấn học tập</a>
+            <a href="${pageContext.request.contextPath}/admin/users?role=Admin<c:if test='${not empty kw}'>&kw=${kw}</c:if>" class="${selectedRole == 'Admin' ? 'btn btn-primary btn-sm rounded-pill px-3' : 'btn btn-outline-secondary btn-sm rounded-pill px-3'}">Quản trị viên</a>
+        </div>
+        <form method="get" action="${pageContext.request.contextPath}/admin/users" class="d-flex gap-2" style="max-width: 420px; width: 100%;">
+            <c:if test="${not empty selectedRole}">
+                <input type="hidden" name="role" value="${selectedRole}" />
+            </c:if>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="kw" value="<c:out value='${kw}'/>" class="form-control border-start-0 ps-0" placeholder="Tìm tên, username, email, SĐT..." />
+                <c:if test="${not empty kw}">
+                    <a href="${pageContext.request.contextPath}/admin/users<c:if test='${not empty selectedRole}'>?role=${selectedRole}</c:if>" class="btn btn-outline-secondary" title="Xóa tìm kiếm"><i class="bi bi-x"></i></a>
+                </c:if>
+                <button type="submit" class="btn btn-primary px-3">Tìm kiếm</button>
+            </div>
+        </form>
     </div>
 
     <!-- Users Table -->
@@ -119,7 +134,11 @@
                         <sec:csrfInput /><input name="fullName" class="form-control" value="<c:out value='${u.hoTen}'/>" maxlength="100" required>
                         <input type="email" name="email" class="form-control" value="<c:out value='${u.email}'/>" maxlength="254" required>
                         <input name="phone" class="form-control" value="<c:out value='${u.soDienThoai}'/>">
-                        <select name="role" class="form-select"><option value="${u.vaiTro}"><c:out value="${u.vaiTro}" /></option><option value="SinhVien">Sinh viên</option><option value="CoVan">Cố vấn</option><option value="Admin">Admin</option></select>
+                        <select name="role" class="form-select">
+                            <c:if test="${u.vaiTro == 'Admin'}"><option value="Admin" selected>Admin</option></c:if>
+                            <option value="SinhVien" ${u.vaiTro == 'SinhVien' ? 'selected' : ''}>Sinh viên</option>
+                            <option value="CoVan" ${u.vaiTro == 'CoVan' ? 'selected' : ''}>Cố vấn</option>
+                        </select>
                         <select name="unitId" class="form-select"><option value="">Đơn vị cố vấn</option><c:forEach var="unit" items="${units}"><option value="${unit.maDonVi}" ${advisorProfiles[u.maTK].donVi.maDonVi == unit.maDonVi ? 'selected' : ''}><c:out value="${unit.tenDonVi}" /></option></c:forEach></select>
                         <button class="btn btn-sm btn-primary">Lưu thay đổi</button></form></details>
                         </td>

@@ -29,7 +29,10 @@ public class UserAccountService {
     private final NguoiTuVanRepository advisorRepo;
     private final DonViRepository unitRepo;
     private final com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo;
-    private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo;
+    
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
+private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo;
 
     public UserAccountService(TaiKhoanRepository accountRepo, SinhVienRepository studentRepo, PasswordEncoder passwordEncoder,
                               NguoiTuVanRepository advisorRepo, DonViRepository unitRepo, com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo, com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo) {
@@ -173,6 +176,10 @@ public class UserAccountService {
         if("Admin".equals(account.getVaiTro()) && !"Admin".equals(role) && accountRepo.findByVaiTro("Admin").stream().filter(a -> "HoatDong".equals(a.getTrangThai())).count()<=1)
             throw new IllegalStateException("Phải giữ ít nhất một quản trị viên hoạt động.");
         if("SinhVien".equals(role) && studentRepo.findByTaiKhoan_MaTK(id).isEmpty()) throw new IllegalArgumentException("Cần hồ sơ sinh viên trước khi phân vai trò Sinh viên.");
+        boolean wasStudent = "SinhVien".equals(account.getVaiTro());
+        boolean isNewAdvisor = "CoVan".equals(role);
+        DonVi assignedUnit = null;
+
         NguoiTuVan advisor=advisorRepo.findByTaiKhoan_MaTK(id).orElse(null);
         if("CoVan".equals(role)) {
             if(unitId==null && advisor==null) {
@@ -190,6 +197,7 @@ public class UserAccountService {
             DonVi unit = unitId != null ? unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại.")) : (advisor != null ? advisor.getDonVi() : null);
             if(unit == null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
             if(!Boolean.TRUE.equals(unit.getHoatDong())) throw new IllegalArgumentException("Đơn vị đã ngưng hoạt động.");
+            assignedUnit = unit;
             if(advisor==null) {
                 var studentOpt = studentRepo.findByTaiKhoan_MaTK(id);
                 String maCanBo = studentOpt.map(SinhVien::getMssv).filter(m -> !m.isBlank()).orElse("CB" + id);
@@ -202,12 +210,13 @@ public class UserAccountService {
                     .maCanBo(maCanBo)
                     .chucVu("Cố vấn sinh viên")
                     .chuyenMon("Tư vấn học tập và giải đáp câu hỏi")
-                    .nhanTuVan(false)
+                    .nhanTuVan(true)
                     .hanNgachTiepNhan(20)
                     .build();
             } else {
                 if(advisor.getDonVi() != null && !unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
                 advisor.setDonVi(unit);
+                advisor.setNhanTuVan(true);
             }
             advisorRepo.save(advisor);
         }
@@ -216,6 +225,21 @@ public class UserAccountService {
         account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
         account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now(clock));
         accountRepo.save(account);
+
+        if (emailService != null && isNewAdvisor && wasStudent) {
+            String unitName = assignedUnit != null ? assignedUnit.getTenDonVi() : "Đơn vị tư vấn";
+            emailService.sendAsyncNotification(
+                account.getEmail(),
+                "[QAUTE] Thông báo bổ nhiệm vai trò Cố vấn học tập",
+                account.getHoTen(),
+                "Bổ nhiệm vai trò Cố vấn học tập",
+                "Xin chúc mừng bạn! Bạn đã được Ban Quản trị phân công làm <strong>Cố vấn học tập</strong> phụ trách <strong>" + unitName + "</strong>.<br><br>"
+                    + "Tài khoản của bạn đã được kích hoạt chức năng cố vấn. Bạn có thể tham gia trả lời câu hỏi và chat tư vấn cho sinh viên tại <strong>Khu vực Cố vấn</strong>.<br>"
+                    + "Đồng thời, bạn <strong>vẫn giữ nguyên đầy đủ quyền lợi sinh viên</strong> và có thể tiếp tục sử dụng các chức năng hỏi đáp, tra cứu của sinh viên như bình thường.",
+                "/advisor/dashboard",
+                "Truy cập Khu vực Cố vấn"
+            );
+        }
     }
 
     @org.springframework.beans.factory.annotation.Autowired

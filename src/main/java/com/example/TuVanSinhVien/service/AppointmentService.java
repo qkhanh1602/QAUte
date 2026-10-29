@@ -135,7 +135,7 @@ public class AppointmentService {
                 String body = "Sinh viên <strong>" + svName + mssv + "</strong> đã gửi yêu cầu đặt lịch hẹn với bạn:<br><br>"
                         + "<strong>Chủ đề:</strong> " + chuDe + "<br>"
                         + "<strong>Thời gian đề xuất:</strong> " + timeStr + "<br>"
-                        + "<strong>Hình thức:</strong> " + ("TrucTuyen".equals(slot.getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại trường)") + "<br>"
+                        + "<strong>Hình thức:</strong> " + ("TrucTuyen".equals(slot.getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại phòng tư vấn)") + "<br>"
                         + (noiDungHen != null && !noiDungHen.isBlank() ? "<strong>Nội dung:</strong> " + noiDungHen.trim() + "<br>" : "")
                         + "<br><em>Vui lòng đăng nhập hệ thống để duyệt và cung cấp link họp / phòng tư vấn trước hạn duyệt.</em>";
                 emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/appointments", "Duyệt lịch hẹn");
@@ -413,7 +413,7 @@ public class AppointmentService {
 
         String advisorName = (app.getNguoiTuVan() != null && app.getNguoiTuVan().getTaiKhoan() != null)
                 ? app.getNguoiTuVan().getTaiKhoan().getHoTen() : "Cố vấn học tập";
-        String hinhThucLabel = "TrucTuyen".equals(app.getKhungGio().getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại trường)";
+        String hinhThucLabel = "TrucTuyen".equals(app.getKhungGio().getHinhThuc()) ? "Trực tuyến (Google Meet)" : "Trực tiếp (Tại phòng tư vấn)";
 
         java.time.format.DateTimeFormatter timeFmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
         java.time.format.DateTimeFormatter dateFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");

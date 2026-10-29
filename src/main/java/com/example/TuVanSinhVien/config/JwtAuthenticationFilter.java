@@ -1,6 +1,7 @@
 package com.example.TuVanSinhVien.config;
 
 import com.example.TuVanSinhVien.entity.TaiKhoan;
+import com.example.TuVanSinhVien.repository.SinhVienRepository;
 import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -8,6 +9,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,10 +21,18 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TaiKhoanRepository accountRepository;
+    @Autowired(required = false)
+    private SinhVienRepository studentRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService, TaiKhoanRepository accountRepository) {
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
+    }
+
+    public JwtAuthenticationFilter(JwtService jwtService, TaiKhoanRepository accountRepository, SinhVienRepository studentRepository) {
+        this.jwtService = jwtService;
+        this.accountRepository = accountRepository;
+        this.studentRepository = studentRepository;
     }
 
     @Override
@@ -58,7 +68,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         || !java.util.Objects.equals(claims.get("role", String.class), account.getVaiTro())) {
                     throw new SecurityException();
                 }
-                CustomUserDetails principal = new CustomUserDetails(account);
+                boolean alsoStudent = "CoVan".equals(account.getVaiTro()) && studentRepository != null
+                        && studentRepository.findByTaiKhoan_MaTK(account.getMaTK()).isPresent();
+                CustomUserDetails principal = new CustomUserDetails(account, alsoStudent);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                 authentication.setDetails(claims.getExpiration().toInstant());

@@ -17,9 +17,16 @@ public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Integer> {
     boolean existsByEmail(String email);
     org.springframework.data.domain.Page<TaiKhoan> findByVaiTro(String role, org.springframework.data.domain.Pageable pageable);
 
+    @Query("select t from TaiKhoan t where (:role is null or t.vaiTro = :role) and ("
+            + "lower(t.hoTen) like lower(concat('%', :kw, '%')) or "
+            + "lower(t.tenDangNhap) like lower(concat('%', :kw, '%')) or "
+            + "lower(t.email) like lower(concat('%', :kw, '%')) or "
+            + "(t.soDienThoai is not null and t.soDienThoai like concat('%', :kw, '%')))")
+    org.springframework.data.domain.Page<TaiKhoan> searchUsers(@Param("role") String role, @Param("kw") String kw, org.springframework.data.domain.Pageable pageable);
+
     List<TaiKhoan> findByVaiTro(String vaiTro);
     long countByVaiTro(String vaiTro);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @Query("select e from TaiKhoan e where e."+"maTK = :id")
+    @Query("select e from TaiKhoan e where e.maTK = :id")
     java.util.Optional<TaiKhoan> findLockedById(@Param("id") Integer id);
 }

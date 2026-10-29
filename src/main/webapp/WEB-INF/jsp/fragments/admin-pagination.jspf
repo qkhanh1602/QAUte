@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <c:if test="${not empty pageData}">
 <nav aria-label="Phân trang" class="container d-flex justify-content-center align-items-center gap-3 my-4">
-  <c:if test="${pageData.hasPrevious()}"><c:url var="prevPage" value="${paginationPath}"><c:param name="page" value="${pageData.number-1}"/><c:if test="${not empty selectedRole}"><c:param name="role" value="${selectedRole}"/></c:if></c:url><a class="btn btn-outline-primary" href="<c:out value='${prevPage}'/>">Trang trước</a></c:if>
+  <c:if test="${pageData.hasPrevious()}"><c:url var="prevPage" value="${paginationPath}"><c:param name="page" value="${pageData.number-1}"/><c:if test="${not empty selectedRole}"><c:param name="role" value="${selectedRole}"/></c:if><c:if test="${not empty kw}"><c:param name="kw" value="${kw}"/></c:if></c:url><a class="btn btn-outline-primary" href="<c:out value='${prevPage}'/>">Trang trước</a></c:if>
   <span>Trang ${pageData.totalPages == 0 ? 0 : pageData.number+1} / ${pageData.totalPages} · ${pageData.totalElements} bản ghi</span>
-  <c:if test="${pageData.hasNext()}"><c:url var="nextPage" value="${paginationPath}"><c:param name="page" value="${pageData.number+1}"/><c:if test="${not empty selectedRole}"><c:param name="role" value="${selectedRole}"/></c:if></c:url><a class="btn btn-outline-primary" href="<c:out value='${nextPage}'/>">Trang sau</a></c:if>
+  <c:if test="${pageData.hasNext()}"><c:url var="nextPage" value="${paginationPath}"><c:param name="page" value="${pageData.number+1}"/><c:if test="${not empty selectedRole}"><c:param name="role" value="${selectedRole}"/></c:if><c:if test="${not empty kw}"><c:param name="kw" value="${kw}"/></c:if></c:url><a class="btn btn-outline-primary" href="<c:out value='${nextPage}'/>">Trang sau</a></c:if>
 </nav></c:if>
