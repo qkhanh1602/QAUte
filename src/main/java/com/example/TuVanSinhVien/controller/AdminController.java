@@ -175,7 +175,7 @@ public class AdminController {
         Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
                 .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
         model.addAttribute("advisorProfiles", advisorProfiles);
-        Map<Integer, com.example.TuVanSinhVien.entity.SinhVien> studentProfiles = (sinhVienRepo != null ? sinhVienRepo.findAll() : java.util.List.<com.example.TuVanSinhVien.entity.SinhVien>of()).stream()
+        Map<Integer, com.example.TuVanSinhVien.entity.SinhVien> studentProfiles = (sinhVienRepo != null ? sinhVienRepo.findAllWithAccount() : java.util.List.<com.example.TuVanSinhVien.entity.SinhVien>of()).stream()
                 .collect(Collectors.toMap(s -> s.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
         model.addAttribute("studentProfiles", studentProfiles);
         model.addAttribute("units", catalogService.getAllActiveDonVi());

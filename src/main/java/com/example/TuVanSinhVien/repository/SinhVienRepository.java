@@ -13,5 +13,8 @@ public interface SinhVienRepository extends JpaRepository<SinhVien, Integer> {
     Optional<SinhVien> findByTaiKhoan(TaiKhoan taiKhoan);
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "taiKhoan")
     Optional<SinhVien> findByTaiKhoan_MaTK(Integer maTK);
+    @org.springframework.data.jpa.repository.Query("select sv from SinhVien sv join fetch sv.taiKhoan")
+    java.util.List<SinhVien> findAllWithAccount();
+
     boolean existsByMssv(String mssv);
 }

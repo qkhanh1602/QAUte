@@ -96,7 +96,7 @@
                             <small class="text-muted"><c:out value="${u.soDienThoai != null ? u.soDienThoai : '-'}" /></small>
                         </td>
                         <td>
-                            <c:set var="hasStudentRole" value="${st != null}" />
+                            <c:set var="hasStudentRole" value="${st != null or u.vaiTro == 'SinhVien'}" />
                             <c:set var="hasAdvisorRole" value="${advisor != null and (u.vaiTro == 'CoVan' or advisor.nhanTuVan)}" />
                             <c:choose>
                                 <c:when test="${u.vaiTro == 'Admin'}">
