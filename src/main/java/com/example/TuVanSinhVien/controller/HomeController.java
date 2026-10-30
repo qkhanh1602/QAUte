@@ -23,7 +23,6 @@ public class HomeController {
     private final AttachmentService attachmentService;
 
     @GetMapping("/")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String index(@RequestParam(required = false) String logout, Model model) {
         if (logout != null) {
             model.addAttribute("logoutMessage", "Bạn đã đăng xuất khỏi hệ thống thành công.");
