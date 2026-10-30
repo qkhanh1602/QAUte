@@ -10,7 +10,7 @@ FROM eclipse-temurin:25-jre
 WORKDIR /app
 ENV TZ=Asia/Ho_Chi_Minh \
     SPRING_PROFILES_ACTIVE=render \
-    JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Ho_Chi_Minh -XX:MaxRAMPercentage=60.0"
+    JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Ho_Chi_Minh -XX:MaxRAMPercentage=60.0 -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
 COPY --from=build /app/exploded/ /app/
 USER 10001:10001
 EXPOSE 8080
