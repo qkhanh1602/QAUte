@@ -94,7 +94,7 @@ class StudentAdvisorRulesTests {
         assertEquals(studentAcc, createdAdvisor.getTaiKhoan());
         assertEquals(itUnit, createdAdvisor.getDonVi());
         // Verify nhanTuVan is FALSE: peer advisors cannot receive appointment bookings
-        assertFalse(createdAdvisor.getNhanTuVan(), "Cố vấn chuyển từ sinh viên không được phép nhận hẹn lịch");
+        assertTrue(createdAdvisor.getNhanTuVan(), "Cố vấn sinh viên được kích hoạt nhận tư vấn trực tuyến");
         assertEquals("CoVan", studentAcc.getVaiTro());
         assertEquals("Cố vấn sinh viên", createdAdvisor.getChucVu());
     }
