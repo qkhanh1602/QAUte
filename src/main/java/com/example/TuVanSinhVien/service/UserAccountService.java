@@ -222,16 +222,10 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
         }
         if(advisor != null && !"CoVan".equals(role)) {
             cleanupAdvisorWork(advisor);
-            try {
-                advisorRepo.delete(advisor);
-                advisorRepo.flush();
-                advisor = null;
-            } catch (Exception ex) {
-                advisor.setNhanTuVan(false);
-                advisor.setChucVu("Sinh viên");
-                advisor.setDonVi(null);
-                advisorRepo.save(advisor);
-            }
+            advisor.setNhanTuVan(false);
+            advisor.setChucVu("Sinh viên");
+            advisor.setDonVi(null);
+            advisorRepo.save(advisor);
         }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
         account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
@@ -311,15 +305,10 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
         NguoiTuVan advisor = advisorRepo.findByTaiKhoan_MaTK(userId).orElse(null);
         if (advisor != null) {
             cleanupAdvisorWork(advisor);
-            try {
-                advisorRepo.delete(advisor);
-                advisorRepo.flush();
-            } catch (Exception ex) {
-                advisor.setNhanTuVan(false);
-                advisor.setChucVu("Sinh viên");
-                advisor.setDonVi(null);
-                advisorRepo.save(advisor);
-            }
+            advisor.setNhanTuVan(false);
+            advisor.setChucVu("Sinh viên");
+            advisor.setDonVi(null);
+            advisorRepo.save(advisor);
         }
 
         account.setVaiTro("SinhVien");
