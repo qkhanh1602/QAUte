@@ -148,6 +148,13 @@
                                         <i class="bi bi-key me-1"></i>Reset MK
                                     </button>
                                 </form>
+                                <c:if test="${hasStudentRole and hasAdvisorRole}">
+                                <form method="post" class="m-0" onsubmit="return confirm('Bạn có chắc chắn muốn hủy vai trò Cố vấn của sinh viên <c:out value="${u.hoTen}"/>?\nTài khoản sẽ trở về là Sinh viên bình thường.');" action="${pageContext.request.contextPath}/admin/users/${u.maTK}/revoke-advisor">
+                                    <sec:csrfInput /><button type="submit" class="btn btn-outline-warning btn-sm rounded-pill text-dark" title="Hủy vai trò cố vấn, đưa tài khoản về sinh viên">
+                                        <i class="bi bi-person-dash me-1"></i>Hủy cố vấn
+                                    </button>
+                                </form>
+                                </c:if>
                             </div>
                         </c:if>
                         <details class="mt-2"><summary class="text-primary">Sửa tài khoản / Phân vai trò</summary>

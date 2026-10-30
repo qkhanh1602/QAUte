@@ -476,4 +476,18 @@ public class AdminController {
         } catch(RuntimeException ex) { flash.addFlashAttribute("errorMessage",ex.getMessage()); }
         return "redirect:/admin/users";
     }
+
+    @PostMapping("/users/{id}/revoke-advisor")
+    public String revokeAdvisor(@PathVariable Integer id,
+                                @AuthenticationPrincipal CustomUserDetails actor,
+                                RedirectAttributes flash) {
+        try {
+            userAccountService.revokeAdvisorRole(id, actor != null ? actor.getMaTK() : null);
+            flash.addFlashAttribute("successMessage", "Đã hủy vai trò Cố vấn thành công. Tài khoản hiện trở về vai trò Sinh viên.");
+        } catch (RuntimeException ex) {
+            flash.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
 }

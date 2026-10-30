@@ -193,4 +193,43 @@ class StudentAdvisorRulesTests {
         });
         assertTrue(ex.getMessage().contains("không phụ trách chức năng hẹn lịch tư vấn"));
     }
+
+    @Test
+    void testRevokeAdvisorRoleFromStudentAdvisor() {
+        TaiKhoan studentAcc = TaiKhoan.builder()
+                .maTK(101)
+                .tenDangNhap("sv_khanh")
+                .hoTen("Vo Cao Quoc Khanh")
+                .email("khanh@example.com")
+                .vaiTro("CoVan")
+                .trangThai("HoatDong")
+                .tokenVersion(1)
+                .build();
+
+        SinhVien sv = SinhVien.builder()
+                .maSV(55)
+                .mssv("24110252")
+                .taiKhoan(studentAcc)
+                .build();
+
+        NguoiTuVan advisor = NguoiTuVan.builder()
+                .maCV(77)
+                .taiKhoan(studentAcc)
+                .nhanTuVan(true)
+                .chucVu("Cố vấn sinh viên")
+                .build();
+
+        when(accountRepo.findLockedById(101)).thenReturn(Optional.of(studentAcc));
+        when(studentRepo.findByTaiKhoan_MaTK(101)).thenReturn(Optional.of(sv));
+        when(advisorRepo.findByTaiKhoan_MaTK(101)).thenReturn(Optional.of(advisor));
+        when(ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(77)).thenReturn(List.of());
+        when(appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(77)).thenReturn(List.of());
+
+        userAccountService.revokeAdvisorRole(101, 1);
+
+        assertEquals("SinhVien", studentAcc.getVaiTro());
+        assertEquals(2, studentAcc.getTokenVersion());
+        verify(advisorRepo).delete(advisor);
+    }
+
 }

@@ -221,13 +221,15 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
             advisorRepo.save(advisor);
         }
         if(advisor != null && !"CoVan".equals(role)) {
-            requireNoActiveWork(advisor);
+            cleanupAdvisorWork(advisor);
             try {
                 advisorRepo.delete(advisor);
                 advisorRepo.flush();
                 advisor = null;
             } catch (Exception ex) {
                 advisor.setNhanTuVan(false);
+                advisor.setChucVu("Sinh viên");
+                advisor.setDonVi(null);
                 advisorRepo.save(advisor);
             }
         }
@@ -254,6 +256,92 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.example.TuVanSinhVien.repository.PhienChatRepository chatRepo;
+
+
+    private void cleanupAdvisorWork(NguoiTuVan advisor) {
+        if (advisor == null || advisor.getMaCV() == null) return;
+        Integer maCV = advisor.getMaCV();
+
+        if (chatRepo != null) {
+            try {
+                chatRepo.findByNguoiTuVan_MaCVOrderByThoiGianBatDauDesc(maCV).stream()
+                        .filter(c -> "DangHoatDong".equals(c.getTrangThai()))
+                        .forEach(c -> {
+                            c.setTrangThai("DaKetThuc");
+                            c.setThoiGianKetThuc(LocalDateTime.now(clock));
+                            chatRepo.save(c);
+                        });
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(maCV).stream()
+                    .filter(a -> java.util.Set.of("ChoDuyet", "DaXacNhan").contains(a.getTrangThai()))
+                    .forEach(a -> {
+                        a.setTrangThai("Huy");
+                        a.setLyDo((a.getLyDo() != null ? a.getLyDo() + " | " : "") + "Hủy do cố vấn kết thúc nhiệm vụ.");
+                        appointmentRepo.save(a);
+                    });
+        } catch (Exception ignored) {}
+
+        try {
+            ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(maCV).stream()
+                    .filter(t -> java.util.Set.of("DangXuLy", "DaPhanHoi", "TiepNhan").contains(t.getTrangThai()))
+                    .forEach(t -> {
+                        t.setCoVanPhuTrach(null);
+                        if ("DangXuLy".equals(t.getTrangThai())) {
+                            t.setTrangThai("TiepNhan");
+                        }
+                        ticketRepo.save(t);
+                    });
+        } catch (Exception ignored) {}
+    }
+
+    @Transactional
+    public void revokeAdvisorRole(Integer userId, Integer actorId) {
+        TaiKhoan account = accountRepo.findLockedById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if (userId.equals(actorId)) {
+            throw new IllegalArgumentException("Không thể tự hủy vai trò của chính mình.");
+        }
+        if (studentRepo.findByTaiKhoan_MaTK(userId).isEmpty()) {
+            throw new IllegalArgumentException("Chức năng này chỉ áp dụng cho tài khoản có hồ sơ sinh viên.");
+        }
+
+        NguoiTuVan advisor = advisorRepo.findByTaiKhoan_MaTK(userId).orElse(null);
+        if (advisor != null) {
+            cleanupAdvisorWork(advisor);
+            try {
+                advisorRepo.delete(advisor);
+                advisorRepo.flush();
+            } catch (Exception ex) {
+                advisor.setNhanTuVan(false);
+                advisor.setChucVu("Sinh viên");
+                advisor.setDonVi(null);
+                advisorRepo.save(advisor);
+            }
+        }
+
+        account.setVaiTro("SinhVien");
+        account.setTokenVersion((account.getTokenVersion() == null ? 0 : account.getTokenVersion()) + 1);
+        account.setNgayCapNhat(LocalDateTime.now(clock));
+        accountRepo.save(account);
+
+        if (emailService != null) {
+            emailService.sendAsyncNotification(
+                account.getEmail(),
+                "[QAUTE] Thông báo kết thúc nhiệm vụ Cố vấn học tập",
+                account.getHoTen(),
+                "Kết thúc nhiệm vụ Cố vấn học tập",
+                "Xin chào " + account.getHoTen() + ",<br><br>"
+                    + "Ban Quản trị QAUTE xin thông báo bạn đã <strong>kết thúc nhiệm vụ Cố vấn học tập</strong>.<br>"
+                    + "Vai trò cố vấn của bạn đã được hủy. Tài khoản của bạn hiện là <strong>Sinh viên</strong> với đầy đủ mọi quyền lợi sinh viên bình thường.<br>"
+                    + "Cảm ơn bạn đã đồng hành và hỗ trợ sinh viên trong thời gian qua!",
+                "/student/dashboard",
+                "Vào trang Sinh viên"
+            );
+        }
+    }
 
     private void requireNoActiveWork(NguoiTuVan advisor) {
         if(ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(t -> java.util.Set.of("DangXuLy","DaPhanHoi").contains(t.getTrangThai()))
