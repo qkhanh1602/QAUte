@@ -224,7 +224,6 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
             cleanupAdvisorWork(advisor);
             advisor.setNhanTuVan(false);
             advisor.setChucVu("Sinh viên");
-            advisor.setDonVi(null);
             advisorRepo.save(advisor);
         }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
@@ -307,7 +306,6 @@ private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appoin
             cleanupAdvisorWork(advisor);
             advisor.setNhanTuVan(false);
             advisor.setChucVu("Sinh viên");
-            advisor.setDonVi(null);
             advisorRepo.save(advisor);
         }
 

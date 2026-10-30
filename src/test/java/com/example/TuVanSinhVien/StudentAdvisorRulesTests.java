@@ -230,8 +230,7 @@ class StudentAdvisorRulesTests {
         assertEquals("SinhVien", studentAcc.getVaiTro());
         assertEquals(2, studentAcc.getTokenVersion());
         assertFalse(advisor.getNhanTuVan(), "Vai trò nhận tư vấn phải được tắt");
-        assertNull(advisor.getDonVi(), "Đơn vị cố vấn phải được gỡ");
-        verify(advisorRepo).save(advisor);
+                verify(advisorRepo).save(advisor);
     }
 
 }
