@@ -29,7 +29,10 @@ public class UserAccountService {
     private final NguoiTuVanRepository advisorRepo;
     private final DonViRepository unitRepo;
     private final com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo;
-    private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo;
+    
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
+private final com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo;
 
     public UserAccountService(TaiKhoanRepository accountRepo, SinhVienRepository studentRepo, PasswordEncoder passwordEncoder,
                               NguoiTuVanRepository advisorRepo, DonViRepository unitRepo, com.example.TuVanSinhVien.repository.YeuCauTuVanRepository ticketRepo, com.example.TuVanSinhVien.repository.LichHenTuVanRepository appointmentRepo) {
@@ -59,6 +62,8 @@ public class UserAccountService {
     }
 
     private TaiKhoan createBaseAccount(String username, String password, String fullName, String email, String phone, String role) {
+        AccountInput.identity(username, fullName, email, phone);
+        AccountInput.password(password);
         String normalizedUsername = required(username, "Tên đăng nhập");
         String normalizedEmail = required(email, "Email").toLowerCase();
         if (password == null || !password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,72}$")) {
@@ -76,8 +81,11 @@ public class UserAccountService {
     @Transactional
     public TaiKhoan createStudent(String username, String password, String fullName, String email, String phone,
                                   String studentCode, String faculty, String major, String className, String course) {
+        AccountInput.identity(username, fullName, email, phone);
+        AccountInput.password(password);
         String normalizedUsername = required(username, "Tên đăng nhập");
         String normalizedEmail = required(email, "Email").toLowerCase();
+        AccountInput.student(studentCode, faculty, major, className, course);
         String normalizedStudentCode = required(studentCode, "MSSV").toUpperCase();
         if (password == null || !password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,72}$")) {
             throw new IllegalArgumentException("Mật khẩu phải dài 8–72 ký tự, có chữ và số.");
@@ -168,30 +176,177 @@ public class UserAccountService {
         if("Admin".equals(account.getVaiTro()) && !"Admin".equals(role) && accountRepo.findByVaiTro("Admin").stream().filter(a -> "HoatDong".equals(a.getTrangThai())).count()<=1)
             throw new IllegalStateException("Phải giữ ít nhất một quản trị viên hoạt động.");
         if("SinhVien".equals(role) && studentRepo.findByTaiKhoan_MaTK(id).isEmpty()) throw new IllegalArgumentException("Cần hồ sơ sinh viên trước khi phân vai trò Sinh viên.");
+        boolean wasStudent = "SinhVien".equals(account.getVaiTro());
+        boolean isNewAdvisor = "CoVan".equals(role);
+        DonVi assignedUnit = null;
+
         NguoiTuVan advisor=advisorRepo.findByTaiKhoan_MaTK(id).orElse(null);
         if("CoVan".equals(role)) {
-            if(advisor==null) throw new IllegalArgumentException("Cần tạo/duyệt hồ sơ cố vấn trước khi phân vai trò Cố vấn.");
-            if(unitId==null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
-            DonVi unit=unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại."));
+            if(unitId==null && advisor==null) {
+                var studentOpt = studentRepo.findByTaiKhoan_MaTK(id);
+                if (studentOpt.isPresent() && studentOpt.get().getKhoa() != null) {
+                    String studentKhoa = studentOpt.get().getKhoa().trim();
+                    unitId = unitRepo.findAll().stream()
+                        .filter(u -> Boolean.TRUE.equals(u.getHoatDong()) &&
+                            (u.getTenDonVi().equalsIgnoreCase(studentKhoa) || studentKhoa.toLowerCase().contains(u.getTenDonVi().toLowerCase()) || u.getTenDonVi().toLowerCase().contains(studentKhoa.toLowerCase())))
+                        .map(DonVi::getMaDonVi)
+                        .findFirst().orElse(null);
+                }
+            }
+            if(unitId==null && advisor==null) throw new IllegalArgumentException("Vui lòng chọn đơn vị phụ trách khi phân vai trò Cố vấn.");
+            DonVi unit = unitId != null ? unitRepo.findById(unitId).orElseThrow(() -> new IllegalArgumentException("Đơn vị không tồn tại.")) : (advisor != null ? advisor.getDonVi() : null);
+            if(unit == null) throw new IllegalArgumentException("Cố vấn cần có đơn vị phụ trách.");
             if(!Boolean.TRUE.equals(unit.getHoatDong())) throw new IllegalArgumentException("Đơn vị đã ngưng hoạt động.");
-            // Reassignment of an advisor with active work must be handled through ticket/appointment workflows first.
-            if(!unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
-            advisor.setDonVi(unit); advisorRepo.save(advisor);
+            assignedUnit = unit;
+            if(advisor==null) {
+                var studentOpt = studentRepo.findByTaiKhoan_MaTK(id);
+                String maCanBo = studentOpt.map(SinhVien::getMssv).filter(m -> !m.isBlank()).orElse("CB" + id);
+                if (advisorRepo.findByMaCanBo(maCanBo).isPresent()) {
+                    maCanBo = "CB" + id;
+                }
+                advisor = NguoiTuVan.builder()
+                    .taiKhoan(account)
+                    .donVi(unit)
+                    .maCanBo(maCanBo)
+                    .chucVu("Cố vấn sinh viên")
+                    .chuyenMon("Tư vấn học tập và giải đáp câu hỏi")
+                    .nhanTuVan(true)
+                    .hanNgachTiepNhan(20)
+                    .build();
+            } else {
+                if(advisor.getDonVi() != null && !unit.getMaDonVi().equals(advisor.getDonVi().getMaDonVi())) requireNoActiveWork(advisor);
+                advisor.setDonVi(unit);
+                advisor.setNhanTuVan(true);
+            }
+            advisorRepo.save(advisor);
         }
-        if(advisor!=null && !"CoVan".equals(role)) { requireNoActiveWork(advisor); advisor.setNhanTuVan(false); advisorRepo.save(advisor); }
+        if(advisor != null && !"CoVan".equals(role)) {
+            cleanupAdvisorWork(advisor);
+            try {
+                advisorRepo.delete(advisor);
+                advisorRepo.flush();
+                advisor = null;
+            } catch (Exception ex) {
+                advisor.setNhanTuVan(false);
+                advisor.setChucVu("Sinh viên");
+                advisor.setDonVi(null);
+                advisorRepo.save(advisor);
+            }
+        }
         if(phone!=null && !phone.isBlank() && !phone.matches("^(?:\\+84|0)[0-9]{9,10}$")) throw new IllegalArgumentException("Số điện thoại không hợp lệ.");
         account.setHoTen(fullName); account.setEmail(cleanEmail); account.setSoDienThoai(blankToNull(phone)); account.setVaiTro(role);
         account.setTokenVersion((account.getTokenVersion()==null?0:account.getTokenVersion())+1); account.setNgayCapNhat(LocalDateTime.now(clock));
         accountRepo.save(account);
+
+        if (emailService != null && isNewAdvisor && wasStudent) {
+            String unitName = assignedUnit != null ? assignedUnit.getTenDonVi() : "Đơn vị tư vấn";
+            emailService.sendAsyncNotification(
+                account.getEmail(),
+                "[QAUTE] Thông báo bổ nhiệm vai trò Cố vấn học tập",
+                account.getHoTen(),
+                "Bổ nhiệm vai trò Cố vấn học tập",
+                "Xin chúc mừng bạn! Bạn đã được Ban Quản trị phân công làm <strong>Cố vấn học tập</strong> phụ trách <strong>" + unitName + "</strong>.<br><br>"
+                    + "Tài khoản của bạn đã được kích hoạt chức năng cố vấn. Bạn có thể tham gia trả lời câu hỏi và chat tư vấn cho sinh viên tại <strong>Khu vực Cố vấn</strong>.<br>"
+                    + "Đồng thời, bạn <strong>vẫn giữ nguyên đầy đủ quyền lợi sinh viên</strong> và có thể tiếp tục sử dụng các chức năng hỏi đáp, tra cứu của sinh viên như bình thường.",
+                "/advisor/dashboard",
+                "Truy cập Khu vực Cố vấn"
+            );
+        }
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.example.TuVanSinhVien.repository.PhienChatRepository chatRepo;
 
+
+    private void cleanupAdvisorWork(NguoiTuVan advisor) {
+        if (advisor == null || advisor.getMaCV() == null) return;
+        Integer maCV = advisor.getMaCV();
+
+        if (chatRepo != null) {
+            try {
+                chatRepo.findByNguoiTuVan_MaCVOrderByThoiGianBatDauDesc(maCV).stream()
+                        .filter(c -> "DangHoatDong".equals(c.getTrangThai()))
+                        .forEach(c -> {
+                            c.setTrangThai("DaKetThuc");
+                            c.setThoiGianKetThuc(LocalDateTime.now(clock));
+                            chatRepo.save(c);
+                        });
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(maCV).stream()
+                    .filter(a -> java.util.Set.of("ChoDuyet", "DaXacNhan").contains(a.getTrangThai()))
+                    .forEach(a -> {
+                        a.setTrangThai("Huy");
+                        a.setLyDo((a.getLyDo() != null ? a.getLyDo() + " | " : "") + "Hủy do cố vấn kết thúc nhiệm vụ.");
+                        appointmentRepo.save(a);
+                    });
+        } catch (Exception ignored) {}
+
+        try {
+            ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(maCV).stream()
+                    .filter(t -> java.util.Set.of("DangXuLy", "DaPhanHoi", "TiepNhan").contains(t.getTrangThai()))
+                    .forEach(t -> {
+                        t.setCoVanPhuTrach(null);
+                        if ("DangXuLy".equals(t.getTrangThai())) {
+                            t.setTrangThai("TiepNhan");
+                        }
+                        ticketRepo.save(t);
+                    });
+        } catch (Exception ignored) {}
+    }
+
+    @Transactional
+    public void revokeAdvisorRole(Integer userId, Integer actorId) {
+        TaiKhoan account = accountRepo.findLockedById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản."));
+        if (userId.equals(actorId)) {
+            throw new IllegalArgumentException("Không thể tự hủy vai trò của chính mình.");
+        }
+        if (studentRepo.findByTaiKhoan_MaTK(userId).isEmpty()) {
+            throw new IllegalArgumentException("Chức năng này chỉ áp dụng cho tài khoản có hồ sơ sinh viên.");
+        }
+
+        NguoiTuVan advisor = advisorRepo.findByTaiKhoan_MaTK(userId).orElse(null);
+        if (advisor != null) {
+            cleanupAdvisorWork(advisor);
+            try {
+                advisorRepo.delete(advisor);
+                advisorRepo.flush();
+            } catch (Exception ex) {
+                advisor.setNhanTuVan(false);
+                advisor.setChucVu("Sinh viên");
+                advisor.setDonVi(null);
+                advisorRepo.save(advisor);
+            }
+        }
+
+        account.setVaiTro("SinhVien");
+        account.setTokenVersion((account.getTokenVersion() == null ? 0 : account.getTokenVersion()) + 1);
+        account.setNgayCapNhat(LocalDateTime.now(clock));
+        accountRepo.save(account);
+
+        if (emailService != null) {
+            emailService.sendAsyncNotification(
+                account.getEmail(),
+                "[QAUTE] Thông báo kết thúc nhiệm vụ Cố vấn học tập",
+                account.getHoTen(),
+                "Kết thúc nhiệm vụ Cố vấn học tập",
+                "Xin chào " + account.getHoTen() + ",<br><br>"
+                    + "Ban Quản trị QAUTE xin thông báo bạn đã <strong>kết thúc nhiệm vụ Cố vấn học tập</strong>.<br>"
+                    + "Vai trò cố vấn của bạn đã được hủy. Tài khoản của bạn hiện là <strong>Sinh viên</strong> với đầy đủ mọi quyền lợi sinh viên bình thường.<br>"
+                    + "Cảm ơn bạn đã đồng hành và hỗ trợ sinh viên trong thời gian qua!",
+                "/student/dashboard",
+                "Vào trang Sinh viên"
+            );
+        }
+    }
+
     private void requireNoActiveWork(NguoiTuVan advisor) {
         if(ticketRepo.findByCoVanPhuTrach_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(t -> java.util.Set.of("DangXuLy","DaPhanHoi").contains(t.getTrangThai()))
             || appointmentRepo.findByNguoiTuVan_MaCVOrderByNgayTaoDesc(advisor.getMaCV()).stream().anyMatch(a -> java.util.Set.of("ChoDuyet","DaXacNhan").contains(a.getTrangThai())))
-            throw new IllegalStateException("Cố vấn còn phiếu/lịch hẹn đang xử lý; hãy điều phối xong trước khi khóa hoặc đổi vai trò/đơn vị.");
+            throw new IllegalStateException("Cố vấn còn câu hỏi/lịch hẹn đang xử lý; hãy điều phối xong trước khi khóa hoặc đổi vai trò/đơn vị.");
         if (chatRepo != null && chatRepo.findByNguoiTuVan_MaCVOrderByThoiGianBatDauDesc(advisor.getMaCV()).stream()
                 .anyMatch(c -> "DangHoatDong".equals(c.getTrangThai())))
             throw new IllegalStateException("Cố vấn còn phiên chat đang mở; hãy kết thúc phiên trước khi khóa hoặc đổi đơn vị.");

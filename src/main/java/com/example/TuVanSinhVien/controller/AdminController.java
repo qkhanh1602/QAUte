@@ -35,6 +35,10 @@ import java.time.LocalDate;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.TuVanSinhVien.service.ForumService forumService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.example.TuVanSinhVien.repository.SinhVienRepository sinhVienRepo;
     private final ReportService reportService;
     private final TaiKhoanRepository taiKhoanRepo;
     private final CatalogService catalogService;
@@ -52,18 +56,23 @@ public class AdminController {
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         model.addAttribute("summary", reportService.getDashboardSummary());
+        model.addAttribute("forumSummary", forumService.dashboardSummary());
         model.addAttribute("units", catalogService.getAllDonVi());
         return "admin/dashboard";
     }
 
     @GetMapping("/reports/export")
     public ResponseEntity<byte[]> exportReport(@RequestParam(defaultValue = "xlsx") String format,
-                                               @RequestParam(required = false) LocalDate from,
-                                               @RequestParam(required = false) LocalDate to,
+                                               @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
+                                               @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
                                                @RequestParam(required = false) Integer unitId) {
         if (from != null && to != null && from.isAfter(to)) {
-            throw new IllegalArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+            throw new InvalidReportRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
         }
+        if (!"pdf".equalsIgnoreCase(format) && !"xlsx".equalsIgnoreCase(format))
+            throw new InvalidReportRequest("Vui lòng chọn định dạng Excel hoặc PDF.");
+        if (LocalDate.MAX.equals(to)) throw new InvalidReportRequest("Ngày kết thúc không hợp lệ.");
+        if (unitId != null && unitId <= 0) throw new InvalidReportRequest("Vui lòng chọn đơn vị hợp lệ.");
         boolean pdf = "pdf".equalsIgnoreCase(format);
         byte[] body = pdf ? reportExportService.exportPdf(from, to, unitId) : reportExportService.exportExcel(from, to, unitId);
         return ResponseEntity.ok()
@@ -72,11 +81,54 @@ public class AdminController {
                 .body(body);
     }
 
+    private static class InvalidReportRequest extends RuntimeException {
+        InvalidReportRequest(String message) { super(message); }
+    }
+
+    @ExceptionHandler(InvalidReportRequest.class)
+    public org.springframework.web.servlet.ModelAndView invalidReport(InvalidReportRequest exception) {
+        return badRequest(exception.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public org.springframework.web.servlet.ModelAndView invalidParameter() {
+        return badRequest("Thông tin lọc không hợp lệ. Vui lòng kiểm tra ngày và mã đơn vị.");
+    }
+
+    private org.springframework.web.servlet.ModelAndView badRequest(String message) {
+        var view = new org.springframework.web.servlet.ModelAndView("error");
+        view.setStatus(org.springframework.http.HttpStatus.BAD_REQUEST);
+        view.addObject("errorTitle", "Vui lòng kiểm tra thông tin");
+        view.addObject("errorMessage", message);
+        view.addObject("backLink", "/admin/dashboard");
+        return view;
+    }
+
     @GetMapping("/tickets")
-    public String tickets(Model model) {
-        model.addAttribute("tickets", ticketService.getAllTickets());
+    public String tickets(@RequestParam(defaultValue="0") int page, Model model) {
+        var result=ticketService.getAdminPage(page);
+        model.addAttribute("tickets", result.getContent());
+        model.addAttribute("pageData", result);
+        model.addAttribute("paginationPath", "/admin/tickets");
         model.addAttribute("advisors", nguoiTuVanRepo.findAllWithAccountAndUnit());
+        model.addAttribute("forumVisibility", forumService.visibilityByQuestion(result.getContent().stream().map(t -> t.getMaYeuCau()).toList()));
         return "admin/tickets";
+    }
+
+    @PostMapping("/tickets/{id}/visibility")
+    public String questionVisibility(@PathVariable Integer id, @RequestParam boolean visible,
+                                     @RequestParam(required=false) String reason,
+                                     @AuthenticationPrincipal CustomUserDetails user,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            forumService.setVisibility(id, visible, user.getMaTK(), reason);
+            redirectAttributes.addFlashAttribute("successMessage", visible
+                    ? "Đã khôi phục câu hỏi trên diễn đàn."
+                    : "Đã ẩn câu hỏi khỏi diễn đàn. Lịch sử trao đổi vẫn được giữ lại.");
+        } catch (IllegalArgumentException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/tickets";
     }
 
     @PostMapping("/tickets/{id}/assign")
@@ -88,7 +140,7 @@ public class AdminController {
             TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK())
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy tài khoản Admin."));
             ticketService.assignTicket(id, advisorId, admin, note);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công phiếu #" + id + " thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã phân công câu hỏi thành công.");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -96,17 +148,39 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public String users(@RequestParam(required = false) String role, Model model) {
-        if (role != null && !role.isEmpty()) {
-            model.addAttribute("users", taiKhoanRepo.findByVaiTro(role));
+    public String users(@RequestParam(required = false) String role,
+                        @RequestParam(required = false) String kw,
+                        @RequestParam(defaultValue = "0") int page,
+                        Model model) {
+        String filter = role != null && java.util.Set.of("Admin", "CoVan", "SinhVien").contains(role) ? role : null;
+        String keyword = kw != null ? kw.trim() : "";
+        var pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), 20, org.springframework.data.domain.Sort.by("maTK").descending());
+        org.springframework.data.domain.Page<TaiKhoan> result;
+        if (!keyword.isEmpty()) {
+            result = taiKhoanRepo.searchUsers(filter, keyword, pageable);
+            if (result.getTotalPages() > 0 && page >= result.getTotalPages()) {
+                pageable = org.springframework.data.domain.PageRequest.of(result.getTotalPages() - 1, 20, org.springframework.data.domain.Sort.by("maTK").descending());
+                result = taiKhoanRepo.searchUsers(filter, keyword, pageable);
+            }
         } else {
-            model.addAttribute("users", taiKhoanRepo.findAll());
+            result = filter == null ? taiKhoanRepo.findAll(pageable) : taiKhoanRepo.findByVaiTro(filter, pageable);
+            if (result.getTotalPages() > 0 && page >= result.getTotalPages()) {
+                pageable = org.springframework.data.domain.PageRequest.of(result.getTotalPages() - 1, 20, org.springframework.data.domain.Sort.by("maTK").descending());
+                result = filter == null ? taiKhoanRepo.findAll(pageable) : taiKhoanRepo.findByVaiTro(filter, pageable);
+            }
         }
+        model.addAttribute("users", result.getContent());
+        model.addAttribute("pageData", result);
+        model.addAttribute("paginationPath", "/admin/users");
         Map<Integer, NguoiTuVan> advisorProfiles = nguoiTuVanRepo.findAllWithAccountAndUnit().stream()
-                .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity()));
+                .collect(Collectors.toMap(advisor -> advisor.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
         model.addAttribute("advisorProfiles", advisorProfiles);
+        Map<Integer, com.example.TuVanSinhVien.entity.SinhVien> studentProfiles = (sinhVienRepo != null ? sinhVienRepo.findAllWithAccount() : java.util.List.<com.example.TuVanSinhVien.entity.SinhVien>of()).stream()
+                .collect(Collectors.toMap(s -> s.getTaiKhoan().getMaTK(), Function.identity(), (a, b) -> a));
+        model.addAttribute("studentProfiles", studentProfiles);
         model.addAttribute("units", catalogService.getAllActiveDonVi());
-        model.addAttribute("selectedRole", role);
+        model.addAttribute("selectedRole", filter);
+        model.addAttribute("kw", keyword);
         return "admin/users";
     }
 
@@ -351,7 +425,7 @@ public class AdminController {
     public String approveFaq(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, RedirectAttributes redirectAttributes) {
         TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElse(null);
         contentService.approveFaq(id, admin);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã duyệt và công khai câu hỏi FAQ #" + id);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã duyệt và công khai câu hỏi FAQ.");
         return "redirect:/admin/content";
     }
 
@@ -359,7 +433,7 @@ public class AdminController {
     public String approveArticle(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails userDetails, RedirectAttributes redirectAttributes) {
         TaiKhoan admin = taiKhoanRepo.findById(userDetails.getMaTK()).orElse(null);
         contentService.approveArticle(id, admin);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xuất bản bài viết hướng dẫn #" + id);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã xuất bản bài viết hướng dẫn.");
         return "redirect:/admin/content";
     }
 
@@ -386,6 +460,7 @@ public class AdminController {
                          @RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
                          @RequestParam(defaultValue="0") int page, Model model) {
         model.addAttribute("type",type); model.addAttribute("units",catalogService.getAllDonVi());
+        model.addAttribute("searchAccounts",taiKhoanRepo.findAll());
         try { model.addAttribute("results",searchService.search(type,keyword,status,unitId,accountId,from,to,page)); }
         catch(IllegalArgumentException ex) { model.addAttribute("errorMessage",ex.getMessage()); }
         return "admin/search";
@@ -401,4 +476,18 @@ public class AdminController {
         } catch(RuntimeException ex) { flash.addFlashAttribute("errorMessage",ex.getMessage()); }
         return "redirect:/admin/users";
     }
+
+    @PostMapping("/users/{id}/revoke-advisor")
+    public String revokeAdvisor(@PathVariable Integer id,
+                                @AuthenticationPrincipal CustomUserDetails actor,
+                                RedirectAttributes flash) {
+        try {
+            userAccountService.revokeAdvisorRole(id, actor != null ? actor.getMaTK() : null);
+            flash.addFlashAttribute("successMessage", "Đã hủy vai trò Cố vấn thành công. Tài khoản hiện trở về vai trò Sinh viên.");
+        } catch (RuntimeException ex) {
+            flash.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
 }

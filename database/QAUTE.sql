@@ -1,9 +1,15 @@
 :ON ERROR EXIT
--- Enable Query > SQLCMD Mode when running this script in SSMS.
--- QAUTE - SQL Server 2022 / Azure SQL compatible schema (body only for Azure).
--- Source: CNPM C1C2C3.docx; design decisions: PLAN_QAUTE.md.
--- Run with sqlcmd -b -f 65001 -S localhost -E -C -i QAUTE.sql
--- Fresh installation only. NEVER drops or overwrites an existing database.
+-- QAUTE - FILE CAI MOI DAY DU CHO THANH VIEN NHOM
+-- Cap nhat 14/10/2026. SQL Server 2022, 25 bang nghiep vu.
+-- Trong SSMS: ket noi SQL Server LOCAL, bat Query > SQLCMD Mode, nhan F5.
+-- File nay tao database, bang, PK/FK/CHECK, index, view, trigger va danh muc.
+-- Da gom danh sach khoa; KHONG can chay them V3 hay cac migration cu.
+-- Chi dung khi CHUA CO database QAUTE. Neu da co, script dung va khong xoa du lieu.
+-- KHONG chay file nay tren database Azure/Render dang su dung.
+-- Tai khoan va noi dung mau duoc tao khi chay ung dung voi profile dev.
+-- Mat khau va du lieu giao dich that khong nam trong file nay.
+-- Gio tu van: Thu Hai-Sau 08:00-11:30 va 13:30-16:30, tru ngay nghi.
+-- Sinh vien de xuat lich; co van duyet/tu choi, khong can mo gio truoc.
 USE master;
 GO
 IF DB_ID(N'QAUTE') IS NOT NULL
@@ -80,12 +86,6 @@ MaLinhVuc int IDENTITY PRIMARY KEY,
  TrangThai varchar(20) NOT NULL DEFAULT 'HoatDong' CHECK (TrangThai IN ('HoatDong','TamDung')),
  NhayCam bit NOT NULL DEFAULT 0,
  UNIQUE (MaLinhVuc, MaDonVi)
-);
-
-CREATE TABLE dbo.CoVanLinhVuc (
-MaCV int NOT NULL REFERENCES dbo.NguoiTuVan(MaCV),
- MaLinhVuc int NOT NULL REFERENCES dbo.LinhVucTuVan(MaLinhVuc),
- PRIMARY KEY (MaCV, MaLinhVuc)
 );
 
 CREATE TABLE dbo.YeuCauTuVan (
@@ -186,7 +186,7 @@ MaKhungGio int IDENTITY PRIMARY KEY,
  PhienBan bigint NOT NULL DEFAULT 0,
  CHECK (KetThuc > BatDau),
  CHECK (DATEDIFF(MINUTE, BatDau, KetThuc) IN (45,60)),
- UNIQUE (MaCV, BatDau), UNIQUE (MaKhungGio, MaCV)
+ UNIQUE (MaKhungGio, MaCV)
 );
 
 CREATE TABLE dbo.LichHenTuVan (
@@ -244,7 +244,7 @@ MaPhienChat int IDENTITY PRIMARY KEY,
 CREATE TABLE dbo.TinNhanChat (
 MaTinNhan bigint IDENTITY PRIMARY KEY,
  MaPhienChat int NOT NULL REFERENCES dbo.PhienChat(MaPhienChat),
- MaTK_Gui int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
+ MaTK_Gui int NULL REFERENCES dbo.TaiKhoan(MaTK),
  ClientMessageId uniqueidentifier NOT NULL,
  LoaiTinNhan varchar(20) NOT NULL DEFAULT 'VanBan' CHECK (LoaiTinNhan IN ('VanBan','TepTin','HinhAnh')),
  NoiDung nvarchar(max) NULL,
@@ -288,26 +288,6 @@ MaThongBao bigint IDENTITY PRIMARY KEY,
  UNIQUE (MaTK_Nhan, KhoaChongLap)
 );
 
-CREATE TABLE dbo.PhienDangNhap (
-MaPhien uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- RefreshTokenHash binary(32) NOT NULL UNIQUE,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- LanHoatDongCuoi datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- HetHan datetime2(3) NOT NULL, ThuHoiLuc datetime2(3) NULL,
- UserAgent nvarchar(500) NULL,
- CHECK (HetHan > NgayTao)
-);
-
-CREATE TABLE dbo.TokenDatLaiMatKhau (
-MaToken bigint IDENTITY PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- TokenHash binary(32) NOT NULL UNIQUE,
- HetHan datetime2(3) NOT NULL, DaDungLuc datetime2(3) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME())),
- CHECK (HetHan > NgayTao)
-);
-
 -- OTP is for a registration/verification flow. Never store the one-time code itself.
 CREATE TABLE dbo.YeuCauXacMinhOTP (
  MaOTP uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY,
@@ -341,37 +321,11 @@ CREATE TABLE dbo.NhatKyBaoMat (
  NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
-CREATE TABLE dbo.DanhTinhSSO (
-MaDanhTinh int IDENTITY PRIMARY KEY,
- MaTK int NOT NULL REFERENCES dbo.TaiKhoan(MaTK),
- NhaCungCap varchar(30) NOT NULL, SubjectId varchar(255) NOT NULL,
- UNIQUE (NhaCungCap, SubjectId), UNIQUE (MaTK, NhaCungCap)
-);
-
 CREATE TABLE dbo.CauHinhHeThong (
 Khoa varchar(80) NOT NULL PRIMARY KEY,
  GiaTri nvarchar(1000) NOT NULL, MoTa nvarchar(500) NOT NULL,
  MaTK_CapNhat int NULL REFERENCES dbo.TaiKhoan(MaTK),
  NgayCapNhat datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
-);
-
-CREATE TABLE dbo.LichLamViec (
-MaCa int IDENTITY PRIMARY KEY,
- ThuISO tinyint NOT NULL CHECK (ThuISO BETWEEN 1 AND 7),
- GioBatDau time(0) NOT NULL, GioKetThuc time(0) NOT NULL,
- CHECK (GioKetThuc > GioBatDau), UNIQUE (ThuISO, GioBatDau)
-);
-
-CREATE TABLE dbo.NgayNghi (
-Ngay date NOT NULL PRIMARY KEY, LyDo nvarchar(200) NOT NULL
-);
-
-CREATE TABLE dbo.NhatKyHeThong (
-MaNhatKy bigint IDENTITY PRIMARY KEY,
- MaTK int NULL REFERENCES dbo.TaiKhoan(MaTK),
- HanhDong varchar(60) NOT NULL, LoaiDoiTuong varchar(60) NOT NULL,
- MaDoiTuong varchar(100) NULL, ChiTiet nvarchar(2000) NULL,
- NgayTao datetime2(3) NOT NULL DEFAULT (DATEADD(HOUR,7,SYSUTCDATETIME()))
 );
 
 CREATE TABLE dbo.HangDoiSuKien (
@@ -401,7 +355,6 @@ CREATE INDEX IX_Chat_SinhVien ON dbo.PhienChat(MaSV, ThoiGianBatDau DESC);
 CREATE INDEX IX_Chat_HangDoi ON dbo.PhienChat(MaDonVi, TrangThai, ThoiGianBatDau);
 CREATE INDEX IX_TinNhan_LichSu ON dbo.TinNhanChat(MaPhienChat, MaTinNhan);
 CREATE INDEX IX_ThongBao_ChuaDoc ON dbo.ThongBao(MaTK_Nhan, NgayTao DESC) WHERE DaDoc = 0;
-CREATE INDEX IX_Phien_TaiKhoan ON dbo.PhienDangNhap(MaTK, ThuHoiLuc, HetHan);
 CREATE INDEX IX_OTP_TraCuu ON dbo.YeuCauXacMinhOTP(Email, MucDich, NgayTao DESC)
  INCLUDE(HetHan, DaDungLuc, SoLanNhapSai, GuiLaiSau);
 CREATE INDEX IX_NhatKyBaoMat_TaiKhoan ON dbo.NhatKyBaoMat(MaTK, NgayTao DESC);
@@ -431,18 +384,57 @@ INSERT dbo.LinhVucTuVan(MaLinhVucCode, TenLinhVuc, MaDonVi, NhayCam)
  ('TAMLY',N'Tư vấn tâm lý','HOTRO',1),
  ('NGHENGHIEP',N'Định hướng nghề nghiệp','CNTT',0)
  ) v(Code,Ten,DonVi,NhayCam) JOIN dbo.DonVi d ON d.MaDonViCode = v.DonVi;
+-- Danh sach khoa day du, duoc tao cung schema.
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CKCTM')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CKCTM', N'Khoa Cơ khí Chế tạo máy', 'Khoa', 1, N'Khoa Cơ khí Chế tạo máy - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'GTNL')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('GTNL', N'Khoa Giao thông và năng lượng', 'Khoa', 1, N'Khoa Giao thông và Năng lượng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CNHHTP')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CNHHTP', N'Khoa Công nghệ Hóa học và Thực phẩm', 'Khoa', 1, N'Khoa Công nghệ Hóa học và Thực phẩm - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'DDT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('DDT', N'Khoa Điện - Điện tử', 'Khoa', 1, N'Khoa Điện - Điện tử - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'INTT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('INTT', N'Khoa In và Truyền thông', 'Khoa', 1, N'Khoa In và Truyền thông - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'KHUD')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('KHUD', N'Khoa Khoa học Ứng dụng', 'Khoa', 1, N'Khoa Khoa học Ứng dụng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'KINHTE')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('KINHTE', N'Khoa Kinh tế', 'Khoa', 1, N'Khoa Kinh tế - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'NGOAINGU')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('NGOAINGU', N'Khoa Ngoại ngữ', 'Khoa', 1, N'Khoa Ngoại ngữ - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'TTDL')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('TTDL', N'Khoa Thời trang và Du lịch', 'Khoa', 1, N'Khoa Thời trang và Du lịch - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'XAYDUNG')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('XAYDUNG', N'Khoa Xây dựng', 'Khoa', 1, N'Khoa Xây dựng - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'CTLUAT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('CTLUAT', N'Khoa Chính trị và Luật', 'Khoa', 1, N'Khoa Chính trị và Luật - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'VSPKT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('VSPKT', N'Viện Sư phạm Kỹ thuật', 'Khoa', 1, N'Viện Sư phạm Kỹ thuật - HCMUTE');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DonVi WHERE MaDonViCode = 'DTTT')
+    INSERT INTO dbo.DonVi (MaDonViCode, TenDonVi, LoaiDonVi, HoatDong, MoTa) VALUES ('DTTT', N'Khoa Đào tạo Tiên tiến', 'Khoa', 1, N'Khoa Đào tạo Tiên tiến (Chương trình dạy bằng Tiếng Anh) - HCMUTE');
+
 INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('booking.window_days',N'7',N'Cho phép đặt trong 7 ngày tới'),
  ('booking.max_pending',N'2',N'Tối đa 2 lịch chờ duyệt trên mỗi sinh viên'),
- ('booking.cancel_before_hours',N'12',N'Hủy trước ít nhất 12 giờ'),
+ ('booking.cancel_before_hours',N'3',N'Hủy trước ít nhất 3 giờ cho cả hai hình thức'),
  ('booking.approve_hours',N'24',N'Hạn duyệt lịch theo giờ thực'),
- ('booking.allowed_slot_minutes',N'45,60',N'Ưu tiên QĐ24; sửa CHECK nếu đổi thời lượng'),
- ('booking.min_weekly_slots',N'2',N'Tối thiểu hai slot mỗi tuần'),
+ ('booking.allowed_slot_minutes',N'45,60',N'Bản ghi lịch sử hỗ trợ 45/60 phút; đề xuất mới trên web dùng 60 phút'),
  ('booking.remind_business_hours',N'2',N'Nhắc trước 2 giờ làm việc'),
  ('ticket.title_min_chars',N'10',N'Tiêu đề tối thiểu 10 ký tự'),
  ('ticket.body_min_chars',N'20',N'Nội dung tối thiểu 20 ký tự'),
  ('ticket.auto_close_days',N'7',N'Đóng sau 7 ngày không có hỏi thêm kể từ phản hồi cuối'),
- ('sla.accept_hours',N'48',N'Hạn tiếp nhận 48 giờ liên tục; cảnh báo vàng sau 24 giờ liên tục'),
+ ('sla.accept_hours',N'48',N'Hạn tiếp nhận và phản hồi 48 giờ liên tục; cảnh báo khi quá hạn'),
  ('sla.reply_hours',N'48',N'Cảnh báo chưa phản hồi lần đầu'),
  ('sla.clock',N'ELAPSED',N'SLA tính giờ liên tục kể từ khi gửi; giờ trực cố vấn cấu hình riêng'),
  ('session.idle_minutes',N'30',N'Hết phiên sau 30 phút không hoạt động'),
@@ -456,9 +448,6 @@ INSERT dbo.CauHinhHeThong(Khoa,GiaTri,MoTa) VALUES
  ('upload.max_bytes_exclusive',N'10485760',N'Tệp phải nhỏ hơn 10 MiB'),
  ('upload.allowed_mime',N'image/jpeg,image/png,application/pdf',N'Kiểm tra chữ ký tệp tại service'),
  ('app.timezone',N'Asia/Ho_Chi_Minh',N'Datetime2 lưu giờ Việt Nam Asia/Ho_Chi_Minh, không cộng thêm 7 giờ khi hiển thị');
-INSERT dbo.LichLamViec(ThuISO,GioBatDau,GioKetThuc)
- SELECT d.Thu,t.BatDau,t.KetThuc FROM (VALUES(1),(2),(3),(4),(5)) d(Thu)
- CROSS JOIN (VALUES(CAST('08:00' AS time),CAST('12:00' AS time)),(CAST('13:00' AS time),CAST('17:00' AS time))) t(BatDau,KetThuc);
 COMMIT;
 GO
 
@@ -505,10 +494,6 @@ BEGIN
   THROW 51005, 'Sender must be a participant of this chat.', 1;
 END;
 GO
-PRINT N'QAUTE schema and reference data created successfully.';
-GO
-
-GO
 -- Public forum: existing and new tickets are public; chat and attachments stay private.
 IF OBJECT_ID(N'dbo.CauHoiDienDan', N'U') IS NULL
 BEGIN
@@ -521,3 +506,22 @@ BEGIN
  INSERT INTO dbo.CauHoiDienDan(MaYeuCau) SELECT MaYeuCau FROM dbo.YeuCauTuVan;
 END;
 GO
+
+-- Kiem tra nhanh sau cai moi: 25 bang, day du khoa va linh vuc nen.
+SELECT COUNT(*) AS SoBang FROM sys.tables WHERE is_ms_shipped=0;
+SELECT MaDonViCode, TenDonVi, LoaiDonVi FROM dbo.DonVi ORDER BY MaDonViCode;
+PRINT N'QAUTE created successfully. No extra migration files are required for a fresh local installation.';
+GO
+
+/* GOI Y HOC DATABASE
+1. Doc CREATE TABLE de xac dinh khoa chinh, khoa ngoai, UNIQUE va CHECK.
+2. Doc entity/Repository/Service trong source de hieu tung bang duoc su dung.
+3. Sau khi ung dung chay profile dev, thu truy van co van theo don vi:
+
+SELECT cv.MaCV, tk.HoTen, dv.TenDonVi
+FROM dbo.NguoiTuVan cv
+JOIN dbo.TaiKhoan tk ON tk.MaTK=cv.MaTK
+JOIN dbo.DonVi dv ON dv.MaDonVi=cv.MaDonVi;
+
+4. Tu viet JOIN cho SinhVien, YeuCauTuVan va LichHenTuVan tren database rieng.
+*/

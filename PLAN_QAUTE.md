@@ -36,7 +36,7 @@ Các quyết định dưới đây là đề xuất triển khai, không sửa n
 | §1.3.6 và UC07, bảng tác nhân §2.2.1 | Quy trình nói khách có thể chat nhưng UC07 yêu cầu đăng nhập | MVP chỉ người đã đăng nhập chat; khách chỉ đọc nội dung đã duyệt |
 | QĐ06, UC03, UC17 và bảng 3-11 | Tên trạng thái khác nhau, “Đã chuyển tiếp” dễ thành trạng thái treo | Chỉ lưu `ChoTiepNhan`, `DangXuLy`, `DaPhanHoi`, `Dong`; phân công/chuyển tiếp là sự kiện có lịch sử |
 | UC03 và §1.3.2 | Mở trang chi tiết làm thay đổi trạng thái | GET chỉ đọc; nút Nhận xử lý gửi POST với kiểm tra đồng thời |
-| QĐ11 và QĐ25 | 48 giờ làm việc để thụ lý so với cảnh báo chưa nhận 24h/chưa trả lời 48h | Tạm chọn 24 giờ làm việc nhận, 48 giờ làm việc phản hồi đầu; lưu hạn cụ thể, cho cấu hình |
+| QĐ11 và QĐ25 | SLA tiếp nhận và phản hồi | Thống nhất 48 giờ liên tục từ lúc gửi; bỏ cảnh báo sớm 24 giờ |
 | QĐ24 và UC18 | Slot 45–60 phút nhưng UC18 có lựa chọn 30 phút | Ưu tiên QĐ24: 45 hoặc 60 phút; nếu giảng viên chọn 30 phút phải sửa cả CHECK và cấu hình |
 | Bảng 3-8 | Chỉ có thứ/giờ; không phân biệt cùng slot ở hai tuần | Slot có `BatDau`, `KetThuc` UTC đầy đủ ngày; sao chép tuần sinh bản ghi mới |
 | Bảng 3-8 | `DaKinh` có vẻ lỗi gõ của “Đã kín” | `Mo/Khoa` là trạng thái quản trị; bận/rảnh suy ra từ lịch hẹn còn chiếm chỗ |
@@ -47,7 +47,7 @@ Các quyết định dưới đây là đề xuất triển khai, không sửa n
 | QĐ19, bảng FAQ/bài viết | Mặc định công khai, chưa lưu người duyệt | Mặc định bản nháp; ghi người và thời điểm duyệt; xuất bản bản sao đã ẩn thông tin riêng |
 | Bảng 3-4 | Họ tên/email/SĐT lặp giữa cố vấn và tài khoản | Dùng dữ liệu chuẩn tại `TaiKhoan`, tránh cập nhật lệch |
 | QĐ01, UC11, UC15 và phi chức năng | JWT đơn thuần không đáp ứng khóa tức thì và idle timeout | Thêm phiên đăng nhập, refresh token dạng hash, token version, dấu thời gian hoạt động |
-| QĐ10/QĐ17 | Có phân quyền chuyên môn nhưng thiếu quan hệ cố vấn–lĩnh vực | Thêm `CoVanLinhVuc`; kiểm tra cả phạm vi và quyền trên đối tượng |
+| QĐ10/QĐ17 | Phân quyền theo đơn vị phụ trách | Cố vấn và lĩnh vực cùng thuộc đơn vị; kiểm tra quyền trên từng đối tượng |
 | QĐ25 | Dòng cuối Bảng 6 thiếu ô mã QĐ25 và trưởng đơn vị chỉ là tên | Dùng mã QĐ25 theo bảng chức năng; thêm tài khoản nhận cảnh báo cho trưởng đơn vị |
 | UC10 | Tìm toàn văn chưa có cấu hình index | P0 kiểm tra Full-Text Search trên môi trường; giai đoạn đầu tìm từ khóa có phân trang, ghi rõ nếu chưa đạt toàn văn |
 | Phi chức năng | 1.000 concurrent, 2 giây, 99,5%, backup hằng ngày | Là mục tiêu production cần đo; bản demo free có ngoại lệ được ghi rõ, không tuyên bố đạt mặc định |
@@ -126,7 +126,7 @@ STOMP CONNECT/SEND/SUBSCRIBE kiểm tra phiên còn hoạt động, origin, quy�
 
 Lịch làm việc mặc định đề xuất: thứ Hai–thứ Sáu, 08:00–12:00 và 13:00–17:00, giờ Việt Nam; ngày nghỉ cấu hình riêng. Đây không phải lịch chính thức từ tài liệu. Service cộng/trừ giờ làm việc rồi lưu deadline UTC để không phải tính lại mỗi truy vấn.
 
-Vàng: quá hạn nhận và chưa có `NgayTiepNhan`. Đỏ: quá hạn phản hồi đầu và chưa có `NgayPhanHoiDau`. QĐ11 cho phép thụ lý trong 48 giờ và QĐ25 cảnh báo sớm 24 giờ cần chốt lại với giảng viên; cấu hình hiện tại coi 24/48 là hai mốc vận hành. Thay cấu hình chỉ áp dụng yêu cầu mới, trừ khi admin chủ động tái tính với audit.
+SLA tiếp nhận và phản hồi đầu tiên đều là 48 giờ liên tục từ lúc tạo câu hỏi. Chỉ cảnh báo quá hạn khi chưa có phản hồi đầu tiên và câu hỏi còn chờ tiếp nhận hoặc đang xử lý; không có cảnh báo sớm 24 giờ.
 
 Theo QĐ22, tỷ lệ hoàn tất = `(số DaPhanHoi + số Dong) / tổng yêu cầu × 100`. Chọn cohort theo ngày tạo, cùng bộ lọc cho tử và mẫu; mẫu bằng 0 hiển thị 0 hoặc “chưa có dữ liệu”. Thống kê ticket/hẹn/chat tách riêng, không cộng lẫn tùy tiện. Phản hồi đầu tính từ ngày tạo đến phản hồi đầu, loại những ticket chưa có phản hồi khỏi mẫu trung bình và báo riêng số chưa phản hồi. Tổng hợp ngày dùng giờ Việt Nam; khoảng ngày query chuyển thành UTC dạng `[start, endExclusive)`.
 
@@ -134,17 +134,18 @@ Scheduler cần outbox, khóa xử lý, retry có backoff, giới hạn lần th
 
 ## 6. Thiết kế database đã chuẩn bị
 
-Database `QAUTE` gồm **29 bảng**: 16 bảng nghiệp vụ gốc được hiệu chỉnh và 13 bảng bổ sung. Không dùng `ntext`/`Boolean`/`Now()` trong SQL Server: thay bằng `nvarchar(max)`/`bit`/`SYSUTCDATETIME()`. Thời điểm lưu `datetime2(3)` UTC, ngày nghỉ là ngày địa phương. ID nghiệp vụ dùng int; tin nhắn/log/tệp dùng bigint; `PhienBan bigint` dành cho JPA `@Version`.
+Database `QAUTE` hiện có **25 bảng** theo schema cập nhật. Cố vấn và lĩnh vực được liên kết qua đơn vị, không dùng bảng nối chuyên môn riêng. Không dùng `ntext`/`Boolean`/`Now()` trong SQL Server: thay bằng `nvarchar(max)`/`bit`/`SYSUTCDATETIME()`. Thời điểm lưu `datetime2(3)` UTC, ngày nghỉ là ngày địa phương. ID nghiệp vụ dùng int; tin nhắn/log/tệp dùng bigint; `PhienBan bigint` dành cho JPA `@Version`.
 
 | Nhóm | Bảng |
 | --- | --- |
-| Người dùng và tổ chức | TaiKhoan, SinhVien, NguoiTuVan, DonVi, LinhVucTuVan, CoVanLinhVuc |
+| Người dùng và tổ chức | TaiKhoan, SinhVien, NguoiTuVan, DonVi, LinhVucTuVan |
 | Ticket | YeuCauTuVan, PhanCongTuVan, PhanHoiTuVan, LichSuYeuCau, DanhGiaYeuCau |
 | Nội dung | CauHoiFAQ, BaiVietHuongDan, MauTraLoi |
 | Lịch hẹn | KhungGioTuVan, LichHenTuVan, DanhGiaBuoiTuVan |
 | Chat và tệp | PhienChat, TinNhanChat, TepDinhKem |
-| Xác thực | PhienDangNhap, TokenDatLaiMatKhau, DanhTinhSSO |
-| Vận hành | ThongBao, CauHinhHeThong, LichLamViec, NgayNghi, NhatKyHeThong, HangDoiSuKien |
+| Xác thực | YeuCauXacMinhOTP, NhatKyBaoMat |
+| Diễn đàn công khai | CauHoiDienDan |
+| Vận hành | ThongBao, CauHinhHeThong, HangDoiSuKien |
 
 Các quan hệ trọng tâm:
 
@@ -154,8 +155,6 @@ erDiagram
     TaiKhoan ||--o| NguoiTuVan : profile
     DonVi ||--o{ NguoiTuVan : contains
     DonVi ||--o{ LinhVucTuVan : routes
-    NguoiTuVan ||--o{ CoVanLinhVuc : expertise
-    LinhVucTuVan ||--o{ CoVanLinhVuc : expertise
     SinhVien ||--o{ YeuCauTuVan : submits
     YeuCauTuVan ||--o{ PhanHoiTuVan : conversation
     YeuCauTuVan ||--o{ PhanCongTuVan : assignment
@@ -166,7 +165,8 @@ erDiagram
     LichHenTuVan ||--o| DanhGiaBuoiTuVan : rated
     SinhVien ||--o{ PhienChat : joins
     PhienChat ||--o{ TinNhanChat : contains
-    TaiKhoan ||--o{ PhienDangNhap : authenticates
+    YeuCauTuVan ||--|| CauHoiDienDan : publication
+    TaiKhoan ||--o{ YeuCauXacMinhOTP : verifies
 ```
 
 Đây là sơ đồ quan hệ chính; toàn bộ PK/FK/CHECK nằm trong `QAUTE.sql`. Một slot có nhiều lịch trong lịch sử vì có thể hủy rồi đặt lại, nhưng unique index không cho hai lịch cùng chiếm chỗ. Lịch hoàn thành vẫn giữ chỗ lịch sử.
@@ -263,7 +263,7 @@ Phân công gợi ý cho 4 thành viên, chưa gán tên: (1) nền tảng/auth/
 | Review | Chặn đánh giá chưa hoàn thành, sai chủ, 0/6 sao, đánh giá lần hai hoặc sửa sau nộp |
 | Chat | Client giả sender, SUBSCRIBE sai phiên, khóa khi đang kết nối, retry trùng ID, mạng mất/khôi phục, outbox retry |
 | Nội dung/tệp | FAQ chưa duyệt không xuất hiện; XSS; file giả đuôi, file đúng/vượt giới hạn, private asset không tải trái phép |
-| Scheduler | Qua trưa/cuối tuần/ngày nghỉ, deadline 24/48 giờ làm việc; restart quét bù không nhân đôi thông báo |
+| Scheduler | SLA 48 giờ liên tục, kể cả nghỉ trưa/cuối tuần/ngày nghỉ; không cảnh báo trước hạn; restart không nhân đôi thông báo |
 | Report | Không dữ liệu, mẫu số 0, khoảng thời gian sai, mốc qua nửa đêm VN, công thức QĐ22, tiếng Việt và layout PDF |
 | Migration | Khởi tạo database rỗng, nâng phiên bản, schema validation; backup có thể restore trên máy khác |
 | Deployment | WAR/JSP/SiteMesh trong Docker, biến PORT, reverse proxy HTTPS, WSS reconnect, dữ liệu sau restart, private PDF |
