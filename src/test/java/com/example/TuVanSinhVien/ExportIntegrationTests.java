@@ -38,6 +38,27 @@ class ExportIntegrationTests {
    assertTrue(workbook.getSheetAt(0).getLastRowNum()>0);
   }
  }
+ @Test void forbiddenAndInvalidExportRenderFriendlyPagesThroughRealFiltersAndJsp() throws Exception {
+  var client=HttpClient.newBuilder().cookieHandler(new java.net.CookieManager()).build();
+  var login=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/login")).GET().build(),HttpResponse.BodyHandlers.ofString());
+  var csrf=java.util.regex.Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"").matcher(login.body());
+  assertTrue(csrf.find(), "Login form must contain CSRF token");
+  String form="username=covan.cntt&password=Covan%40123&_csrf="+java.net.URLEncoder.encode(csrf.group(1), java.nio.charset.StandardCharsets.UTF_8);
+  var signedIn=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/login"))
+    .header("Content-Type","application/x-www-form-urlencoded").POST(HttpRequest.BodyPublishers.ofString(form)).build(),HttpResponse.BodyHandlers.ofString());
+  assertEquals(302,signedIn.statusCode());
+  assertFalse(signedIn.headers().firstValue("Location").orElse("").contains("error"));
+  var denied=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/admin/dashboard"))
+    .GET().build(),HttpResponse.BodyHandlers.ofString());
+  assertEquals(403,denied.statusCode());
+  assertTrue(denied.body().contains("Bạn không có quyền truy cập"), denied.body());
+  assertTrue(denied.body().contains("/advisor/dashboard"));
+  var admin=accounts.findByTenDangNhap("admin").orElseThrow();
+  var invalid=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/admin/reports/export?from=2026-10-17&to=2026-10-01"))
+    .header("Authorization","Bearer "+jwt.createAccessToken(admin)).GET().build(),HttpResponse.BodyHandlers.ofString());
+  assertEquals(400,invalid.statusCode());
+  assertTrue(invalid.body().contains("Ngày bắt đầu phải nhỏ hơn"));
+ }
  @Test void detachedTicketIsReloadedBeforeRenderingRecord() throws Exception {
   var ticket=tickets.findAll().getFirst();
   assertFalse(org.hibernate.Hibernate.isInitialized(ticket.getSinhVien()));

@@ -10,7 +10,7 @@
 <%@ include file="/WEB-INF/jsp/fragments/common-head.jspf" %>
 </head>
 <body>
-<div class="alert alert-info mx-3 mt-3 small">Cố vấn trực chat thứ Hai–Sáu, <c:out value="${q:officeHoursLabel()}" /> (trừ ngày nghỉ). Sinh viên có thể để lại tin nhắn chờ ngoài giờ.</div>
+<div class="alert alert-info mx-3 mt-3 small">Hệ thống hỗ trợ tư vấn trực tuyến 24/7. Cố vấn và sinh viên có thể trao đổi bất kỳ lúc nào.</div>
 
 <%@ include file="/WEB-INF/jsp/fragments/navbar.jspf" %>
 <div class="container py-4 advisor-chat-page">
@@ -108,9 +108,18 @@
                         Chưa có tin nhắn trong phiên này. Hãy gửi lời chào đến sinh viên!
                     </div>
 
-                    </c:if><c:forEach var="m" items="${messages}"><div data-message-id="${m.maTinNhan}" class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
-                        <div class="${m.taiKhoanGui.maTK == advisor.taiKhoan.maTK ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" >
-                            <c:if test="${not empty m.taiKhoanGui}"><div class="small fw-bold mb-1 opacity-75"><c:out value="${m.taiKhoanGui.hoTen}" /></div></c:if>
+                    </c:if><c:forEach var="m" items="${messages}">
+                    <c:set var="isOwn" value="${m.taiKhoanGui == null or (advisor.taiKhoan != null and m.taiKhoanGui.maTK == advisor.taiKhoan.maTK)}" />
+                    <div data-message-id="${m.maTinNhan}" class="${isOwn ? 'd-flex justify-content-end' : 'd-flex justify-content-start'}">
+                        <div class="${isOwn ? 'chat-bubble-sender' : 'chat-bubble-receiver'}" >
+                            <c:choose>
+                                <c:when test="${m.taiKhoanGui == null}">
+                                    <div class="small fw-bold mb-1 opacity-75">Hệ thống tự động</div>
+                                </c:when>
+                                <c:when test="${not empty m.taiKhoanGui and m.taiKhoanGui.maTK != advisor.taiKhoan.maTK}">
+                                    <div class="small fw-bold mb-1 opacity-75"><c:out value="${m.taiKhoanGui.hoTen}" /></div>
+                                </c:when>
+                            </c:choose>
                             <div style="white-space: pre-line;"><c:out value="${m.noiDungHienThi}" /></div>
                             <c:if test="${messageAttachments != null and messageAttachments[m.maTinNhan] != null}"><div class="mt-2"><c:forEach var="file" items="${messageAttachments[m.maTinNhan]}"><a class="btn btn-sm btn-light border" target="_blank" rel="noopener" href="${pageContext.request.contextPath}/attachments/${file.maTep}"><i class="bi bi-paperclip"></i> <span><c:out value="${file.tenGoc}" /></span></a></c:forEach></div>
                             </c:if><div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;"><c:out value="${q:formatTemporal(m.thoiGianGui, 'HH:mm')}" /></div>

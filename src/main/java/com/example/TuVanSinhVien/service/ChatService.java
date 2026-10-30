@@ -17,6 +17,11 @@ public class ChatService {
     private SlaService officeHours = new SlaService();
     @org.springframework.beans.factory.annotation.Autowired
     private TaiKhoanRepository accounts;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
+
+    private final java.util.Map<String, java.time.Instant> lastChatEmailSent = new java.util.concurrent.ConcurrentHashMap<>();
+
     private final PhienChatRepository phienChatRepo;
     private final TinNhanChatRepository tinNhanRepo;
     private final DonViRepository donViRepo;
@@ -36,6 +41,18 @@ public class ChatService {
         this.nguoiTuVanRepo = nguoiTuVanRepo;
         this.faqRepo = faqRepo;
         this.events = events;
+    }
+
+    private boolean shouldSendChatEmail(Integer sessionId, Integer recipientId) {
+        if (sessionId == null || recipientId == null) return true;
+        String key = sessionId + "_" + recipientId;
+        java.time.Instant now = java.time.Instant.now();
+        java.time.Instant last = lastChatEmailSent.get(key);
+        if (last == null || java.time.Duration.between(last, now).toSeconds() >= 60) {
+            lastChatEmailSent.put(key, now);
+            return true;
+        }
+        return false;
     }
 
     @Transactional
@@ -59,7 +76,7 @@ public class ChatService {
 
     @Transactional
     public void advisorJoinSession(Integer maPhienChat, NguoiTuVan cv) {
-        requireAdvisorOfficeHours();
+        // Cho phép cố vấn tiếp nhận chat bất kỳ lúc nào, không ràng buộc giờ hành chính
         PhienChat session = phienChatRepo.findLockedById(maPhienChat)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phiên tư vấn trực tuyến."));
         if (!session.getDonVi().getMaDonVi().equals(cv.getDonVi().getMaDonVi())) {
@@ -81,7 +98,7 @@ public class ChatService {
         TaiKhoan current = accounts == null ? sender : accounts.findById(sender.getMaTK()).orElseThrow(() -> new SecurityException("Tài khoản không tồn tại."));
         if (!"HoatDong".equals(current.getTrangThai()) || Boolean.TRUE.equals(current.getBatBuocDoiMatKhau()))
             throw new SecurityException("Tài khoản chưa được phép gửi tin nhắn.");
-        if ("CoVan".equals(current.getVaiTro())) requireAdvisorOfficeHours();
+        // Cho phép gửi tin nhắn chat ngoài giờ hành chính
         if (noiDung == null || noiDung.trim().isEmpty()) {
             throw new IllegalArgumentException("Nội dung tin nhắn không được để trống.");
         }
@@ -115,35 +132,70 @@ public class ChatService {
                 new ChatDeliveryEvent.Message(msg.getMaTinNhan(), session.getMaPhienChat(),
                         sender.getMaTK(), sender.getHoTen(), msg.getNoiDung(), msg.getThoiGianGui())));
 
+        // Thông báo qua email khi có tin nhắn chat mới
+        if (emailService != null) {
+            if (isAdvisor) {
+                // Cố vấn nhắn -> thông báo qua email cho sinh viên
+                TaiKhoan svTk = session.getSinhVien().getTaiKhoan();
+                if (svTk != null && svTk.getEmail() != null && shouldSendChatEmail(session.getMaPhienChat(), svTk.getMaTK())) {
+                    String sub = "[QAUTE] Cố vấn " + sender.getHoTen() + " vừa nhắn tin cho bạn";
+                    String title = "Bạn nhận được tin nhắn mới từ Cố vấn học tập";
+                    String preview = noiDung.length() > 250 ? noiDung.substring(0, 247) + "..." : noiDung;
+                    String body = "<strong>Cố vấn " + sender.getHoTen() + "</strong> (" + session.getDonVi().getTenDonVi() + ") vừa gửi tin nhắn cho bạn trong phiên chat:<br><br><em>\"" + preview.replace("\n", "<br>") + "\"</em>";
+                    emailService.sendAsyncNotification(svTk.getEmail(), sub, svTk.getHoTen(), title, body, "/student/chat?maDonVi=" + session.getDonVi().getMaDonVi(), "Mở khung chat");
+                }
+            } else if (isStudent) {
+                // Sinh viên nhắn -> thông báo qua email cho cố vấn (nếu phiên đã có cố vấn)
+                if (session.getNguoiTuVan() != null && session.getNguoiTuVan().getTaiKhoan() != null) {
+                    TaiKhoan cvTk = session.getNguoiTuVan().getTaiKhoan();
+                    if (cvTk.getEmail() != null && shouldSendChatEmail(session.getMaPhienChat(), cvTk.getMaTK())) {
+                        String svName = session.getSinhVien().getTaiKhoan().getHoTen();
+                        String mssv = session.getSinhVien().getMssv() != null ? " (" + session.getSinhVien().getMssv() + ")" : "";
+                        String sub = "[QAUTE] Sinh viên " + svName + " vừa gửi tin nhắn chat";
+                        String title = "Tin nhắn mới từ sinh viên trong phiên tư vấn trực tuyến";
+                        String preview = noiDung.length() > 250 ? noiDung.substring(0, 247) + "..." : noiDung;
+                        String body = "<strong>Sinh viên " + svName + mssv + "</strong> vừa gửi tin nhắn trong phiên chat:<br><br><em>\"" + preview.replace("\n", "<br>") + "\"</em>";
+                        emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/chat?sessionId=" + session.getMaPhienChat(), "Mở khung chat");
+                    }
+                }
+            }
+        }
+
         if (isStudent && "ChoTiepNhan".equals(session.getTrangThai())) triggerAutoReply(session, noiDung);
         return msg;
     }
 
     private void triggerAutoReply(PhienChat session, String text) {
+        if (text == null || text.isBlank()) return;
         var suggestion = ChatQuickGuide.forUnit(session.getDonVi().getMaDonViCode()).stream()
                 .filter(q -> q.question().equalsIgnoreCase(text.strip()) || q.label().equalsIgnoreCase(text.strip()))
                 .findFirst();
-        CauHoiFAQ faq = suggestion.isPresent() ? null : findBestMatchingFaq(text);
+
+        long studentMsgCount = tinNhanRepo.countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(
+                session.getMaPhienChat(), session.getSinhVien().getTaiKhoan().getMaTK());
+
         String content;
         if (suggestion.isPresent()) {
+            // Khi sinh viên bấm các lựa chọn gợi ý bên dưới, hệ thống sẽ trả lời nội dung tương ứng
             content = suggestion.get().answer();
-        } else if (faq != null) {
-            String answer = faq.getCauTraLoi().strip();
-            if (answer.length() > 450) answer = answer.substring(0, 447) + "…";
-            content = answer + "\nXem thêm trong FAQ. Cần hỗ trợ thêm, bạn cứ nhắn tại đây.";
-        } else {
-            if (tinNhanRepo.countByPhienChat_MaPhienChatAndTaiKhoanGui_MaTK(
-                    session.getMaPhienChat(), session.getSinhVien().getTaiKhoan().getMaTK()) > 1) return;
+        } else if (studentMsgCount <= 1) {
+            // Tin nhắn đầu tiên của sinh viên (dù nhập nội dung gì): luôn gửi lời chào mẫu
             content = "Chào em " + session.getSinhVien().getTaiKhoan().getHoTen()
                     + (session.getSinhVien().getMssv() == null ? "" : " - " + session.getSinhVien().getMssv())
                     + ", em cần trợ giúp gì? Em có thể nhập câu hỏi hoặc chọn gợi ý bên dưới.";
+        } else {
+            // Các tin nhắn tiếp theo nếu không phải bấm gợi ý thì để cố vấn trả lời, không ngắt lời bằng FAQ
+            return;
         }
+
         TinNhanChat reply = tinNhanRepo.save(TinNhanChat.builder().phienChat(session)
                 .taiKhoanGui(null).clientMessageId(UUID.randomUUID()).loaiTinNhan("VanBan")
                 .noiDung(content).thoiGianGui(LocalDateTime.now(clock)).build());
-        events.publishEvent(new ChatDeliveryEvent(session.getSinhVien().getTaiKhoan().getTenDangNhap(), null,
+        events.publishEvent(new ChatDeliveryEvent(
+                session.getSinhVien().getTaiKhoan().getTenDangNhap(),
+                session.getNguoiTuVan() == null ? null : session.getNguoiTuVan().getTaiKhoan().getTenDangNhap(),
                 new ChatDeliveryEvent.Message(reply.getMaTinNhan(), session.getMaPhienChat(), null,
-                        "", reply.getNoiDungHienThi(), reply.getThoiGianGui())));
+                        "Hệ thống", reply.getNoiDungHienThi(), reply.getThoiGianGui())));
     }
 
     private CauHoiFAQ findBestMatchingFaq(String text) {
@@ -209,8 +261,7 @@ public class ChatService {
     }
 
     private void requireAdvisorOfficeHours() {
-        if (!officeHours.isOfficeTime(LocalDateTime.now(clock)))
-            throw new IllegalStateException("Cố vấn tiếp nhận và trả lời chat trong giờ hành chính: thứ Hai–Sáu, " + SlaService.OFFICE_HOURS_LABEL + ".");
+        // Cho phép trao đổi trực tuyến 24/7, không giới hạn giờ hành chính
     }
 
     private PhienChat getRequiredSession(Integer maPhienChat) {

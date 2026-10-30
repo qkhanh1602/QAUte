@@ -1,18 +1,11 @@
 package com.example.TuVanSinhVien.service;
 
-import com.example.TuVanSinhVien.entity.YeuCauTuVan;
 import com.example.TuVanSinhVien.repository.YeuCauTuVanRepository;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.BaseFont;
-import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xddf.usermodel.chart.*;
-import org.apache.poi.xssf.usermodel.XSSFDrawing;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
@@ -24,52 +17,18 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class ReportExportService {
     private final YeuCauTuVanRepository ticketRepo;
 
     public ReportExportService(YeuCauTuVanRepository ticketRepo) { this.ticketRepo = ticketRepo; }
 
     public byte[] exportExcel(LocalDate from, LocalDate to, Integer unitId) {
-        List<YeuCauTuVan> tickets = load(from, to, unitId);
-        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            XSSFSheet sheet = workbook.createSheet("BaoCao");
-            CellStyle headerStyle = workbook.createCellStyle();
-            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont(); headerFont.setBold(true); headerStyle.setFont(headerFont);
-            String[] headers = {"Tiêu đề câu hỏi", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái", "Cố vấn"};
-            org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
-            for (int i = 0; i < headers.length; i++) { header.createCell(i).setCellValue(headers[i]); header.getCell(i).setCellStyle(headerStyle); }
-            int rowIndex = 1;
-            for (YeuCauTuVan ticket : tickets) {
-                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowIndex++);
-                row.createCell(0).setCellValue(ticket.getTieuDe());
-                row.createCell(1).setCellValue(ticket.getNgayTao().toString());
-                row.createCell(2).setCellValue(ticket.getSinhVien().getTaiKhoan().getHoTen());
-                row.createCell(3).setCellValue(ticket.getDonVi().getTenDonVi());
-                row.createCell(4).setCellValue(ticket.getLinhVuc().getTenLinhVuc());
-                row.createCell(5).setCellValue(ticket.getTrangThai());
-                row.createCell(6).setCellValue(ticket.getCoVanPhuTrach() == null ? "" : ticket.getCoVanPhuTrach().getTaiKhoan().getHoTen());
-            }
-            for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
-            Map<String, Long> counts = countByStatus(tickets);
-            int summaryStart = Math.max(rowIndex + 2, 4);
-            org.apache.poi.ss.usermodel.Row summaryHeader = sheet.createRow(summaryStart); summaryHeader.createCell(0).setCellValue("Trạng thái"); summaryHeader.createCell(1).setCellValue("Số lượng");
-            int cursor = summaryStart + 1;
-            for (Map.Entry<String, Long> entry : counts.entrySet()) { org.apache.poi.ss.usermodel.Row row = sheet.createRow(cursor++); row.createCell(0).setCellValue(entry.getKey()); row.createCell(1).setCellValue(entry.getValue()); }
-            XSSFDrawing drawing = sheet.createDrawingPatriarch();
-            var anchor = drawing.createAnchor(0, 0, 0, 0, 8, summaryStart, 16, summaryStart + 15);
-            var chart = drawing.createChart(anchor); chart.setTitleText("Số lượng câu hỏi theo trạng thái");
-            XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
-            XDDFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT); leftAxis.setCrosses(AxisCrosses.AUTO_ZERO);
-            XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange(sheet, new org.apache.poi.ss.util.CellRangeAddress(summaryStart + 1, cursor - 1, 0, 0));
-            XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(sheet, new org.apache.poi.ss.util.CellRangeAddress(summaryStart + 1, cursor - 1, 1, 1));
-            XDDFChartData data = chart.createData(ChartTypes.BAR, bottomAxis, leftAxis); data.addSeries(categories, values); chart.plot(data);
-            workbook.write(output); return output.toByteArray();
-        } catch (Exception ex) { throw new IllegalStateException("Không thể tạo báo cáo Excel.", ex); }
+        List<ReportRow> tickets = load(from, to, unitId);
+        return ReportWorkbook.create(tickets, countByStatus(tickets));
     }
 
     public byte[] exportPdf(LocalDate from, LocalDate to, Integer unitId) {
-        List<YeuCauTuVan> tickets = load(from, to, unitId);
+        List<ReportRow> tickets = load(from, to, unitId);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4.rotate(), 32, 32, 32, 42);
             PdfWriter writer = PdfWriter.getInstance(document, output); document.open();
@@ -85,7 +44,7 @@ public class ReportExportService {
             PdfPTable table = new PdfPTable(new float[]{4, 2, 3, 3, 3, 2}); table.setWidthPercentage(100);
             table.setHeaderRows(1); table.setSpacingBefore(12);
             for (String header : List.of("Tiêu đề", "Ngày tạo", "Sinh viên", "Đơn vị", "Lĩnh vực", "Trạng thái")) { PdfPCell cell = new PdfPCell(new Phrase(header, bodyFont)); cell.setBackgroundColor(new Color(220, 232, 224)); table.addCell(cell); }
-            for (YeuCauTuVan ticket : tickets) { add(table, bodyFont, ticket.getTieuDe()); add(table, bodyFont, ticket.getNgayTao().toLocalDate().toString()); add(table, bodyFont, ticket.getSinhVien().getTaiKhoan().getHoTen()); add(table, bodyFont, ticket.getDonVi().getTenDonVi()); add(table, bodyFont, ticket.getLinhVuc().getTenLinhVuc()); add(table, bodyFont, ticket.getTrangThai()); }
+            for (ReportRow ticket : tickets) { add(table, bodyFont, ticket.title()); add(table, bodyFont, ticket.createdAt().toLocalDate().toString()); add(table, bodyFont, ticket.studentName()); add(table, bodyFont, ticket.unitName()); add(table, bodyFont, ticket.fieldName()); add(table, bodyFont, ticket.status()); }
             document.add(table);
             Paragraph signature = new Paragraph("\nNgười lập báo cáo                                      Xác nhận của đơn vị", bodyFont); signature.setAlignment(Element.ALIGN_RIGHT); document.add(signature);
             document.close(); return output.toByteArray();
@@ -93,6 +52,14 @@ public class ReportExportService {
     }
 
     private void add(PdfPTable table, com.lowagie.text.Font font, String text) { table.addCell(new PdfPCell(new Phrase(text == null ? "" : text, font))); }
-    private List<YeuCauTuVan> load(LocalDate from, LocalDate to, Integer unitId) { LocalDateTime fromTime = from == null ? null : from.atStartOfDay(); LocalDateTime toTime = to == null ? null : to.plusDays(1).atStartOfDay(); return ticketRepo.findForReport(fromTime, toTime, unitId); }
-    private Map<String, Long> countByStatus(List<YeuCauTuVan> tickets) { Map<String, Long> result = new LinkedHashMap<>(); for (String state : List.of("ChoTiepNhan", "DangXuLy", "DaPhanHoi", "Dong")) result.put(state, tickets.stream().filter(t -> state.equals(t.getTrangThai())).count()); return result; }
+    private List<ReportRow> load(LocalDate from, LocalDate to, Integer unitId) {
+        if (from != null && to != null && from.isAfter(to)) throw new IllegalArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+        if (LocalDate.MAX.equals(to)) throw new IllegalArgumentException("Ngày kết thúc không hợp lệ.");
+        if (unitId != null && unitId <= 0) throw new IllegalArgumentException("Đơn vị không hợp lệ.");
+        LocalDateTime fromTime = from == null ? null : from.atStartOfDay();
+        LocalDateTime toTime = to == null ? null : to.plusDays(1).atStartOfDay();
+        // Fetch scalar rows in a short repository transaction, then release the connection.
+        return ticketRepo.findReportRows(fromTime, toTime, unitId);
+    }
+    private Map<String, Long> countByStatus(List<ReportRow> tickets) { Map<String, Long> result = new LinkedHashMap<>(); for (String state : List.of("ChoTiepNhan", "DangXuLy", "DaPhanHoi", "Dong")) result.put(state, tickets.stream().filter(t -> state.equals(t.status())).count()); return result; }
 }

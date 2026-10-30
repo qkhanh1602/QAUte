@@ -66,8 +66,14 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             }
         }
 
-        // Trường hợp khác: forward tới trang 403 thân thiện
-        request.setAttribute("errorMessage", accessDeniedException.getMessage());
-        request.getRequestDispatcher("/error/403").forward(request, response);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("text/html;charset=UTF-8");
+        request.setAttribute("errorTitle", "Bạn không có quyền truy cập");
+        request.setAttribute("errorMessage", "Tài khoản hiện tại không được phép sử dụng chức năng này.");
+        boolean advisor = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_CoVan".equals(a.getAuthority()));
+        request.setAttribute("backLink", advisor ? "/advisor/dashboard" : "/");
+        // INCLUDE is allowed by the security chain; preserve the original 403 status.
+        request.getRequestDispatcher("/WEB-INF/jsp/error.jsp").include(request, response);
     }
 }

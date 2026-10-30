@@ -5,11 +5,14 @@ import com.example.TuVanSinhVien.repository.TaiKhoanRepository;
 import com.example.TuVanSinhVien.service.ChatService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.Principal;
 
 @Controller
 public class WebSocketChatController {
+    private static final Logger log = LoggerFactory.getLogger(WebSocketChatController.class);
     private final ChatService chatService;
     private final TaiKhoanRepository accountRepository;
 
@@ -32,6 +35,7 @@ public class WebSocketChatController {
     @org.springframework.messaging.handler.annotation.MessageExceptionHandler
     @org.springframework.messaging.simp.annotation.SendToUser(value = "/queue/chat-errors", broadcast = false)
     public java.util.Map<String, String> handleChatError(Exception exception) {
+        log.error("Lỗi xử lý gửi tin nhắn chat qua WebSocket: ", exception);
         String message = exception instanceof IllegalArgumentException || exception instanceof IllegalStateException
                 || exception instanceof SecurityException ? exception.getMessage() : "Không gửi được tin nhắn. Vui lòng thử lại.";
         return java.util.Map.of("message", message == null ? "Không gửi được tin nhắn." : message);

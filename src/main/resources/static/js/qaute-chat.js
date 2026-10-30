@@ -31,18 +31,32 @@
         if (Number(message.sessionId) !== sessionId || seen.has(String(message.messageId))) return;
         seen.add(String(message.messageId));
         if (!stream.querySelector('[data-message-id]')) stream.replaceChildren();
-        const own = Number(message.senderId) === userId;
+        const isAdvisor = stream.id === 'advisorMessageStream';
+        const isBot = !message.senderId;
+        const own = Number(message.senderId) === userId || (isAdvisor && isBot);
         const wrap = document.createElement('div');
         wrap.dataset.messageId = String(message.messageId);
         wrap.className = own ? 'd-flex justify-content-end' : 'd-flex justify-content-start';
         const bubble = document.createElement('div');
         bubble.className = own ? 'chat-bubble-sender' : 'chat-bubble-receiver';
-        const sender = document.createElement('div'); sender.className = 'small fw-bold mb-1 opacity-75'; sender.textContent = message.senderName;
-        const content = document.createElement('div'); content.style.whiteSpace = 'pre-line'; content.textContent = message.content;
-        const time = document.createElement('div'); time.className = 'small text-end mt-1 opacity-75';
+        const sender = document.createElement('div');
+        sender.className = 'small fw-bold mb-1 opacity-75';
+        if (isBot) {
+            sender.textContent = isAdvisor ? 'Hệ thống tự động' : 'Hệ thống tư vấn';
+        } else if (!own && message.senderName) {
+            sender.textContent = message.senderName;
+        }
+        const content = document.createElement('div');
+        content.style.whiteSpace = 'pre-line';
+        content.textContent = message.content;
+        const time = document.createElement('div');
+        time.className = 'small text-end mt-1 opacity-75';
         time.textContent = String(message.sentAt || '').slice(11, 16);
-        if (message.senderName) bubble.append(sender);
-        bubble.append(content, time); wrap.append(bubble); stream.append(wrap); scroll();
+        if (sender.textContent) bubble.append(sender);
+        bubble.append(content, time);
+        wrap.append(bubble);
+        stream.append(wrap);
+        scroll();
         if (own && pendingViaSocket && pending === message.content) finish();
     };
     // Same authorized MVC page supplies fallback history and attachment markup.

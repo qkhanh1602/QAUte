@@ -13,6 +13,8 @@ public class TicketService {
     private final java.time.Clock clock;
     @org.springframework.beans.factory.annotation.Autowired
     private ForumService forumService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private EmailService emailService;
     private final YeuCauTuVanRepository ticketRepo;
     private final PhanCongTuVanRepository phanCongRepo;
     private final PhanHoiTuVanRepository phanHoiRepo;
@@ -110,6 +112,15 @@ public class TicketService {
         lichSuRepo.save(ls);
         // Báo cho sinh viên
         notificationService.sendNotification(ticket.getSinhVien().getTaiKhoan(), "Câu hỏi diễn đàn đã được tiếp nhận", "Cố vấn " + cv.getTaiKhoan().getHoTen() + " đã tiếp nhận câu hỏi \'" + ticket.getTieuDe() + "\'.", "DienDan", "/student/tickets/" + ticket.getMaYeuCau());
+        if (emailService != null && ticket.getSinhVien() != null && ticket.getSinhVien().getTaiKhoan() != null) {
+            TaiKhoan svTk = ticket.getSinhVien().getTaiKhoan();
+            if (svTk.getEmail() != null) {
+                String sub = "[QAUTE] Câu hỏi của bạn đã được Cố vấn tiếp nhận: " + ticket.getTieuDe();
+                String title = "Cố vấn đã tiếp nhận câu hỏi của bạn";
+                String body = "Cố vấn <strong>" + cv.getTaiKhoan().getHoTen() + "</strong> (" + ticket.getDonVi().getTenDonVi() + ") đã tiếp nhận xử lý câu hỏi: <em>\"" + ticket.getTieuDe() + "\"</em>.<br>Cố vấn đang xem xét và sẽ sớm gửi phản hồi cho bạn.";
+                emailService.sendAsyncNotification(svTk.getEmail(), sub, svTk.getHoTen(), title, body, "/student/tickets/" + ticket.getMaYeuCau(), "Xem chi tiết câu hỏi");
+            }
+        }
     }
 
     @Transactional
@@ -146,6 +157,18 @@ public class TicketService {
         }
         // Báo cho sinh viên
         notificationService.sendNotification(ticket.getSinhVien().getTaiKhoan(), "Có câu trả lời cho yêu cầu tư vấn", "Câu hỏi \'" + ticket.getTieuDe() + "\' đã có phản hồi mới từ cố vấn.", "DienDan", "/student/tickets/" + ticket.getMaYeuCau());
+        if (emailService != null && ticket.getSinhVien() != null && ticket.getSinhVien().getTaiKhoan() != null) {
+            TaiKhoan svTk = ticket.getSinhVien().getTaiKhoan();
+            if (svTk.getEmail() != null) {
+                String sub = "[QAUTE] Cố vấn đã trả lời câu hỏi: " + ticket.getTieuDe();
+                String title = "Câu hỏi của bạn đã có phản hồi mới từ Cố vấn";
+                String preview = noiDung.length() > 300 ? noiDung.substring(0, 297) + "..." : noiDung;
+                String body = "<strong>Cố vấn:</strong> " + advisor.getTaiKhoan().getHoTen() + "<br>"
+                        + "<strong>Câu hỏi:</strong> " + ticket.getTieuDe() + "<br><br>"
+                        + "<strong>Nội dung câu trả lời:</strong><br>" + preview.replace("\n", "<br>");
+                emailService.sendAsyncNotification(svTk.getEmail(), sub, svTk.getHoTen(), title, body, "/student/tickets/" + ticket.getMaYeuCau(), "Xem chi tiết câu trả lời");
+            }
+        }
         return ph;
     }
 
@@ -172,6 +195,19 @@ public class TicketService {
         lichSuRepo.save(ls);
         if (ticket.getCoVanPhuTrach() != null) {
             notificationService.sendNotification(ticket.getCoVanPhuTrach().getTaiKhoan(), "Sinh viên hỏi thêm", "Sinh viên bổ sung trao đổi trong câu hỏi: \'" + ticket.getTieuDe() + "\'.", "DienDan", "/advisor/tickets/" + ticket.getMaYeuCau());
+            if (emailService != null && ticket.getCoVanPhuTrach().getTaiKhoan() != null) {
+                TaiKhoan cvTk = ticket.getCoVanPhuTrach().getTaiKhoan();
+                if (cvTk.getEmail() != null) {
+                    String sub = "[QAUTE] Sinh viên gửi trao đổi bổ sung: " + ticket.getTieuDe();
+                    String title = "Sinh viên bổ sung trao đổi trong câu hỏi";
+                    String svName = Boolean.TRUE.equals(ticket.getBaoMatDanhTinh()) ? "Sinh viên ẩn danh" : student.getTaiKhoan().getHoTen();
+                    String preview = noiDung.length() > 300 ? noiDung.substring(0, 297) + "..." : noiDung;
+                    String body = "<strong>Sinh viên:</strong> " + svName + "<br>"
+                            + "<strong>Câu hỏi:</strong> " + ticket.getTieuDe() + "<br><br>"
+                            + "<strong>Nội dung trao đổi mới:</strong><br>" + preview.replace("\n", "<br>");
+                    emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/tickets/" + ticket.getMaYeuCau(), "Xem và trả lời câu hỏi");
+                }
+            }
         }
         return ph;
     }
@@ -316,6 +352,18 @@ public class TicketService {
         notificationService.sendNotification(advisor.getTaiKhoan(), "Bạn được phân công câu hỏi diễn đàn",
                 "Câu hỏi: " + ticket.getTieuDe(), "DienDan",
                 "/advisor/tickets/" + ticket.getMaYeuCau());
+        if (emailService != null && advisor.getTaiKhoan() != null && advisor.getTaiKhoan().getEmail() != null) {
+            TaiKhoan cvTk = advisor.getTaiKhoan();
+            String sub = "[QAUTE] Bạn được phân công câu hỏi tư vấn mới";
+            String title = "Bạn được Quản trị viên phân công câu hỏi";
+            String svName = Boolean.TRUE.equals(ticket.getBaoMatDanhTinh()) ? "Sinh viên ẩn danh" : ticket.getSinhVien().getTaiKhoan().getHoTen();
+            String body = "Quản trị viên đã phân công cho bạn xử lý câu hỏi:<br>"
+                    + "<strong>Tiêu đề:</strong> " + ticket.getTieuDe() + "<br>"
+                    + "<strong>Người gửi:</strong> " + svName + "<br>"
+                    + "<strong>Đơn vị:</strong> " + ticket.getDonVi().getTenDonVi() + "<br>"
+                    + (note != null && !note.isBlank() ? "<strong>Ghi chú điều phối:</strong> " + note : "");
+            emailService.sendAsyncNotification(cvTk.getEmail(), sub, cvTk.getHoTen(), title, body, "/advisor/tickets/" + ticket.getMaYeuCau(), "Xem câu hỏi được phân công");
+        }
     }
 
     @Transactional

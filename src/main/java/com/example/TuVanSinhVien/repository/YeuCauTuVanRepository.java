@@ -57,6 +57,16 @@ public interface YeuCauTuVanRepository extends org.springframework.data.jpa.repo
     List<YeuCauTuVan> findForReport(@Param("fromTime") LocalDateTime fromTime,
                                    @Param("toTime") LocalDateTime toTime,
                                    @Param("unitId") Integer unitId);
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Query("SELECT new com.example.TuVanSinhVien.service.ReportRow(y.tieuDe, y.ngayTao, studentAccount.hoTen, "
+            + "unit.tenDonVi, field.tenLinhVuc, y.trangThai, advisorAccount.hoTen) FROM YeuCauTuVan y "
+            + "JOIN y.sinhVien student JOIN student.taiKhoan studentAccount JOIN y.donVi unit JOIN y.linhVuc field "
+            + "LEFT JOIN y.coVanPhuTrach advisor LEFT JOIN advisor.taiKhoan advisorAccount "
+            + "WHERE (:fromTime IS NULL OR y.ngayTao >= :fromTime) AND (:toTime IS NULL OR y.ngayTao < :toTime) "
+            + "AND (:unitId IS NULL OR unit.maDonVi = :unitId) ORDER BY y.ngayTao DESC, y.maYeuCau DESC")
+    List<com.example.TuVanSinhVien.service.ReportRow> findReportRows(@Param("fromTime") LocalDateTime fromTime,
+                                                                  @Param("toTime") LocalDateTime toTime,
+                                                                  @Param("unitId") Integer unitId);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from YeuCauTuVan e where e."+"maYeuCau = :id")
     java.util.Optional<YeuCauTuVan> findLockedById(@Param("id") Integer id);

@@ -45,7 +45,7 @@
                         <i class="bi bi-diagram-2 me-1"></i>Điều phối câu hỏi
                     </a>
                 </div>
-                <form class="row g-2 mt-3" method="get" action="${pageContext.request.contextPath}/admin/reports/export">
+                <form data-report-export class="row g-2 mt-3" method="get" action="${pageContext.request.contextPath}/admin/reports/export">
                     <div class="col-auto"><input class="form-control form-control-sm" type="date" name="from" aria-label="Từ ngày"></div>
                     <div class="col-auto"><input class="form-control form-control-sm" type="date" name="to" aria-label="Đến ngày"></div>
                     <div class="col-auto"><select class="form-select form-select-sm" name="unitId"><option value="">Tất cả đơn vị</option><c:forEach var="unit" items="${units}"><option value="${unit.maDonVi}"><c:out value="${unit.tenDonVi}" /></option></c:forEach></select></div>
@@ -148,6 +148,7 @@
 </div>
 
 <!-- Chart.js CDN -->
+<script src="${pageContext.request.contextPath}/js/report-export.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 

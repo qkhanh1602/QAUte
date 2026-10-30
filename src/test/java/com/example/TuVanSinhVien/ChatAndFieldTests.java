@@ -40,9 +40,9 @@ class ChatAndFieldTests {
         chat().sendMessage(3,student,"Thông tin bổ sung", "VanBan");
         verify(messages,times(1)).save(any());
     }
-    @Test void faqReplyIsConciseAndDoesNotImpersonateAdvisor() {
-        when(faqs.searchPublicFaq("học bổng")).thenReturn(List.of(CauHoiFAQ.builder().cauTraLoi("A".repeat(800)).build()));
-        chat().sendMessage(3,student,"học bổng", "VanBan");
+    @Test void suggestionReplyIsTriggeredForQuickGuide() {
+        session.getDonVi().setMaDonViCode("HOTRO");
+        chat().sendMessage(3,student,"Học bổng", "VanBan");
         var saved=org.mockito.ArgumentCaptor.forClass(TinNhanChat.class);
         verify(messages,times(2)).save(saved.capture());
         assertTrue(saved.getAllValues().get(1).getNoiDung().length()<600);

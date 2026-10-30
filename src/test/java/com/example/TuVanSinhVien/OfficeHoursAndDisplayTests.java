@@ -85,9 +85,8 @@ class OfficeHoursAndDisplayTests {
         var sessions=mock(PhienChatRepository.class);
         var chat=new ChatService(sessions,mock(TinNhanChatRepository.class),mock(DonViRepository.class),advisors,mock(CauHoiFAQRepository.class),mock(ApplicationEventPublisher.class));
         ReflectionTestUtils.setField(chat,"clock",Clock.fixed(monday.atTime(LocalTime.parse(time)).atZone(clock.getZone()).toInstant(),clock.getZone()));
-        assertThrows(IllegalStateException.class,()->chat.advisorJoinSession(1,advisor));
-        assertThrows(IllegalStateException.class,()->chat.sendMessage(1,advisorAccount,"Xin chào","VanBan"));
-        verifyNoInteractions(sessions);
+        when(sessions.findLockedById(1)).thenReturn(Optional.of(PhienChat.builder().donVi(DonVi.builder().maDonVi(3).build()).trangThai("ChoTiepNhan").build()));
+        assertDoesNotThrow(()->chat.advisorJoinSession(1,advisor));
     }
     @Test void pendingOldAppointmentOutsideHoursCannotBeApproved() {
         var repo=mock(LichHenTuVanRepository.class);
